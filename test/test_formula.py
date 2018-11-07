@@ -34,3 +34,33 @@ def test_base_api(engine, tsh):
 2019-01-02    4.0
 2019-01-03    5.0
 """, twomore)
+
+
+def test_linear_combo(engine, tsh):
+    tsh.register_formula(
+        engine,
+        'x_plus_y',
+        '(add (list (series "x" #:fill "ffill") (series "y" #:fill "bfill")))')
+
+    x = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+
+    tsh.insert(engine, x, 'x', 'Babar')
+
+    y = pd.Series(
+        [7, 8, 9],
+        index=pd.date_range(dt(2019, 1, 3), periods=3, freq='D')
+    )
+
+    tsh.insert(engine, y, 'y', 'Babar')
+
+    twomore = tsh.get(engine, 'x_plus_y')
+    assert_df("""
+2019-01-01     8.0
+2019-01-02     9.0
+2019-01-03    10.0
+2019-01-04    11.0
+2019-01-05    12.0
+""", twomore)
