@@ -64,3 +64,37 @@ def test_linear_combo(engine, tsh):
 2019-01-04    11.0
 2019-01-05    12.0
 """, twomore)
+
+
+def test_priority(engine, tsh):
+    tsh.register_formula(
+        engine,
+        'test_prio',
+        '(priority (list (series "a") (series "b") (series "c" #:prune #t)))'
+    )
+
+    a = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+    b = pd.Series(
+        [10, 20, 30],
+        index=pd.date_range(dt(2019, 1, 2), periods=3, freq='D')
+    )
+    c = pd.Series(
+        [100, 200, 300],
+        index=pd.date_range(dt(2019, 1, 3), periods=3, freq='D')
+    )
+
+    tsh.insert(engine, a, 'a', 'Babar')
+    tsh.insert(engine, b, 'b', 'Celeste')
+    tsh.insert(engine, c, 'c', 'Arthur')
+
+    prio = tsh.get(engine, 'test_prio')
+
+    assert_df("""
+2019-01-01      1.0
+2019-01-02     10.0
+2019-01-03    100.0
+2019-01-04    200.0
+""", prio)

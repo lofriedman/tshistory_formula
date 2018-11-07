@@ -3,6 +3,7 @@ from threading import local
 import pandas as pd
 
 from psyl.lisp import Env, evaluate, parse
+from tshistory.util import SeriesServices
 
 
 THDICT = local()
@@ -45,15 +46,30 @@ def series_add(serieslist):
     return df.dropna().sum(axis=1)
 
 
-def series_get(name, fill=None):
+def series_priority(serieslist):
+    patcher = SeriesServices()
+    final = pd.Series()
+
+    for ts in serieslist:
+        assert ts.dtype != 'O'
+        prune = ts.options.get('prune')
+        if prune:
+            ts = ts[:-prune]
+        final = patcher.patch(final, ts)
+
+    return final
+
+
+def series_get(name, fill=None, prune=None):
     assert 'cn' in THDICT.__dict__
     assert 'tsh' in THDICT.__dict__
     cn = THDICT.cn
     tsh = THDICT.tsh
     ts = tsh.get(cn, name)
-    ts.options = {}
-    if fill:
-        ts.options['fillopt'] = fill
+    ts.options = {
+        'fillopt': fill,
+        'prune': prune
+    }
     return ts
 
 
@@ -61,6 +77,7 @@ ENV = Env({
     '+': scalar_add,
     'list': pylist,
     'add': series_add,
+    'priority': series_priority,
     'series': series_get
 })
 
