@@ -98,3 +98,24 @@ def test_priority(engine, tsh):
 2019-01-03    100.0
 2019-01-04    200.0
 """, prio)
+
+
+def test_outliers(engine, tsh):
+    tsh.register_formula(
+        engine,
+        'test_outliers',
+        '(outliers (series "a") #:min 2 #:max 4)'
+    )
+
+    a = pd.Series(
+        [1, 2, 3, 4, 5],
+        index=pd.date_range(dt(2019, 1, 1), periods=5, freq='D')
+    )
+    tsh.insert(engine, a, 'a', 'Babar')
+
+    cleaned = tsh.get(engine, 'test_outliers')
+    assert_df("""
+2019-01-02    2.0
+2019-01-03    3.0
+2019-01-04    4.0
+""", cleaned)

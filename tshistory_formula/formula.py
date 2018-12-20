@@ -60,6 +60,14 @@ def series_priority(serieslist):
     return final
 
 
+def series_drop_outliers(series, min=None, max=None):
+    if max is not None:
+        series = series[series <= max]
+    if min is not None:
+        series = series[series >= min]
+    return series
+
+
 def series_get(name, fill=None, prune=None):
     assert 'cn' in THDICT.__dict__
     assert 'tsh' in THDICT.__dict__
@@ -78,7 +86,6 @@ ENV = Env({
     'list': pylist,
     'add': series_add,
     'priority': series_priority,
+    'outliers': series_drop_outliers,
     'series': series_get
 })
-
-
