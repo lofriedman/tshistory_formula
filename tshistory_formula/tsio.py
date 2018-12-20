@@ -44,6 +44,7 @@ class TimeSerie(BaseTS):
             text = self.formula_map[name]
             formula.THDICT.cn = cn
             formula.THDICT.tsh = self
+            formula.THDICT.getargs = kw
             return evaluate(text, formula.ENV)
 
         return super().get(cn, name, **kw)

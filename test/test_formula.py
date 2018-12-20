@@ -65,12 +65,22 @@ def test_linear_combo(engine, tsh):
 2019-01-05    12.0
 """, twomore)
 
+    limited = tsh.get(
+        engine, 'x_plus_y',
+        from_value_date=dt(2019, 1, 3),
+        to_value_date=dt(2019, 1, 4)
+    )
+    assert_df("""
+2019-01-03    10.0
+2019-01-04    11.0
+""", limited)
+
 
 def test_priority(engine, tsh):
     tsh.register_formula(
         engine,
         'test_prio',
-        '(priority (list (series "a") (series "b") (series "c" #:prune #t)))'
+        '(priority (list (series "a") (series "b") (series "c" #:prune 1)))'
     )
 
     a = pd.Series(
@@ -99,6 +109,19 @@ def test_priority(engine, tsh):
 2019-01-04    200.0
 """, prio)
 
+    limited = tsh.get(
+        engine,
+        'test_prio',
+        from_value_date=dt(2019, 1, 2),
+        to_value_date=dt(2019, 1, 3)
+    )
+    # NOTE that the 1-3 point is now 20 because the 100 (series c)
+    #      point has been pruned
+    assert_df("""
+2019-01-02    10.0
+2019-01-03    20.0
+""", limited)
+
 
 def test_outliers(engine, tsh):
     tsh.register_formula(
@@ -119,3 +142,13 @@ def test_outliers(engine, tsh):
 2019-01-03    3.0
 2019-01-04    4.0
 """, cleaned)
+
+    restricted = tsh.get(
+        engine,
+        'test_outliers',
+        from_value_date=dt(2019, 1, 3),
+        to_value_date=dt(2019, 1, 3)
+    )
+    assert_df("""
+2019-01-03    3.0
+""", restricted)

@@ -69,11 +69,10 @@ def series_drop_outliers(series, min=None, max=None):
 
 
 def series_get(name, fill=None, prune=None):
-    assert 'cn' in THDICT.__dict__
-    assert 'tsh' in THDICT.__dict__
     cn = THDICT.cn
     tsh = THDICT.tsh
-    ts = tsh.get(cn, name)
+    getargs = THDICT.getargs
+    ts = tsh.get(cn, name, **getargs)
     ts.options = {
         'fillopt': fill,
         'prune': prune
