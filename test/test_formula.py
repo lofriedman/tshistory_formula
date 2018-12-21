@@ -24,6 +24,7 @@ def test_interpreter(engine):
 
 def test_base_api(engine, tsh):
     tsh.register_formula(engine, 'test_plus_two', '(+ (series "test") 2)')
+    tsh.register_formula(engine, 'test_three_plus', '(+ 3 (series "test"))')
 
     test = pd.Series(
         [1, 2, 3],
@@ -39,13 +40,28 @@ def test_base_api(engine, tsh):
 2019-01-03    5.0
 """, twomore)
 
-    tsh.register_formula(engine, 'test_product', '(* (series "test") 1.5)')
+    evenmore = tsh.get(engine, 'test_three_plus')
+    assert_df("""
+2019-01-01    4.0
+2019-01-02    5.0
+2019-01-03    6.0
+""", evenmore)
 
-    plus = tsh.get(engine, 'test_product')
+    tsh.register_formula(engine, 'test_product_a', '(* (series "test") 1.5)')
+    tsh.register_formula(engine, 'test_product_b', '(* 2 (series "test"))')
+
+    plus = tsh.get(engine, 'test_product_a')
     assert_df("""
 2019-01-01    1.5
 2019-01-02    3.0
 2019-01-03    4.5
+""", plus)
+
+    plus = tsh.get(engine, 'test_product_b')
+    assert_df("""
+2019-01-01    2.0
+2019-01-02    4.0
+2019-01-03    6.0
 """, plus)
 
 
