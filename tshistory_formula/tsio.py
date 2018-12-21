@@ -1,5 +1,5 @@
 from sqlalchemy import select
-from psyl.lisp import evaluate
+from psyl.lisp import evaluate, parse
 from tshistory.tsio import TimeSerie as BaseTS
 
 from tshistory_formula.schema import formula_schema
@@ -16,6 +16,8 @@ class TimeSerie(BaseTS):
         self.formula_map = {}
 
     def register_formula(self, cn, name, formula):
+        # basic syntax check
+        parse(formula)
         cn.execute(
             self.formula_schema.formula.insert().values(
                 name=name,

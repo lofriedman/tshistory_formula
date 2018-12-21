@@ -13,13 +13,16 @@ def utcdt(*dtargs):
 
 def test_interpreter(engine):
     form = '(+ 2 3)'
-    from psyl.lisp import evaluate
     with pytest.raises(LookupError):
-        e = evaluate(form)
+        e = lisp.evaluate(form)
 
     env = lisp.Env({'+': lambda a, b: a + b})
-    e = evaluate(form, env)
+    e = lisp.evaluate(form, env)
     assert e == 5
+
+    brokenform = '(+ 2 3'
+    with pytest.raises(SyntaxError):
+        lisp.parse(brokenform)
 
 
 def test_base_api(engine, tsh):
@@ -232,3 +235,13 @@ def test_outliers(engine, tsh):
     assert_df("""
 2019-01-03    3.0
 """, restricted)
+
+
+def test_error(engine, tsh):
+    with pytest.raises(SyntaxError):
+        tsh.register_formula(
+            engine,
+            'test_error',
+            '(outliers (series "a")'
+        )
+
