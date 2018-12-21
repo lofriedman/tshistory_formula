@@ -41,7 +41,7 @@ def series_add(serieslist):
     filloptmap = {}
 
     for ts in serieslist:
-        if ts.options.get('fillopt'):
+        if ts.options.get('fillopt') is not None:
             filloptmap[ts.name] = ts.options['fillopt']
         if df is None:
             df = ts.to_frame()
@@ -49,8 +49,12 @@ def series_add(serieslist):
         df = df.join(ts, how='outer')
 
     for ts, fillopt in filloptmap.items():
-        for method in fillopt.split(','):
-            df[ts] = df[ts].fillna(method=method.strip())
+        if isinstance(fillopt, str):
+            for method in fillopt.split(','):
+                df[ts] = df[ts].fillna(method=method.strip())
+        else:
+            assert isinstance(fillopt, (int, float))
+            df[ts] = df[ts].fillna(value=fillopt)
 
     return df.dropna().sum(axis=1)
 

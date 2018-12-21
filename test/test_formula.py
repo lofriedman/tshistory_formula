@@ -68,8 +68,12 @@ def test_base_api(engine, tsh):
 def test_linear_combo(engine, tsh):
     tsh.register_formula(
         engine,
-        'x_plus_y',
-        '(add (list (series "x" #:fill "ffill") (series "y" #:fill "bfill")))')
+        'addseries',
+        '(add (list '
+        '  (series "x" #:fill "ffill")'
+        '  (series "y" #:fill "bfill")'
+        '  (series "z" #:fill 0)))'
+    )
 
     idate = utcdt(2019, 1, 1)
     x = pd.Series(
@@ -88,17 +92,25 @@ def test_linear_combo(engine, tsh):
     tsh.insert(engine, y, 'y', 'Babar',
                _insertion_date=idate)
 
-    twomore = tsh.get(engine, 'x_plus_y')
+    z = pd.Series(
+        [0],
+        index=pd.date_range(dt(2019, 1, 3), periods=1, freq='D')
+    )
+
+    tsh.insert(engine, z, 'z', 'Babar',
+               _insertion_date=idate)
+
+    ts = tsh.get(engine, 'addseries')
     assert_df("""
 2019-01-01     8.0
 2019-01-02     9.0
 2019-01-03    10.0
 2019-01-04    11.0
 2019-01-05    12.0
-""", twomore)
+""", ts)
 
     limited = tsh.get(
-        engine, 'x_plus_y',
+        engine, 'addseries',
         from_value_date=dt(2019, 1, 3),
         to_value_date=dt(2019, 1, 4)
     )
@@ -125,23 +137,23 @@ def test_linear_combo(engine, tsh):
     tsh.insert(engine, y, 'y', 'Babar',
                _insertion_date=idate2)
 
-    twomore = tsh.get(engine, 'x_plus_y')
+    ts = tsh.get(engine, 'addseries')
     assert_df("""
 2019-01-01    10.0
 2019-01-02    11.0
 2019-01-03    12.0
 2019-01-04    13.0
 2019-01-05    14.0
-""", twomore)
+""", ts)
 
-    twomore = tsh.get(engine, 'x_plus_y', revision_date=idate)
+    ts = tsh.get(engine, 'addseries', revision_date=idate)
     assert_df("""
 2019-01-01     8.0
 2019-01-02     9.0
 2019-01-03    10.0
 2019-01-04    11.0
 2019-01-05    12.0
-""", twomore)
+""", ts)
 
 
 def test_priority(engine, tsh):
