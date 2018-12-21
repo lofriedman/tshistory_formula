@@ -10,7 +10,8 @@ setup(name='tshistory_formula',
 
       packages=['tshistory_formula'],
       install_requires=[
-          'tshistory'
+          'tshistory',
+          'psyl'
       ],
       classifiers=[
           'Development Status :: 4 - Beta',
