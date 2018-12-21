@@ -7,6 +7,10 @@ from psyl import lisp
 from tshistory.testutil import assert_df
 
 
+def utcdt(*dtargs):
+    return pd.Timestamp(dt(*dtargs), tz='UTC')
+
+
 def test_interpreter(engine):
     form = '(+ 2 3)'
     from psyl.lisp import evaluate
@@ -42,19 +46,22 @@ def test_linear_combo(engine, tsh):
         'x_plus_y',
         '(add (list (series "x" #:fill "ffill") (series "y" #:fill "bfill")))')
 
+    idate = utcdt(2019, 1, 1)
     x = pd.Series(
         [1, 2, 3],
         index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
     )
 
-    tsh.insert(engine, x, 'x', 'Babar')
+    tsh.insert(engine, x, 'x', 'Babar',
+               _insertion_date=idate)
 
     y = pd.Series(
         [7, 8, 9],
         index=pd.date_range(dt(2019, 1, 3), periods=3, freq='D')
     )
 
-    tsh.insert(engine, y, 'y', 'Babar')
+    tsh.insert(engine, y, 'y', 'Babar',
+               _insertion_date=idate)
 
     twomore = tsh.get(engine, 'x_plus_y')
     assert_df("""
@@ -74,6 +81,42 @@ def test_linear_combo(engine, tsh):
 2019-01-03    10.0
 2019-01-04    11.0
 """, limited)
+
+    # make some history
+    idate2 = utcdt(2019, 1, 2)
+    x = pd.Series(
+        [2, 3, 4],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+
+    tsh.insert(engine, x, 'x', 'Babar',
+               _insertion_date=idate2)
+
+    y = pd.Series(
+        [8, 9, 10],
+        index=pd.date_range(dt(2019, 1, 3), periods=3, freq='D')
+    )
+
+    tsh.insert(engine, y, 'y', 'Babar',
+               _insertion_date=idate2)
+
+    twomore = tsh.get(engine, 'x_plus_y')
+    assert_df("""
+2019-01-01    10.0
+2019-01-02    11.0
+2019-01-03    12.0
+2019-01-04    13.0
+2019-01-05    14.0
+""", twomore)
+
+    twomore = tsh.get(engine, 'x_plus_y', revision_date=idate)
+    assert_df("""
+2019-01-01     8.0
+2019-01-02     9.0
+2019-01-03    10.0
+2019-01-04    11.0
+2019-01-05    12.0
+""", twomore)
 
 
 def test_priority(engine, tsh):
