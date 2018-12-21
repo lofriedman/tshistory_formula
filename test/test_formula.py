@@ -39,6 +39,15 @@ def test_base_api(engine, tsh):
 2019-01-03    5.0
 """, twomore)
 
+    tsh.register_formula(engine, 'test_product', '(* (series "test") 1.5)')
+
+    plus = tsh.get(engine, 'test_product')
+    assert_df("""
+2019-01-01    1.5
+2019-01-02    3.0
+2019-01-03    4.5
+""", plus)
+
 
 def test_linear_combo(engine, tsh):
     tsh.register_formula(

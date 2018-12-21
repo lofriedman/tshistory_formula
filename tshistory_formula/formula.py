@@ -18,6 +18,15 @@ def scalar_add(a, b):
     return a + b
 
 
+def scalar_prod(a, b):
+    if isinstance(a, (int, float)):
+        assert isinstance(b, (int, float, pd.Series))
+    if isinstance(b, (int, float)):
+        assert isinstance(a, (int, float, pd.Series))
+
+    return a * b
+
+
 def pylist(*args):
     return args
 
@@ -82,6 +91,7 @@ def series_get(name, fill=None, prune=None):
 
 ENV = Env({
     '+': scalar_add,
+    '*': scalar_prod,
     'list': pylist,
     'add': series_add,
     'priority': series_priority,
