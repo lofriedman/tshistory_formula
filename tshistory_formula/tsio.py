@@ -15,9 +15,26 @@ class TimeSerie(BaseTS):
         self.formula_schema.define()
         self.formula_map = {}
 
-    def register_formula(self, cn, name, formula):
+    def find_series(self, cn, stree, smap):
+        if stree[0] == 'series':
+            name = stree[1]
+            smap[name] = self.exists(cn, name)
+            return
+
+        for arg in stree[1:]:
+            if isinstance(arg, list):
+                self.find_series(cn, arg, smap)
+
+    def register_formula(self, cn, name, formula, reject_unkown=True):
         # basic syntax check
-        parse(formula)
+        smap = {}
+        series = self.find_series(cn, parse(formula), smap)
+        if not all(smap.values()) and reject_unkown:
+            badseries = [k for k, v in smap.items() if not v]
+            raise ValueError(
+                f'Formula `{name}` refers to unknown series '
+                f'{", ".join(badseries)}'
+            )
         cn.execute(
             self.formula_schema.formula.insert().values(
                 name=name,

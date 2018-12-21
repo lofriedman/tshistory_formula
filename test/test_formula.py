@@ -26,8 +26,8 @@ def test_interpreter(engine):
 
 
 def test_base_api(engine, tsh):
-    tsh.register_formula(engine, 'test_plus_two', '(+ (series "test") 2)')
-    tsh.register_formula(engine, 'test_three_plus', '(+ 3 (series "test"))')
+    tsh.register_formula(engine, 'test_plus_two', '(+ (series "test") 2)', False)
+    tsh.register_formula(engine, 'test_three_plus', '(+ 3 (series "test"))', False)
 
     test = pd.Series(
         [1, 2, 3],
@@ -50,8 +50,8 @@ def test_base_api(engine, tsh):
 2019-01-03    6.0
 """, evenmore)
 
-    tsh.register_formula(engine, 'test_product_a', '(* (series "test") 1.5)')
-    tsh.register_formula(engine, 'test_product_b', '(* 2 (series "test"))')
+    tsh.register_formula(engine, 'test_product_a', '(* (series "test") 1.5)', False)
+    tsh.register_formula(engine, 'test_product_b', '(* 2 (series "test"))', False)
 
     plus = tsh.get(engine, 'test_product_a')
     assert_df("""
@@ -75,7 +75,8 @@ def test_linear_combo(engine, tsh):
         '(add (list '
         '  (series "x" #:fill "ffill")'
         '  (series "y" #:fill "bfill")'
-        '  (series "z" #:fill 0)))'
+        '  (series "z" #:fill 0)))',
+        False
     )
 
     idate = utcdt(2019, 1, 1)
@@ -163,7 +164,8 @@ def test_priority(engine, tsh):
     tsh.register_formula(
         engine,
         'test_prio',
-        '(priority (list (series "a") (series "b") (series "c" #:prune 1)))'
+        '(priority (list (series "a") (series "b") (series "c" #:prune 1)))',
+        False
     )
 
     a = pd.Series(
@@ -244,4 +246,16 @@ def test_error(engine, tsh):
             'test_error',
             '(outliers (series "a")'
         )
+
+    with pytest.raises(ValueError) as err:
+        tsh.register_formula(
+            engine,
+            'test_error',
+            '(priority (list (series "NOPE1") (series "NOPE2" #:prune 1)))'
+        )
+    assert err.value.args[0] == (
+        'Formula `test_error` refers to '
+        'unknown series NOPE1, NOPE2'
+    )
+
 
