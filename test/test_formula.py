@@ -72,10 +72,10 @@ def test_linear_combo(engine, tsh):
     tsh.register_formula(
         engine,
         'addseries',
-        '(add (list '
+        '(add '
         '  (series "x" #:fill "ffill")'
         '  (series "y" #:fill "bfill")'
-        '  (series "z" #:fill 0)))',
+        '  (series "z" #:fill 0))',
         False
     )
 
@@ -164,7 +164,7 @@ def test_priority(engine, tsh):
     tsh.register_formula(
         engine,
         'test_prio',
-        '(priority (list (series "a") (series "b") (series "c" #:prune 1)))',
+        '(priority (series "a") (series "b") (series "c" #:prune 1))',
         False
     )
 
@@ -251,7 +251,7 @@ def test_error(engine, tsh):
         tsh.register_formula(
             engine,
             'test_error',
-            '(priority (list (series "NOPE1") (series "NOPE2" #:prune 1)))'
+            '(priority (series "NOPE1") (series "NOPE2" #:prune 1))'
         )
     assert err.value.args[0] == (
         'Formula `test_error` refers to '

@@ -31,7 +31,7 @@ def pylist(*args):
     return args
 
 
-def series_add(serieslist):
+def series_add(*serieslist):
     assert [
         isinstance(s, pd.Series)
         for s in serieslist
@@ -59,7 +59,7 @@ def series_add(serieslist):
     return df.dropna().sum(axis=1)
 
 
-def series_priority(serieslist):
+def series_priority(*serieslist):
     patcher = SeriesServices()
     final = pd.Series()
 
