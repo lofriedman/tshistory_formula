@@ -55,6 +55,12 @@ class TimeSerie(BaseTS):
             self.formula_map[name] = formula
         return bool(formula)
 
+    def type(self, cn, name):
+        if self.isformula(cn, name):
+            return 'formula'
+
+        return super().type(cn, name)
+
     def exists(self, cn, name):
         return super().exists(cn, name) or self.isformula(cn, name)
 

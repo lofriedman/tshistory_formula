@@ -207,6 +207,14 @@ def test_priority(engine, tsh):
 2019-01-03    20.0
 """, limited)
 
+    # type
+    assert tsh.type(engine, 'no-such-series') == 'primary'
+    assert tsh.type(engine, 'test_prio') == 'formula'
+    assert tsh.type(engine, 'a') == 'primary'
+    assert not tsh.exists(engine, 'no-such-series')
+    assert tsh.type(engine, 'test_prio')
+    assert tsh.type(engine, 'a')
+
 
 def test_outliers(engine, tsh):
     tsh.register_formula(
