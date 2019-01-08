@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from psyl import lisp
-from tshistory.testutil import assert_df
+from tshistory.testutil import assert_df, assert_hist
 
 
 def utcdt(*dtargs):
@@ -267,3 +267,82 @@ def test_error(engine, tsh):
     )
 
 
+def test_history(engine, tsh):
+    tsh.register_formula(
+        engine,
+        'h-addition',
+        '(add (series "ha") (series "hb"))',
+        False
+    )
+
+    for day in (1, 2, 3):
+        idate = utcdt(2019, 1, day)
+        for name in 'ab':
+            ts = pd.Series(
+                [day] * 3,
+            index=pd.date_range(dt(2018, 1, 1), periods=3, freq='D')
+            )
+            tsh.insert(engine, ts, 'h' + name, 'Babar',
+                       _insertion_date=idate)
+
+    h = tsh.get_history(engine, 'h-addition')
+    assert_hist("""
+insertion_date             value_date
+2019-01-01 00:00:00+00:00  2018-01-01    2.0
+                           2018-01-02    2.0
+                           2018-01-03    2.0
+2019-01-02 00:00:00+00:00  2018-01-01    4.0
+                           2018-01-02    4.0
+                           2018-01-03    4.0
+2019-01-03 00:00:00+00:00  2018-01-01    6.0
+                           2018-01-02    6.0
+                           2018-01-03    6.0
+""", h)
+
+    h = tsh.get_history(
+        engine, 'h-addition',
+        from_insertion_date=utcdt(2019, 1, 2),
+        to_insertion_date=utcdt(2019, 1, 2),
+        from_value_date=dt(2018, 1, 2),
+        to_value_date=dt(2018, 1, 2)
+    )
+    assert_hist("""
+insertion_date             value_date
+2019-01-02 00:00:00+00:00  2018-01-02    4.0
+""", h)
+
+    # let's add a priority
+    tsh.register_formula(
+        engine,
+        'h-priority',
+        '(priority (series "h-addition") (series "hz"))',
+        False
+    )
+    for day in (1, 2, 3):
+        idate = utcdt(2019, 1, day)
+        ts = pd.Series(
+            [41 + day] * 3,
+            index=pd.date_range(dt(2018, 1, 3), periods=3, freq='D')
+        )
+        tsh.insert(engine, ts, 'hz', 'Babar',
+                   _insertion_date=idate)
+
+    h = tsh.get_history(engine, 'h-priority')
+    assert_hist("""
+insertion_date             value_date
+2019-01-01 00:00:00+00:00  2018-01-01     2.0
+                           2018-01-02     2.0
+                           2018-01-03    42.0
+                           2018-01-04    42.0
+                           2018-01-05    42.0
+2019-01-02 00:00:00+00:00  2018-01-01     4.0
+                           2018-01-02     4.0
+                           2018-01-03    43.0
+                           2018-01-04    43.0
+                           2018-01-05    43.0
+2019-01-03 00:00:00+00:00  2018-01-01     6.0
+                           2018-01-02     6.0
+                           2018-01-03    44.0
+                           2018-01-04    44.0
+                           2018-01-05    44.0
+""", h)

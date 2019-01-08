@@ -15,20 +15,25 @@ class TimeSerie(BaseTS):
         self.formula_schema.define()
         self.formula_map = {}
 
-    def find_series(self, cn, stree, smap):
+    def find_series(self, cn, stree):
+        smap = {}
         if stree[0] == 'series':
             name = stree[1]
             smap[name] = self.exists(cn, name)
-            return
+            return smap
 
         for arg in stree[1:]:
             if isinstance(arg, list):
-                self.find_series(cn, arg, smap)
+                smap.update(self.find_series(cn, arg))
+
+        return smap
 
     def register_formula(self, cn, name, formula, reject_unkown=True):
         # basic syntax check
-        smap = {}
-        self.find_series(cn, parse(formula), smap)
+        smap = self.find_series(
+            cn,
+            parse(formula)
+        )
         if not all(smap.values()) and reject_unkown:
             badseries = [k for k, v in smap.items() if not v]
             raise ValueError(
@@ -71,3 +76,59 @@ class TimeSerie(BaseTS):
             return i.evaluate(text)
 
         return super().get(cn, name, **kw)
+
+    def get_history(self, cn, name,
+                    from_insertion_date=None,
+                    to_insertion_date=None,
+                    from_value_date=None,
+                    to_value_date=None,
+                    deltabefore=None,
+                    deltaafter=None,
+                    diffmode=False):
+        if self.type(cn, name) != 'formula':
+            return super().get_history(
+                cn, name,
+                from_insertion_date,
+                to_insertion_date,
+                from_value_date,
+                to_value_date,
+                deltabefore,
+                deltaafter,
+                diffmode
+            )
+
+        assert not diffmode
+
+        formula = self.formula_map[name]
+        series = self.find_series(cn, parse(formula))
+        histmap = {
+            name: self.get_history(
+                cn, name,
+                from_insertion_date,
+                to_insertion_date,
+                from_value_date,
+                to_value_date,
+                deltabefore,
+                deltaafter,
+                diffmode
+            )
+            for name in series
+        }
+
+        i = interpreter.Interpreter(
+            cn, self, {
+                'from_value_date': from_value_date,
+                'to_value_date': to_value_date
+            },
+            histmap
+        )
+        idates = {
+            idate
+            for hist in histmap.values()
+            for idate in hist
+        }
+
+        return {
+            idate: i.evaluate(formula, idate)
+            for idate in sorted(idates)
+        }

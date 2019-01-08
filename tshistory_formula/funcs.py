@@ -76,7 +76,7 @@ def series_drop_outliers(series, min=None, max=None):
 
 
 def series_get(i, name, fill=None, prune=None):
-    ts = i.tsh.get(i.cn, name, **i.getargs)
+    ts = i.get(name)
     ts.options = {
         'fillopt': fill,
         'prune': prune
