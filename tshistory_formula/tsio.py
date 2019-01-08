@@ -28,7 +28,7 @@ class TimeSerie(BaseTS):
     def register_formula(self, cn, name, formula, reject_unkown=True):
         # basic syntax check
         smap = {}
-        series = self.find_series(cn, parse(formula), smap)
+        self.find_series(cn, parse(formula), smap)
         if not all(smap.values()) and reject_unkown:
             badseries = [k for k, v in smap.items() if not v]
             raise ValueError(
