@@ -1,9 +1,9 @@
 from sqlalchemy import select
-from psyl.lisp import evaluate, parse
+from psyl.lisp import parse
 from tshistory.tsio import TimeSerie as BaseTS
 
 from tshistory_formula.schema import formula_schema
-from tshistory_formula import formula
+from tshistory_formula import interpreter
 
 
 class TimeSerie(BaseTS):
@@ -67,9 +67,7 @@ class TimeSerie(BaseTS):
     def get(self, cn, name, **kw):
         if self.isformula(cn, name):
             text = self.formula_map[name]
-            formula.THDICT.cn = cn
-            formula.THDICT.tsh = self
-            formula.THDICT.getargs = kw
-            return evaluate(text, formula.ENV)
+            i = interpreter.Interpreter(cn, self, kw)
+            return i.evaluate(text)
 
         return super().get(cn, name, **kw)

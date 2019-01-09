@@ -1,104 +1,26 @@
-from threading import local
+from functools import partial
 
-import pandas as pd
+from psyl.lisp import Env, evaluate
 
-from psyl.lisp import Env, evaluate, parse
-from tshistory.util import SeriesServices
-
-
-THDICT = local()
+from tshistory_formula import funcs
 
 
-def scalar_add(a, b):
-    if isinstance(a, (int, float)):
-        assert isinstance(b, (int, float, pd.Series))
-    if isinstance(b, (int, float)):
-        assert isinstance(a, (int, float, pd.Series))
+class Interpreter:
+    __slots__ = ('env', 'cn', 'tsh', 'getargs')
 
-    return a + b
+    def __init__(self, cn, tsh, getargs):
+        self.cn = cn
+        self.tsh = tsh
+        self.getargs = getargs
+        self.env = Env({
+            '+': funcs.scalar_add,
+            '*': funcs.scalar_prod,
+            'list': funcs.pylist,
+            'add': funcs.series_add,
+            'priority': funcs.series_priority,
+            'outliers': funcs.series_drop_outliers,
+            'series': partial(funcs.series_get, self)
+        })
 
-
-def scalar_prod(a, b):
-    if isinstance(a, (int, float)):
-        assert isinstance(b, (int, float, pd.Series))
-    if isinstance(b, (int, float)):
-        assert isinstance(a, (int, float, pd.Series))
-
-    return a * b
-
-
-def pylist(*args):
-    return args
-
-
-def series_add(*serieslist):
-    assert [
-        isinstance(s, pd.Series)
-        for s in serieslist
-    ]
-
-    df = None
-    filloptmap = {}
-
-    for ts in serieslist:
-        if ts.options.get('fillopt') is not None:
-            filloptmap[ts.name] = ts.options['fillopt']
-        if df is None:
-            df = ts.to_frame()
-            continue
-        df = df.join(ts, how='outer')
-
-    for ts, fillopt in filloptmap.items():
-        if isinstance(fillopt, str):
-            for method in fillopt.split(','):
-                df[ts] = df[ts].fillna(method=method.strip())
-        else:
-            assert isinstance(fillopt, (int, float))
-            df[ts] = df[ts].fillna(value=fillopt)
-
-    return df.dropna().sum(axis=1)
-
-
-def series_priority(*serieslist):
-    patcher = SeriesServices()
-    final = pd.Series()
-
-    for ts in serieslist:
-        assert ts.dtype != 'O'
-        prune = ts.options.get('prune')
-        if prune:
-            ts = ts[:-prune]
-        final = patcher.patch(final, ts)
-
-    return final
-
-
-def series_drop_outliers(series, min=None, max=None):
-    if max is not None:
-        series = series[series <= max]
-    if min is not None:
-        series = series[series >= min]
-    return series
-
-
-def series_get(name, fill=None, prune=None):
-    cn = THDICT.cn
-    tsh = THDICT.tsh
-    getargs = THDICT.getargs
-    ts = tsh.get(cn, name, **getargs)
-    ts.options = {
-        'fillopt': fill,
-        'prune': prune
-    }
-    return ts
-
-
-ENV = Env({
-    '+': scalar_add,
-    '*': scalar_prod,
-    'list': pylist,
-    'add': series_add,
-    'priority': series_priority,
-    'outliers': series_drop_outliers,
-    'series': series_get
-})
+    def evaluate(self, text):
+        return evaluate(text, self.env)
