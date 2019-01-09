@@ -6,6 +6,8 @@ import pytest
 from psyl import lisp
 from tshistory.testutil import assert_df, assert_hist
 
+from tshistory_formula.registry import func
+
 
 def utcdt(*dtargs):
     return pd.Timestamp(dt(*dtargs), tz='UTC')
@@ -361,7 +363,7 @@ def test_staircase(engine, tsh):
         for name in 'ab':
             ts = pd.Series(
                 [day / 2.] * 5,
-            index=pd.date_range(dt(2018, 1, day), periods=5, freq='D')
+                index=pd.date_range(dt(2018, 1, day), periods=5, freq='D')
             )
             tsh.insert(engine, ts, 's' + name, 'Babar',
                        _insertion_date=idate)
@@ -376,4 +378,31 @@ def test_staircase(engine, tsh):
 2018-01-07    5.0
 2018-01-08    5.0
 2018-01-09    5.0
+""", ts)
+
+
+def test_new_func(engine, tsh):
+
+    @func('identity')
+    def identity(series):
+        return series
+
+    tsh.register_formula(
+        engine,
+        'identity',
+        '(identity (series "id-a"))',
+        False
+    )
+
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.insert(engine, ts, 'id-a', 'Babar')
+
+    ts = tsh.get(engine, 'identity')
+    assert_df("""
+2019-01-01    1.0
+2019-01-02    2.0
+2019-01-03    3.0
 """, ts)

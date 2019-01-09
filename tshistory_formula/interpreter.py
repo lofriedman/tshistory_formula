@@ -1,9 +1,23 @@
 from functools import partial
+from typing import Optional
 
 import pandas as pd
 from psyl.lisp import Env, evaluate
 
-from tshistory_formula import funcs
+from tshistory_formula import funcs, registry
+
+
+
+def series_get(i,
+               name: str,
+               fill: Optional[str]=None,
+               prune: Optional[str]=None) -> pd.Series:
+    ts = i.get(name)
+    ts.options = {
+        'fillopt': fill,
+        'prune': prune
+    }
+    return ts
 
 
 class Interpreter:
@@ -15,14 +29,8 @@ class Interpreter:
         self.tsh = tsh
         self.getargs = getargs
         self.histories = histories
-        self.env = Env({
-            '+': funcs.scalar_add,
-            '*': funcs.scalar_prod,
-            'add': funcs.series_add,
-            'priority': funcs.series_priority,
-            'outliers': funcs.series_drop_outliers,
-            'series': partial(funcs.series_get, self)
-        })
+        self.env = Env(registry.FUNCS)
+        self.env['series'] = partial(series_get, self)
 
     def get(self, name):
         idate = self.env.get('__idate__')
