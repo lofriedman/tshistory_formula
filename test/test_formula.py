@@ -1,3 +1,4 @@
+import json
 from datetime import datetime as dt
 import pandas as pd
 
@@ -6,7 +7,8 @@ import pytest
 from psyl import lisp
 from tshistory.testutil import assert_df, assert_hist
 
-from tshistory_formula.registry import func
+from tshistory_formula.registry import func, FUNCS
+from tshistory_formula.interpreter import jsontypes
 
 
 def utcdt(*dtargs):
@@ -406,3 +408,24 @@ def test_new_func(engine, tsh):
 2019-01-02    2.0
 2019-01-03    3.0
 """, ts)
+
+    # cleanup
+    FUNCS.pop('identity')
+
+
+def test_types(tsh):
+    types = jsontypes()
+    assert {
+        '*': {'a': 'typing.Union[int, float, Series]',
+              'b': 'typing.Union[int, float, Series]',
+              'return': 'Series'},
+        '+': {'a': 'typing.Union[int, float, Series]',
+              'b': 'typing.Union[int, float, Series]',
+              'return': 'Series'},
+        'add': {'return': 'Series', 'serieslist': 'Series'},
+        'outliers': {'max': 'typing.Union[int, NoneType]',
+                     'min': 'typing.Union[int, NoneType]',
+                     'return': 'Series',
+                     'series': 'Series'},
+        'priority': {'return': 'Series', 'serieslist': 'Series'}
+    } == json.loads(types)

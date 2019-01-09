@@ -1,5 +1,7 @@
-from functools import partial
+import json
+import typing
 from typing import Optional
+from functools import partial
 
 import pandas as pd
 from psyl.lisp import Env, evaluate
@@ -18,6 +20,35 @@ def series_get(i,
         'prune': prune
     }
     return ts
+
+
+class fjson(json.JSONEncoder):
+
+    def default(self, o):
+        try:
+            return super().default(o)
+        except TypeError:
+            stro = str(o)
+            if stro.startswith('typing'):
+                stro = stro.replace(
+                    'pandas.core.series.Series',
+                    'Series'
+                )
+                return stro
+            if 'Series' in stro:
+                return 'Series'
+            raise
+
+
+def functypes():
+    return {
+        name: typing.get_type_hints(func)
+        for name, func in registry.FUNCS.items()
+    }
+
+
+def jsontypes():
+    return json.dumps(functypes(), cls=fjson)
 
 
 class Interpreter:
