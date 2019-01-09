@@ -1,9 +1,13 @@
+from typing import Union, Optional
+
 import pandas as pd
 
 from tshistory.util import SeriesServices
 
 
-def scalar_add(a, b):
+def scalar_add(
+        a: Union[int, float, pd.Series],
+        b: Union[int, float, pd.Series]) -> pd.Series:
     if isinstance(a, (int, float)):
         assert isinstance(b, (int, float, pd.Series))
     if isinstance(b, (int, float)):
@@ -12,7 +16,9 @@ def scalar_add(a, b):
     return a + b
 
 
-def scalar_prod(a, b):
+def scalar_prod(
+        a: Union[int, float, pd.Series],
+        b: Union[int, float, pd.Series]) -> pd.Series:
     if isinstance(a, (int, float)):
         assert isinstance(b, (int, float, pd.Series))
     if isinstance(b, (int, float)):
@@ -21,7 +27,7 @@ def scalar_prod(a, b):
     return a * b
 
 
-def series_add(*serieslist):
+def series_add(*serieslist: pd.Series) -> pd.Series:
     assert [
         isinstance(s, pd.Series)
         for s in serieslist
@@ -49,7 +55,7 @@ def series_add(*serieslist):
     return df.dropna().sum(axis=1)
 
 
-def series_priority(*serieslist):
+def series_priority(*serieslist: pd.Series) -> pd.Series:
     patcher = SeriesServices()
     final = pd.Series()
 
@@ -63,7 +69,9 @@ def series_priority(*serieslist):
     return final
 
 
-def series_drop_outliers(series, min=None, max=None):
+def series_drop_outliers(series: pd.Series,
+                         min: Optional[int]=None,
+                         max: Optional[int]=None) -> pd.Series:
     if max is not None:
         series = series[series <= max]
     if min is not None:
@@ -71,7 +79,10 @@ def series_drop_outliers(series, min=None, max=None):
     return series
 
 
-def series_get(i, name, fill=None, prune=None):
+def series_get(i,
+               name: str,
+               fill: Optional[str]=None,
+               prune: Optional[str]=None) -> pd.Series:
     ts = i.get(name)
     ts.options = {
         'fillopt': fill,
