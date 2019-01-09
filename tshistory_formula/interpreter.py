@@ -18,7 +18,6 @@ class Interpreter:
         self.env = Env({
             '+': funcs.scalar_add,
             '*': funcs.scalar_prod,
-            'list': funcs.pylist,
             'add': funcs.series_add,
             'priority': funcs.series_priority,
             'outliers': funcs.series_drop_outliers,

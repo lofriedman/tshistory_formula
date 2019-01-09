@@ -21,10 +21,6 @@ def scalar_prod(a, b):
     return a * b
 
 
-def pylist(*args):
-    return args
-
-
 def series_add(*serieslist):
     assert [
         isinstance(s, pd.Series)
