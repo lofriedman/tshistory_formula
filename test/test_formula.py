@@ -346,3 +346,34 @@ insertion_date             value_date
                            2018-01-04    44.0
                            2018-01-05    44.0
 """, h)
+
+
+def test_staircase(engine, tsh):
+    tsh.register_formula(
+        engine,
+        's-addition',
+        '(add (series "sa") (series "sb"))',
+        False
+    )
+
+    for day in (1, 2, 3, 4, 5):
+        idate = utcdt(2018, 1, day)
+        for name in 'ab':
+            ts = pd.Series(
+                [day / 2.] * 5,
+            index=pd.date_range(dt(2018, 1, day), periods=5, freq='D')
+            )
+            tsh.insert(engine, ts, 's' + name, 'Babar',
+                       _insertion_date=idate)
+
+    ts = tsh.get_delta(engine, 's-addition', delta=pd.Timedelta(days=1))
+    assert_df("""
+2018-01-02    1.0
+2018-01-03    2.0
+2018-01-04    3.0
+2018-01-05    4.0
+2018-01-06    5.0
+2018-01-07    5.0
+2018-01-08    5.0
+2018-01-09    5.0
+""", ts)
