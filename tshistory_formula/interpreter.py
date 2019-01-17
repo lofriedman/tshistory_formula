@@ -52,22 +52,31 @@ def jsontypes():
 
 
 class Interpreter:
-    __slots__ = ('env', 'cn', 'tsh', 'getargs',
-                 'histories')
+    __slots__ = ('env', 'cn', 'tsh', 'getargs')
 
-    def __init__(self, cn, tsh, getargs, histories=None):
+    def __init__(self, cn, tsh, getargs):
         self.cn = cn
         self.tsh = tsh
         self.getargs = getargs
-        self.histories = histories
         self.env = Env(registry.FUNCS)
         self.env['series'] = partial(series_get, self)
 
     def get(self, name):
-        idate = self.env.get('__idate__')
-        if not idate:
-            return self.tsh.get(self.cn, name, **self.getargs)
+        return self.tsh.get(self.cn, name, **self.getargs)
 
+    def evaluate(self, text):
+        return evaluate(text, self.env)
+
+
+class HistoryInterpreter(Interpreter):
+    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'histories')
+
+    def __init__(self, *args, histories):
+        super().__init__(*args)
+        self.histories = histories
+
+    def get(self, name):
+        idate = self.env.get('__idate__')
         # get the nearest inferior or equal for the given
         # insertion date
         assert self.histories
@@ -79,6 +88,6 @@ class Interpreter:
         ts = pd.Series(name=name)
         return ts
 
-    def evaluate(self, text, idate=None):
+    def evaluate(self, text, idate):
         self.env['__idate__'] = idate
         return evaluate(text, self.env)

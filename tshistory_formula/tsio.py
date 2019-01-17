@@ -115,12 +115,12 @@ class TimeSerie(BaseTS):
             for name in series
         }
 
-        i = interpreter.Interpreter(
+        i = interpreter.HistoryInterpreter(
             cn, self, {
                 'from_value_date': from_value_date,
                 'to_value_date': to_value_date
             },
-            histmap
+            histories=histmap
         )
         idates = {
             idate
