@@ -429,3 +429,32 @@ def test_types(tsh):
                      'series': 'Series'},
         'priority': {'return': 'Series', 'serieslist': 'Series'}
     } == json.loads(types)
+
+
+def test_rename(engine, tsh):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.insert(engine, ts, 'rename-a', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'survive-renaming',
+        '(+ 1 (series "rename-a"))'
+    )
+
+    ts = tsh.get(engine, 'survive-renaming')
+    assert_df("""
+2019-01-01    2.0
+2019-01-02    3.0
+2019-01-03    4.0
+""", ts)
+
+    with engine.begin() as cn:
+        tsh.rename(cn, 'rename-a', 'a-renamed')
+
+    tsh._resetcaches()
+
+    with pytest.raises(Exception):
+        ts = tsh.get(engine, 'survive-renaming')
