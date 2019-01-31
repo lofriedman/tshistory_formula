@@ -431,6 +431,19 @@ def test_types(tsh):
     } == json.loads(types)
 
 
+def test_formula_refers_to_nothing(engine, tsh):
+    tsh.register_formula(
+        engine,
+        'i-cant-work',
+        '(+ 1 (series "lol"))',
+        False
+    )
+
+    with pytest.raises(ValueError) as err:
+        tsh.get(engine, 'i-cant-work')
+    assert err.value.args[0] == 'No such series `lol`'
+
+
 def test_rename(engine, tsh):
     ts = pd.Series(
         [1, 2, 3],
@@ -441,7 +454,12 @@ def test_rename(engine, tsh):
     tsh.register_formula(
         engine,
         'survive-renaming',
-        '(+ 1 (series "rename-a"))'
+        '(+ 1 (series "rename-a" #:fill 0))'
+    )
+    tsh.register_formula(
+        engine,
+        'survive-renaming-2',
+        '(add (series "survive-renaming") (series "rename-a" #:fill 0))'
     )
 
     ts = tsh.get(engine, 'survive-renaming')
@@ -451,10 +469,32 @@ def test_rename(engine, tsh):
 2019-01-03    4.0
 """, ts)
 
+    ts = tsh.get(engine, 'survive-renaming-2')
+    assert_df("""
+2019-01-01    3.0
+2019-01-02    5.0
+2019-01-03    7.0
+""", ts)
+
     with engine.begin() as cn:
         tsh.rename(cn, 'rename-a', 'a-renamed')
 
-    tsh._resetcaches()
+    ts = tsh.get(engine, 'survive-renaming')
+    assert_df("""
+2019-01-01    2.0
+2019-01-02    3.0
+2019-01-03    4.0
+""", ts)
 
-    with pytest.raises(Exception):
-        ts = tsh.get(engine, 'survive-renaming')
+    ts = tsh.get(engine, 'survive-renaming-2')
+    assert_df("""
+2019-01-01    3.0
+2019-01-02    5.0
+2019-01-03    7.0
+""", ts)
+
+    with engine.begin() as cn:
+        with pytest.raises(ValueError) as err:
+            tsh.rename(cn, 'a-renamed', 'survive-renaming')
+
+    assert err.value.args[0] == 'new name is already referenced by `survive-renaming-2`'
