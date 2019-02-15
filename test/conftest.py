@@ -4,8 +4,11 @@ import pytest
 from sqlalchemy import create_engine, MetaData
 
 from pytest_sa_pg import db
+from click.testing import CliRunner
 
-from tshistory_formula.schema import init, reset
+from tshistory import command
+from tshistory_alias.schema import init, reset
+from tshistory_formula.schema import init as ainit, reset as areset
 from tshistory_formula.tsio import TimeSerie
 
 
@@ -19,7 +22,9 @@ def engine(request):
     uri = 'postgresql://localhost:{}/postgres'.format(port)
     e = create_engine(uri)
     meta = MetaData()
+    areset(e)
     reset(e)
+    ainit(e, meta)
     init(e, meta)
     yield e
 
@@ -29,3 +34,15 @@ def tsh(request, engine):
     tsh = TimeSerie()
     tsh._testing = True
     return tsh
+
+
+
+@pytest.fixture
+def cli():
+    def runner(*args, **kw):
+        args = [str(a) for a in args]
+        for k, v in kw.items():
+            args.append('--{}'.format(k))
+            args.append(str(v))
+        return CliRunner().invoke(command.tsh, args)
+    return runner

@@ -11,8 +11,12 @@ setup(name='tshistory_formula',
       packages=['tshistory_formula'],
       install_requires=[
           'tshistory',
-          'psyl'
+          'psyl',
+          'tshistory_alias'
       ],
+      entry_points={'tshistory.subcommands': [
+          'convert-aliases=tshistory_formula.cli:convert_aliases'
+      ]},
       classifiers=[
           'Development Status :: 4 - Beta',
           'Intended Audience :: Developers',

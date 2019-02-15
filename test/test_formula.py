@@ -168,7 +168,7 @@ def test_priority(engine, tsh):
     tsh.register_formula(
         engine,
         'test_prio',
-        '(priority (series "a") (series "b") (series "c" #:prune 1))',
+        '(priority (series "c" #:prune 1) (series "b") (series "a"))',
         False
     )
 
@@ -218,6 +218,42 @@ def test_priority(engine, tsh):
     assert not tsh.exists(engine, 'no-such-series')
     assert tsh.type(engine, 'test_prio')
     assert tsh.type(engine, 'a')
+
+
+def test_priority2(engine, tsh):
+    tsh.register_formula(
+        engine,
+        'test_prio2',
+        '(priority (series "real") (series "nom") (series "fcst"))',
+        False
+    )
+
+    real = pd.Series(
+        [1, 1, 1],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+    nom = pd.Series(
+        [10, 10, 10, 10],
+        index=pd.date_range(dt(2019, 1, 1), periods=4, freq='D')
+    )
+    fcst = pd.Series(
+        [100, 100, 100, 100, 100],
+        index=pd.date_range(dt(2019, 1, 1), periods=5, freq='D')
+    )
+
+    tsh.insert(engine, real, 'real', 'Babar')
+    tsh.insert(engine, nom, 'nom', 'Celeste')
+    tsh.insert(engine, fcst, 'fcst', 'Arthur')
+
+    prio = tsh.get(engine, 'test_prio2')
+
+    assert_df("""
+2019-01-01      1.0
+2019-01-02      1.0
+2019-01-03      1.0
+2019-01-04     10.0
+2019-01-05    100.0
+""", prio)
 
 
 def test_outliers(engine, tsh):
@@ -319,7 +355,7 @@ insertion_date             value_date
     tsh.register_formula(
         engine,
         'h-priority',
-        '(priority (series "h-addition") (series "hz"))',
+        '(priority (series "hz") (series "h-addition"))',
         False
     )
     for day in (1, 2, 3):
@@ -498,3 +534,62 @@ def test_rename(engine, tsh):
             tsh.rename(cn, 'a-renamed', 'survive-renaming')
 
     assert err.value.args[0] == 'new name is already referenced by `survive-renaming-2`'
+
+
+def test_convert_alias(engine, tsh):
+    groundzero = pd.Series(
+        [0, 0, 0],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+    )
+    one = pd.Series(
+        [1, 1, 1],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+    )
+    two = pd.Series(
+        [2, 2, 2, 2, 2],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=5, freq='D')
+    )
+
+    tsh.insert(engine, groundzero, 'groundzero', 'Babar')
+    tsh.insert(engine, one, 'one', 'Babar')
+    tsh.insert(engine, two, 'two', 'Babar')
+
+    tsh.build_arithmetic(
+        engine, 'ones', {
+            'groundzero': 1,
+            'one': 1
+        }
+    )
+    tsh.build_priority(engine, 'twos', ['ones', 'two'])
+
+    ts = tsh.get(engine, 'twos')
+    assert_df("""
+2019-01-01 00:00:00+00:00    1.0
+2019-01-02 00:00:00+00:00    1.0
+2019-01-03 00:00:00+00:00    1.0
+2019-01-04 00:00:00+00:00    2.0
+2019-01-05 00:00:00+00:00    2.0
+""", ts)
+
+    tsh.convert_aliases(engine)
+
+    ts = tsh.get(engine, 'ones')
+    assert_df("""
+2019-01-01 00:00:00+00:00    1.0
+2019-01-02 00:00:00+00:00    1.0
+2019-01-03 00:00:00+00:00    1.0
+""", ts)
+
+    ts = tsh.get(engine, 'twos')
+    assert_df("""
+2019-01-01 00:00:00+00:00    1.0
+2019-01-02 00:00:00+00:00    1.0
+2019-01-03 00:00:00+00:00    1.0
+2019-01-04 00:00:00+00:00    2.0
+2019-01-05 00:00:00+00:00    2.0
+""", ts)
+
+    assert tsh.formula_map == {
+        'ones': '(+ (series "groundzero") (series "one"))',
+        'twos': '(priority (series "ones") (series "two"))'
+    }

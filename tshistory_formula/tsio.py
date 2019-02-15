@@ -1,6 +1,9 @@
+from collections import defaultdict
+
 from sqlalchemy import select
 from psyl.lisp import parse, serialize
-from tshistory.tsio import TimeSerie as BaseTS
+
+from tshistory_alias.tsio import TimeSerie as BaseTS
 
 from tshistory_formula.schema import formula_schema
 from tshistory_formula import interpreter
@@ -191,3 +194,57 @@ class TimeSerie(BaseTS):
             )
 
         super().rename(cn, oldname, newname)
+
+    def convert_aliases(self, cn):
+        sqla = f'select * from "{self.namespace}-alias".arithmetic'
+        sqlp = f'select * from "{self.namespace}-alias".priority'
+
+        arith = defaultdict(list)
+        for row in cn.execute(sqla).fetchall():
+            arith[row.alias].append(row)
+
+        for alias, series in arith.items():
+            form = ['(+']
+            for row in series:
+                if row.coefficient != 1:
+                    form.append('(* {row.coefficient} ')
+                form.append(f' (series "{row.serie}"')
+                if row.fillopt:
+                    form.append(' #:fill "{row.fillopt}"')
+                form.append(')')
+                if row.coefficient != 1:
+                    form.append(')')
+            form.append(')')
+
+            self.register_formula(
+                cn,
+                alias, ''.join(form),
+                False
+            )
+
+        prio = defaultdict(list)
+        for row in cn.execute(sqlp).fetchall():
+            prio[row.alias].append(row)
+
+        for alias, series in prio.items():
+            series.sort(key=lambda row: row.priority)
+            form = ['(priority']
+            for row in series:
+                if row.coefficient != 1:
+                    form.append('(* {row.coefficient} ')
+                form.append(f' (series "{row.serie}"')
+                if row.prune:
+                    form.append(' #:prune "{row.prune}"')
+                form.append(')')
+                if row.coefficient != 1:
+                    form.append(')')
+            form.append(')')
+
+            self.register_formula(
+                cn,
+                alias, ''.join(form),
+                False
+            )
+
+        cn.execute(f'delete from "{self.namespace}-alias".arithmetic')
+        cn.execute(f'delete from "{self.namespace}-alias".priority')

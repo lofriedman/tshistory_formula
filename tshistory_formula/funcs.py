@@ -64,7 +64,7 @@ def series_priority(*serieslist: pd.Series) -> pd.Series:
     patcher = SeriesServices()
     final = pd.Series()
 
-    for ts in serieslist:
+    for ts in reversed(serieslist):
         assert ts.dtype != 'O'
         prune = ts.options.get('prune')
         if prune:
