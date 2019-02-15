@@ -45,7 +45,7 @@ class TimeSerie(BaseTS):
             badseries = [k for k, v in smap.items() if not v]
             raise ValueError(
                 f'Formula `{name}` refers to unknown series '
-                f'{", ".join(badseries)}'
+                f'{", ".join("`%s`" % s for s in badseries)}'
             )
         cn.execute(
             self.formula_schema.formula.insert().values(

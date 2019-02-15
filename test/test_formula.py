@@ -303,7 +303,7 @@ def test_error(engine, tsh):
         )
     assert err.value.args[0] == (
         'Formula `test_error` refers to '
-        'unknown series NOPE1, NOPE2'
+        'unknown series `NOPE1`, `NOPE2`'
     )
 
 

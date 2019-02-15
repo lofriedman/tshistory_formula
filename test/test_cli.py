@@ -22,19 +22,19 @@ def test_convert(engine, cli, tsh):
         index=pd.date_range(utcdt(2019, 1, 1), periods=5, freq='D')
     )
 
-    tsh.insert(engine, groundzero, 'groundzero-cli', 'Babar')
-    tsh.insert(engine, one, 'one-cli', 'Babar')
-    tsh.insert(engine, two, 'two-cli', 'Babar')
+    tsh.insert(engine, groundzero, 'groundzero-conv', 'Babar')
+    tsh.insert(engine, one, 'one-conv', 'Babar')
+    tsh.insert(engine, two, 'two-conv', 'Babar')
 
     tsh.build_arithmetic(
-        engine, 'ones-cli', {
-            'groundzero-cli': 1,
-            'one-cli': 1
+        engine, 'ones-conv', {
+            'groundzero-conv': 1,
+            'one-conv': 1
         }
     )
-    tsh.build_priority(engine, 'twos-cli', ['ones-cli', 'two-cli'])
+    tsh.build_priority(engine, 'twos-conv', ['ones-conv', 'two-conv'])
 
-    ts = tsh.get(engine, 'twos-cli')
+    ts = tsh.get(engine, 'twos-conv')
     assert_df("""
 2019-01-01 00:00:00+00:00    1.0
 2019-01-02 00:00:00+00:00    1.0
@@ -49,14 +49,14 @@ def test_convert(engine, cli, tsh):
 
     tsh._resetcaches()
 
-    ts = tsh.get(engine, 'ones-cli')
+    ts = tsh.get(engine, 'ones-conv')
     assert_df("""
 2019-01-01 00:00:00+00:00    1.0
 2019-01-02 00:00:00+00:00    1.0
 2019-01-03 00:00:00+00:00    1.0
 """, ts)
 
-    ts = tsh.get(engine, 'twos-cli')
+    ts = tsh.get(engine, 'twos-conv')
     assert_df("""
 2019-01-01 00:00:00+00:00    1.0
 2019-01-02 00:00:00+00:00    1.0
@@ -64,3 +64,26 @@ def test_convert(engine, cli, tsh):
 2019-01-04 00:00:00+00:00    2.0
 2019-01-05 00:00:00+00:00    2.0
 """, ts)
+
+
+def test_ingest(engine, cli, tsh, datadir):
+    out = cli('ingest-formulas',
+              engine.url,
+              datadir / 'formula.csv',
+              strict=True,
+              namespace=tsh.namespace)
+
+    assert out.exception.args[0] == (
+        'Formula `ones-imported` refers to '
+        'unknown series `groundzero-cli`, `one-cli`'
+    )
+
+    out = cli('ingest-formulas',
+              engine.url,
+              datadir / 'formula.csv',
+              namespace=tsh.namespace)
+
+    tsh._resetcaches()
+
+    assert tsh.isformula(engine, 'ones-imported')
+    assert tsh.isformula(engine, 'twos-imported')

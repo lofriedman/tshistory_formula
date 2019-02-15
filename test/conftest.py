@@ -42,7 +42,16 @@ def cli():
     def runner(*args, **kw):
         args = [str(a) for a in args]
         for k, v in kw.items():
-            args.append('--{}'.format(k))
-            args.append(str(v))
+            if isinstance(v, bool):
+                if v:
+                    args.append('--{}'.format(k))
+            else:
+                args.append('--{}'.format(k))
+                args.append(str(v))
         return CliRunner().invoke(command.tsh, args)
     return runner
+
+
+@pytest.fixture(scope='session')
+def datadir():
+    return DATADIR

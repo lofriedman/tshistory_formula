@@ -15,7 +15,8 @@ setup(name='tshistory_formula',
           'tshistory_alias'
       ],
       entry_points={'tshistory.subcommands': [
-          'convert-aliases=tshistory_formula.cli:convert_aliases'
+          'convert-aliases=tshistory_formula.cli:convert_aliases',
+          'ingest-formulas=tshistory_formula.cli:ingest_formulas'
       ]},
       classifiers=[
           'Development Status :: 4 - Beta',
