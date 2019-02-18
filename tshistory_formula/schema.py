@@ -22,7 +22,7 @@ class formula_schema:
         self.formula = Table(
             'formula', meta,
             Column('id', Integer, primary_key=True),
-            Column('name', Text, index=True, nullable=True),
+            Column('name', Text, index=True, unique=True, nullable=False),
             Column('text', Text, nullable=False),
             schema=self.namespace
         )
