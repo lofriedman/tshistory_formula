@@ -1,20 +1,25 @@
 from sqlalchemy import MetaData, Table, Column, Integer, Text
+from sqlalchemy.schema import CreateSchema
 
 from tshistory.schema import init as tshinit, reset as tshreset
 
 
 SCHEMAS = {}
 
-class formula_schema:
-    namespace = 'tsh'
+def namespace(basens):
+    return f'{basens}-formula'
 
-    def __new__(cls, ns='tsh'):
+
+class formula_schema:
+
+    def __new__(cls, basens='tsh'):
+        ns = namespace(basens)
         if ns in SCHEMAS:
             return SCHEMAS[ns]
         return super().__new__(cls)
 
-    def __init__(self, namespace='tsh'):
-        self.namespace = namespace
+    def __init__(self, basens='tsh'):
+        self.namespace = namespace(basens)
 
     def define(self, meta=MetaData()):
         if self.namespace in SCHEMAS:
@@ -34,15 +39,18 @@ class formula_schema:
     def create(self, engine):
         if self.exists(engine):
             return
+        engine.execute(CreateSchema(self.namespace))
         self.formula.create(engine)
 
 
-def init(engine, meta, ns='tsh'):
-    tshinit(engine, meta, ns)
-    fschema = formula_schema(ns)
+def init(engine, meta, basens='tsh'):
+    tshinit(engine, meta, basens)
+    fschema = formula_schema(basens)
     fschema.define(meta)
     fschema.create(engine)
 
 
-def reset(engine, ns='tsh'):
-    tshreset(engine, ns)
+def reset(engine, basens='tsh'):
+    tshreset(engine, basens)
+    with engine.begin() as cn:
+        cn.execute(f'drop schema if exists "{namespace(basens)}" cascade')

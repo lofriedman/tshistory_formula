@@ -36,6 +36,7 @@ class TimeSerie(BaseTS):
         return smap
 
     def register_formula(self, cn, name, formula, reject_unkown=True):
+        assert not self.isformula(cn, name), 'already exists'
         # basic syntax check
         smap = self.find_series(
             cn,

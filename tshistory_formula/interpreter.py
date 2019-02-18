@@ -9,7 +9,6 @@ from psyl.lisp import Env, evaluate
 from tshistory_formula import funcs, registry
 
 
-
 def series_get(i,
                name: str,
                fill: Optional[str]=None,
