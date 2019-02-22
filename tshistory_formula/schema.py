@@ -1,28 +1,28 @@
 from sqlalchemy import MetaData, Table, Column, Integer, Text
 from sqlalchemy.schema import CreateSchema
 
-from tshistory.schema import init as tshinit, reset as tshreset
+from tshistory.schema import register_schema, _delete_schema
 
-
-SCHEMAS = {}
 
 def namespace(basens):
     return f'{basens}-formula'
 
 
 class formula_schema:
+    SCHEMAS = {}
 
     def __new__(cls, basens='tsh'):
         ns = namespace(basens)
-        if ns in SCHEMAS:
-            return SCHEMAS[ns]
+        if ns in cls.SCHEMAS:
+            return cls.SCHEMAS[ns]
         return super().__new__(cls)
 
     def __init__(self, basens='tsh'):
         self.namespace = namespace(basens)
+        register_schema(self)
 
     def define(self, meta=MetaData()):
-        if self.namespace in SCHEMAS:
+        if self.namespace in self.SCHEMAS:
             return
         self.formula = Table(
             'formula', meta,
@@ -31,10 +31,17 @@ class formula_schema:
             Column('text', Text, nullable=False),
             schema=self.namespace
         )
-        SCHEMAS[self.namespace] = self
+        self.SCHEMAS[self.namespace] = self
 
     def exists(self, engine):
-        return self.formula.exists(engine)
+        return engine.execute(
+            'select exists('
+            '  select schema_name '
+            '  from information_schema.schemata '
+            '  where schema_name = %(name)s'
+            ')',
+            name=self.namespace
+        ).scalar()
 
     def create(self, engine):
         if self.exists(engine):
@@ -42,15 +49,6 @@ class formula_schema:
         engine.execute(CreateSchema(self.namespace))
         self.formula.create(engine)
 
-
-def init(engine, meta, basens='tsh'):
-    tshinit(engine, meta, basens)
-    fschema = formula_schema(basens)
-    fschema.define(meta)
-    fschema.create(engine)
-
-
-def reset(engine, basens='tsh'):
-    tshreset(engine, basens)
-    with engine.begin() as cn:
-        cn.execute(f'drop schema if exists "{namespace(basens)}" cascade')
+    def destroy(self, engine):
+        _delete_schema(engine, self.namespace)
+        self.SCHEMAS.pop(self.namespace, None)
