@@ -38,3 +38,13 @@ def ingest_formulas(dburi, formula_file, strict=False, namespace='tsh'):
                 row.formula,
                 strict
             )
+
+
+@click.command(name='shell')
+@click.argument('db-uri')
+@click.option('--namespace', default='tsh')
+def shell(db_uri, namespace='tsh'):
+    e = create_engine(find_dburi(db_uri))
+
+    tsh = TimeSerie(namespace)
+    import pdb; pdb.set_trace()
