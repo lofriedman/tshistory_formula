@@ -10,24 +10,36 @@ from tshistory_formula.registry import func
 def scalar_add(
         a: Union[int, float, pd.Series],
         b: Union[int, float, pd.Series]) -> pd.Series:
-    if isinstance(a, (int, float)):
-        assert isinstance(b, (int, float, pd.Series))
-    if isinstance(b, (int, float)):
-        assert isinstance(a, (int, float, pd.Series))
+    if isinstance(a, pd.Series):
+        assert isinstance(b, (int, float))
+        options = a.options
+    else:
+        assert isinstance(a, (int, float))
+        options = b.options
 
-    return a + b
+    ts = a + b
+    # we did a series + scalar and want to propagate
+    # the original series options
+    ts.options = options
+    return ts
 
 
 @func('*')
 def scalar_prod(
         a: Union[int, float, pd.Series],
         b: Union[int, float, pd.Series]) -> pd.Series:
-    if isinstance(a, (int, float)):
-        assert isinstance(b, (int, float, pd.Series))
-    if isinstance(b, (int, float)):
-        assert isinstance(a, (int, float, pd.Series))
+    if isinstance(a, pd.Series):
+        assert isinstance(b, (int, float))
+        options = a.options
+    else:
+        assert isinstance(a, (int, float))
+        options = b.options
 
-    return a * b
+    ts = a * b
+    # we did a series * scalar and want to propagate
+    # the original series options
+    ts.options = options
+    return ts
 
 
 @func('add')

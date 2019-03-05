@@ -205,21 +205,28 @@ class TimeSerie(BaseTS):
             arith[row.alias].append(row)
 
         for alias, series in arith.items():
-            form = ['(+']
-            for row in series:
+            form = ['(add']
+            for idx, row in enumerate(series):
                 if row.coefficient != 1:
-                    form.append('(* {row.coefficient} ')
+                    form.append(f' (* {row.coefficient}')
                 form.append(f' (series "{row.serie}"')
                 if row.fillopt:
-                    form.append(' #:fill "{row.fillopt}"')
+                    form.append(f' #:fill "{row.fillopt}"')
                 form.append(')')
                 if row.coefficient != 1:
                     form.append(')')
             form.append(')')
 
+            if idx == 0:
+                # not really adding there, that was just a
+                # coefficient
+                form = form[1:-1]
+
+            text = ''.join(form).strip()
+            print(alias, '->', text)
             self.register_formula(
                 cn,
-                alias, ''.join(form),
+                alias, text,
                 False
             )
 
@@ -230,20 +237,27 @@ class TimeSerie(BaseTS):
         for alias, series in prio.items():
             series.sort(key=lambda row: row.priority)
             form = ['(priority']
-            for row in series:
+            for idx, row in enumerate(series):
                 if row.coefficient != 1:
-                    form.append('(* {row.coefficient} ')
+                    form.append(f' (* {row.coefficient}')
                 form.append(f' (series "{row.serie}"')
                 if row.prune:
-                    form.append(' #:prune "{row.prune}"')
+                    form.append(f' #:prune {row.prune}')
                 form.append(')')
                 if row.coefficient != 1:
                     form.append(')')
             form.append(')')
 
+            if idx == 0:
+                # not a real priority there, that was just a
+                # coefficient
+                form = form[1:-1]
+
+            text = ''.join(form).strip()
+            print(alias, '->', text)
             self.register_formula(
                 cn,
-                alias, ''.join(form),
+                alias, text,
                 False
             )
 

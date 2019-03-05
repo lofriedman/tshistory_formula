@@ -1,3 +1,4 @@
+import math
 import json
 from datetime import datetime as dt
 import pandas as pd
@@ -556,17 +557,19 @@ def test_convert_alias(engine, tsh):
 
     tsh.build_arithmetic(
         engine, 'ones', {
-            'groundzero': 1,
+            'groundzero': round(math.pi, 4),
             'one': 1
-        }
+        },
+        {'groundzero': 'bfill'}
     )
-    tsh.build_priority(engine, 'twos', ['ones', 'two'])
+    tsh.build_priority(engine, 'twos', ['ones', 'two'],
+                       map_prune={'ones': 1})
 
     ts = tsh.get(engine, 'twos')
     assert_df("""
 2019-01-01 00:00:00+00:00    1.0
 2019-01-02 00:00:00+00:00    1.0
-2019-01-03 00:00:00+00:00    1.0
+2019-01-03 00:00:00+00:00    2.0
 2019-01-04 00:00:00+00:00    2.0
 2019-01-05 00:00:00+00:00    2.0
 """, ts)
@@ -584,12 +587,12 @@ def test_convert_alias(engine, tsh):
     assert_df("""
 2019-01-01 00:00:00+00:00    1.0
 2019-01-02 00:00:00+00:00    1.0
-2019-01-03 00:00:00+00:00    1.0
+2019-01-03 00:00:00+00:00    2.0
 2019-01-04 00:00:00+00:00    2.0
 2019-01-05 00:00:00+00:00    2.0
 """, ts)
 
     assert tsh.formula_map == {
-        'ones': '(+ (series "groundzero") (series "one"))',
-        'twos': '(priority (series "ones") (series "two"))'
+        'ones': '(add (* 3.1416 (series "groundzero" #:fill "bfill")) (series "one"))',
+        'twos': '(priority (series "ones" #:prune 1) (series "two"))'
     }
