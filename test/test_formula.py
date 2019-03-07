@@ -10,6 +10,7 @@ from tshistory.testutil import assert_df, assert_hist
 
 from tshistory_formula.registry import func, FUNCS
 from tshistory_formula.interpreter import jsontypes
+from tshistory_formula.editor import fancypresenter
 
 
 def utcdt(*dtargs):
@@ -596,3 +597,36 @@ def test_convert_alias(engine, tsh):
         'ones': '(add (* 3.1416 (series "groundzero" #:fill "bfill")) (series "one"))',
         'twos': '(priority (series "ones" #:prune 1) (series "two"))'
     }
+
+
+def test_editor_table_callback(engine, tsh):
+    groundzero = pd.Series(
+        [0, 0, 0],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+    )
+    one = pd.Series(
+        [1, 1, 1],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.insert(engine, groundzero, 'groundzero-a', 'Babar')
+    tsh.insert(engine, one, 'one-a', 'Celeste')
+
+    tsh.register_formula(
+        engine,
+        'editor-1',
+        '(add (* 3.1416 (series "groundzero-a" #:fill "bfill" #:prune 1)) (series "one-a"))',
+    )
+
+    presenter = fancypresenter(engine, tsh, 'editor-1', {})
+    info = [
+        {
+            k: v for k, v in info.items() if k != 'ts'
+        }
+        for info in presenter.buildinfo()
+    ]
+    assert info == [
+        {'coef': 'x 3.1416', 'keywords': 'fill:bfill, prune:1',
+         'name': 'groundzero-a', 'type': 'primary'},
+        {'coef': 'x 1', 'keywords': '-', 'name': 'one-a', 'type': 'primary'},
+        {'coef': 'x 1', 'name': 'editor-1', 'type': 'formula: add'}
+    ]
