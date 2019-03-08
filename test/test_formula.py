@@ -597,6 +597,8 @@ def test_convert_alias(engine, tsh):
         'ones': '(add (* 3.1416 (series "groundzero" #:fill "bfill")) (series "one"))',
         'twos': '(priority (series "ones" #:prune 1) (series "two"))'
     }
+    assert tsh.formula(engine, 'ones') == tsh.formula_map['ones']
+    assert tsh.formula(engine, 'twos') == tsh.formula_map['twos']
 
 
 def test_editor_table_callback(engine, tsh):
