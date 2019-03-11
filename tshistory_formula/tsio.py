@@ -128,7 +128,7 @@ class TimeSerie(BaseTS):
                 deltabefore,
                 deltaafter,
                 diffmode
-            )
+            ) or {}
             for name in series
         }
 
