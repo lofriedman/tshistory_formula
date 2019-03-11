@@ -146,7 +146,7 @@ class TimeSerie(BaseTS):
         }
 
         return {
-            idate: i.evaluate(formula, idate)
+            idate: i.evaluate(formula, idate, name)
             for idate in sorted(idates)
         }
 

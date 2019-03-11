@@ -89,6 +89,8 @@ class HistoryInterpreter(Interpreter):
         ts = pd.Series(name=name)
         return ts
 
-    def evaluate(self, text, idate):
+    def evaluate(self, text, idate, name):
         self.env['__idate__'] = idate
-        return evaluate(text, self.env)
+        ts = evaluate(text, self.env)
+        ts.name = name
+        return ts
