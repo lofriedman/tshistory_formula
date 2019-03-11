@@ -266,6 +266,3 @@ class TimeSerie(BaseTS):
                 alias, text,
                 False
             )
-
-        cn.execute(f'delete from "{self.namespace}-alias".arithmetic')
-        cn.execute(f'delete from "{self.namespace}-alias".priority')
