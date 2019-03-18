@@ -16,6 +16,7 @@ setup(name='tshistory_formula',
       ],
       entry_points={'tshistory.subcommands': [
           'convert-aliases=tshistory_formula.cli:convert_aliases',
+          'compare-aliases=tshistory_formula.cli:compare_aliases',
           'ingest-formulas=tshistory_formula.cli:ingest_formulas',
           'shell=tshistory_formula.cli:shell'
       ]},
