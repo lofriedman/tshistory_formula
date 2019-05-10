@@ -3,13 +3,13 @@ from collections import defaultdict
 from sqlalchemy import select
 from psyl.lisp import parse, serialize
 
-from tshistory_alias.tsio import TimeSerie as BaseTS
+from tshistory_alias.tsio import timeseries as basets
 
 from tshistory_formula.schema import formula_schema
 from tshistory_formula import interpreter
 
 
-class TimeSerie(BaseTS):
+class timeseries(basets):
     formula_map = None
 
     def __init__(self, namespace='tsh'):
@@ -94,16 +94,17 @@ class TimeSerie(BaseTS):
 
         return super().get(cn, name, **kw)
 
-    def get_history(self, cn, name,
-                    from_insertion_date=None,
-                    to_insertion_date=None,
-                    from_value_date=None,
-                    to_value_date=None,
-                    deltabefore=None,
-                    deltaafter=None,
-                    diffmode=False):
+    def history(self, cn, name,
+                from_insertion_date=None,
+                to_insertion_date=None,
+                from_value_date=None,
+                to_value_date=None,
+                deltabefore=None,
+                deltaafter=None,
+                diffmode=False,
+                _keep_nans=False):
         if self.type(cn, name) != 'formula':
-            return super().get_history(
+            return super().history(
                 cn, name,
                 from_insertion_date,
                 to_insertion_date,
@@ -111,7 +112,8 @@ class TimeSerie(BaseTS):
                 to_value_date,
                 deltabefore,
                 deltaafter,
-                diffmode
+                diffmode,
+                _keep_nans
             )
 
         assert not diffmode
@@ -119,7 +121,7 @@ class TimeSerie(BaseTS):
         formula = self.formula_map[name]
         series = self.find_series(cn, parse(formula))
         histmap = {
-            name: self.get_history(
+            name: self.history(
                 cn, name,
                 from_insertion_date,
                 to_insertion_date,

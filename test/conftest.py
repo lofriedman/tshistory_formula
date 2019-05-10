@@ -1,12 +1,12 @@
 from pathlib import Path
 import pytest
 
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine
 
 from pytest_sa_pg import db
 from click.testing import CliRunner
 
-from tshistory import command
+from tshistory import cli as command
 from tshistory.schema import (
     init_schemas,
     reset_schemas,
@@ -14,7 +14,7 @@ from tshistory.schema import (
 )
 from tshistory_alias.schema import alias_schema
 from tshistory_formula.schema import formula_schema
-from tshistory_formula.tsio import TimeSerie
+from tshistory_formula.tsio import timeseries
 
 
 DATADIR = Path(__file__).parent / 'data'
@@ -30,15 +30,13 @@ def engine(request):
     alias_schema()
     formula_schema()
     reset_schemas(e)
-    init_schemas(e, MetaData())
+    init_schemas(e)
     return e
 
 
 @pytest.fixture(scope='session')
 def tsh(request, engine):
-    tsh = TimeSerie()
-    tsh._testing = True
-    return tsh
+    return timeseries()
 
 
 @pytest.fixture

@@ -327,7 +327,7 @@ def test_history(engine, tsh):
             tsh.insert(engine, ts, 'h' + name, 'Babar',
                        _insertion_date=idate)
 
-    h = tsh.get_history(engine, 'h-addition')
+    h = tsh.history(engine, 'h-addition')
     assert_hist("""
 insertion_date             value_date
 2019-01-01 00:00:00+00:00  2018-01-01    2.0
@@ -341,7 +341,7 @@ insertion_date             value_date
                            2018-01-03    6.0
 """, h)
 
-    h = tsh.get_history(
+    h = tsh.history(
         engine, 'h-addition',
         from_insertion_date=utcdt(2019, 1, 2),
         to_insertion_date=utcdt(2019, 1, 2),
@@ -369,7 +369,7 @@ insertion_date             value_date
         tsh.insert(engine, ts, 'hz', 'Babar',
                    _insertion_date=idate)
 
-    h = tsh.get_history(engine, 'h-priority')
+    h = tsh.history(engine, 'h-priority')
     assert_hist("""
 insertion_date             value_date
 2019-01-01 00:00:00+00:00  2018-01-01     2.0
@@ -408,7 +408,7 @@ def test_staircase(engine, tsh):
             tsh.insert(engine, ts, 's' + name, 'Babar',
                        _insertion_date=idate)
 
-    ts = tsh.get_delta(engine, 's-addition', delta=pd.Timedelta(days=1))
+    ts = tsh.staircase(engine, 's-addition', delta=pd.Timedelta(days=1))
     assert_df("""
 2018-01-02    1.0
 2018-01-03    2.0

@@ -3,7 +3,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 from tshistory.util import find_dburi
 
-from tshistory_formula.tsio import TimeSerie
+from tshistory_formula.tsio import timeseries
 
 
 @click.command(name='convert-aliases')
@@ -11,7 +11,7 @@ from tshistory_formula.tsio import TimeSerie
 @click.option('--namespace', default='tsh')
 def convert_aliases(dburi, namespace='tsh'):
     engine = create_engine(find_dburi(dburi))
-    tsh = TimeSerie(namespace)
+    tsh = timeseries(namespace)
     with engine.begin() as cn:
         tsh.convert_aliases(cn)
 
@@ -28,7 +28,7 @@ def ingest_formulas(dburi, formula_file, strict=False, namespace='tsh'):
     """
     engine = create_engine(find_dburi(dburi))
     df = pd.read_csv(formula_file)
-    tsh = TimeSerie(namespace)
+    tsh = timeseries(namespace)
     with engine.begin() as cn:
         for row in df.itertuples():
             print('ingesting', row.name)
@@ -46,5 +46,5 @@ def ingest_formulas(dburi, formula_file, strict=False, namespace='tsh'):
 def shell(db_uri, namespace='tsh'):
     e = create_engine(find_dburi(db_uri))
 
-    tsh = TimeSerie(namespace)
+    tsh = timeseries(namespace)
     import pdb; pdb.set_trace()
