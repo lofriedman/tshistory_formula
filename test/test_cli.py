@@ -85,5 +85,5 @@ def test_ingest(engine, cli, tsh, datadir):
 
     tsh._resetcaches()
 
-    assert tsh.isformula(engine, 'ones-imported')
-    assert tsh.isformula(engine, 'twos-imported')
+    assert tsh.formula(engine, 'ones-imported')
+    assert tsh.formula(engine, 'twos-imported')

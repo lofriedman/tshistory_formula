@@ -593,12 +593,12 @@ def test_convert_alias(engine, tsh):
 2019-01-05 00:00:00+00:00    2.0
 """, ts)
 
-    assert tsh.formula_map == {
-        'ones': '(add (* 3.1416 (series "groundzero" #:fill "bfill")) (series "one"))',
-        'twos': '(priority (series "ones" #:prune 1) (series "two"))'
-    }
-    assert tsh.formula(engine, 'ones') == tsh.formula_map['ones']
-    assert tsh.formula(engine, 'twos') == tsh.formula_map['twos']
+    assert tsh.formula(engine, 'ones') == (
+        '(add (* 3.1416 (series "groundzero" #:fill "bfill")) (series "one"))'
+    )
+    assert tsh.formula(engine, 'twos') == (
+        '(priority (series "ones" #:prune 1) (series "two"))'
+    )
 
 
 def test_editor_table_callback(engine, tsh):

@@ -10,17 +10,11 @@ from tshistory_formula import interpreter
 
 
 class timeseries(basets):
-    formula_map = None
 
     def __init__(self, namespace='tsh'):
         super().__init__(namespace)
         self.formula_schema = formula_schema(namespace)
         self.formula_schema.define()
-        self.formula_map = {}
-
-    def _resetcaches(self):
-        self.formula_map.clear()
-        super()._resetcaches()
 
     def find_series(self, cn, stree):
         smap = {}
@@ -36,7 +30,7 @@ class timeseries(basets):
         return smap
 
     def register_formula(self, cn, name, formula, reject_unkown=True):
-        assert not self.isformula(cn, name), f'`{name}` already exists'
+        assert not self.formula(cn, name), f'`{name}` already exists'
         # basic syntax check
         smap = self.find_series(
             cn,
@@ -55,39 +49,29 @@ class timeseries(basets):
             )
         )
 
-    def isformula(self, cn, name):
-        if name in self.formula_map:
-            return True
+    def formula(self, cn, name):
         table = self.formula_schema.formula
         formula = cn.execute(
             select([table.c.text]).where(
                 table.c.name==name
             )
         ).scalar()
-        if formula:
-            self.formula_map[name] = formula
-        return bool(formula)
-
-    def formula(self, cn, name):
-        if not self.isformula(cn, name):
-            return
-
-        return self.formula_map[name]
+        return formula
 
     def type(self, cn, name):
-        if self.isformula(cn, name):
+        if self.formula(cn, name):
             return 'formula'
 
         return super().type(cn, name)
 
     def exists(self, cn, name):
-        return super().exists(cn, name) or self.isformula(cn, name)
+        return super().exists(cn, name) or self.formula(cn, name)
 
     def get(self, cn, name, **kw):
-        if self.isformula(cn, name):
-            text = self.formula_map[name]
+        formula = self.formula(cn, name)
+        if formula:
             i = interpreter.Interpreter(cn, self, kw)
-            ts = i.evaluate(text)
+            ts = i.evaluate(formula)
             if ts is not None:
                 ts.name = name
             return ts
@@ -118,7 +102,7 @@ class timeseries(basets):
 
         assert not diffmode
 
-        formula = self.formula_map[name]
+        formula = self.formula(cn, name)
         series = self.find_series(cn, parse(formula))
         histmap = {
             name: self.history(
@@ -213,7 +197,7 @@ class timeseries(basets):
             arith[row.alias].append(row)
 
         for alias, series in arith.items():
-            if self.isformula(cn, alias):
+            if self.formula(cn, alias):
                 print(f'skipping known formula `{alias}`')
                 continue
             form = ['(add']
@@ -246,7 +230,7 @@ class timeseries(basets):
             prio[row.alias].append(row)
 
         for alias, series in prio.items():
-            if self.isformula(cn, alias):
+            if self.formula(cn, alias):
                 print(f'skipping known formula `{alias}`')
                 continue
             series.sort(key=lambda row: row.priority)
