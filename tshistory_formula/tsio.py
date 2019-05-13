@@ -58,6 +58,15 @@ class timeseries(basets):
         ).scalar()
         return formula
 
+    def list_series(self, cn):
+        series = super().list_series(cn)
+        sql = f'select name from "{self.namespace}-formula".formula'
+        series.update({
+            name: 'formula'
+            for name, in cn.execute(sql)
+        })
+        return series
+
     def type(self, cn, name):
         if self.formula(cn, name):
             return 'formula'

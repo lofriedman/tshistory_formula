@@ -59,6 +59,10 @@ def test_base_api(engine, tsh):
     tsh.register_formula(engine, 'test_product_a', '(* (series "test") 1.5)', False)
     tsh.register_formula(engine, 'test_product_b', '(* 2 (series "test"))', False)
 
+    series = tsh.list_series(engine)
+    assert series['test'] == 'primary'
+    assert series['test_product_a'] == 'formula'
+
     plus = tsh.get(engine, 'test_product_a')
     assert_df("""
 2019-01-01    1.5
