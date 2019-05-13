@@ -213,6 +213,9 @@ class timeseries(basets):
             arith[row.alias].append(row)
 
         for alias, series in arith.items():
+            if self.isformula(cn, alias):
+                print(f'skipping known formula `{alias}`')
+                continue
             form = ['(add']
             for idx, row in enumerate(series):
                 if row.coefficient != 1:
@@ -243,6 +246,9 @@ class timeseries(basets):
             prio[row.alias].append(row)
 
         for alias, series in prio.items():
+            if self.isformula(cn, alias):
+                print(f'skipping known formula `{alias}`')
+                continue
             series.sort(key=lambda row: row.priority)
             form = ['(priority']
             for idx, row in enumerate(series):
