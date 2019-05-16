@@ -35,6 +35,16 @@ def test_base_api(engine, tsh):
     tsh.register_formula(engine, 'test_plus_two', '(+ (series "test") 2)', False)
     tsh.register_formula(engine, 'test_three_plus', '(+ 3 (series "test"))', False)
 
+    with pytest.raises(AssertionError):
+        tsh.register_formula(engine, 'test_plus_two', '(+ (series "test") 2)',
+                             reject_unkown=False,
+                             update=False)
+    # accept an update
+    tsh.register_formula(engine, 'test_plus_two', '(+ (series "test") 2)',
+                         reject_unkown=False,
+                         update=True)
+
+
     test = pd.Series(
         [1, 2, 3],
         index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')

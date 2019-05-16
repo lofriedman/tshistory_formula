@@ -29,8 +29,10 @@ class timeseries(basets):
 
         return smap
 
-    def register_formula(self, cn, name, formula, reject_unkown=True):
-        assert not self.formula(cn, name), f'`{name}` already exists'
+    def register_formula(self, cn, name, formula,
+                         reject_unkown=True, update=False):
+        if not update:
+            assert not self.formula(cn, name), f'`{name}` already exists'
         # basic syntax check
         smap = self.find_series(
             cn,
@@ -42,11 +44,15 @@ class timeseries(basets):
                 f'Formula `{name}` refers to unknown series '
                 f'{", ".join("`%s`" % s for s in badseries)}'
             )
+        sql = (f'insert into "{self.namespace}-formula".formula '
+               '(name, text) '
+               'values (%(name)s, %(text)s) '
+               'on conflict (name) do update '
+               'set text = %(text)s')
         cn.execute(
-            self.formula_schema.formula.insert().values(
-                name=name,
-                text=formula
-            )
+            sql,
+            name=name,
+            text=formula
         )
 
     def formula(self, cn, name):
