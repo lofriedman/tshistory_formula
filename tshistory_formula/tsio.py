@@ -30,7 +30,7 @@ class timeseries(basets):
         return smap
 
     def register_formula(self, cn, name, formula,
-                         reject_unkown=True, update=False):
+                         reject_unknown=True, update=False):
         if not update:
             assert not self.formula(cn, name), f'`{name}` already exists'
         # basic syntax check
@@ -38,7 +38,7 @@ class timeseries(basets):
             cn,
             parse(formula)
         )
-        if not all(smap.values()) and reject_unkown:
+        if not all(smap.values()) and reject_unknown:
             badseries = [k for k, v in smap.items() if not v]
             raise ValueError(
                 f'Formula `{name}` refers to unknown series '

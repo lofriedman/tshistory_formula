@@ -37,11 +37,11 @@ def test_base_api(engine, tsh):
 
     with pytest.raises(AssertionError):
         tsh.register_formula(engine, 'test_plus_two', '(+ (series "test") 2)',
-                             reject_unkown=False,
+                             reject_unknown=False,
                              update=False)
     # accept an update
     tsh.register_formula(engine, 'test_plus_two', '(+ (series "test") 2)',
-                         reject_unkown=False,
+                         reject_unknown=False,
                          update=True)
 
 
