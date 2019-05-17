@@ -1,20 +1,13 @@
 from collections import defaultdict
 
-from sqlalchemy import select
 from psyl.lisp import parse, serialize
 
 from tshistory_alias.tsio import timeseries as basets
 
-from tshistory_formula.schema import formula_schema
 from tshistory_formula import interpreter
 
 
 class timeseries(basets):
-
-    def __init__(self, namespace='tsh'):
-        super().__init__(namespace)
-        self.formula_schema = formula_schema(namespace)
-        self.formula_schema.define()
 
     def find_series(self, cn, stree):
         smap = {}
@@ -44,7 +37,7 @@ class timeseries(basets):
                 f'Formula `{name}` refers to unknown series '
                 f'{", ".join("`%s`" % s for s in badseries)}'
             )
-        sql = (f'insert into "{self.namespace}-formula".formula '
+        sql = (f'insert into "{self.namespace}".formula '
                '(name, text) '
                'values (%(name)s, %(text)s) '
                'on conflict (name) do update '
@@ -56,17 +49,15 @@ class timeseries(basets):
         )
 
     def formula(self, cn, name):
-        table = self.formula_schema.formula
         formula = cn.execute(
-            select([table.c.text]).where(
-                table.c.name==name
-            )
+            f'select text from "{self.namespace}".formula where name = %(name)s',
+            name=name
         ).scalar()
         return formula
 
     def list_series(self, cn):
         series = super().list_series(cn)
-        sql = f'select name from "{self.namespace}-formula".formula'
+        sql = f'select name from "{self.namespace}".formula'
         series.update({
             name: 'formula'
             for name, in cn.execute(sql)
@@ -153,9 +144,8 @@ class timeseries(basets):
 
     def rename(self, cn, oldname, newname):
         # read all formulas and parse them ...
-        table = self.formula_schema.formula
         formulas = cn.execute(
-            select([table.c.name, table.c.text])
+            f'select name, text from "{self.namespace}".formula'
         ).fetchall()
         errors = []
 
@@ -189,12 +179,14 @@ class timeseries(basets):
 
             newtree = edit(tree, oldname, newname)
             newtext = serialize(newtree)
-            sql = table.update().where(
-                table.c.name == fname
-            ).values(
-                text=newtext
+            sql = (f'update "{self.namespace}".formula '
+                   'set text = %(text)s '
+                   'where name = %(name)s')
+            cn.execute(
+                sql,
+                text=newtext,
+                name=fname
             )
-            cn.execute(sql)
 
         if errors:
             raise ValueError(
@@ -204,8 +196,8 @@ class timeseries(basets):
         super().rename(cn, oldname, newname)
 
     def convert_aliases(self, cn):
-        sqla = f'select * from "{self.namespace}-alias".arithmetic'
-        sqlp = f'select * from "{self.namespace}-alias".priority'
+        sqla = f'select * from "{self.namespace}".arithmetic'
+        sqlp = f'select * from "{self.namespace}".priority'
 
         arith = defaultdict(list)
         for row in cn.execute(sqla).fetchall():
