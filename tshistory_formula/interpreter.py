@@ -14,8 +14,10 @@ def series_get(i,
                fill: Optional[str]=None,
                prune: Optional[str]=None) -> pd.Series:
     ts = i.get(name)
-    if ts is None and not i.tsh.exists(i.cn, name):
-        raise ValueError(f'No such series `{name}`')
+    if ts is None:
+        if not i.tsh.exists(i.cn, name):
+            raise ValueError(f'No such series `{name}`')
+        ts = pd.Series(name=name)
     ts.options = {
         'fillopt': fill,
         'prune': prune

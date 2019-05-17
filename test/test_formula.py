@@ -60,8 +60,8 @@ def test_base_api(engine, tsh):
 2019-01-03    5.0
 """, twomore)
 
-    with pytest.raises(AttributeError):
-        nope = tsh.get(engine, 'test_plus_two', revision_date=utcdt(2018, 1, 1))
+    nope = tsh.get(engine, 'test_plus_two', revision_date=utcdt(2018, 1, 1))
+    assert len(nope) == 0
 
     evenmore = tsh.get(engine, 'test_three_plus')
     assert_df("""
