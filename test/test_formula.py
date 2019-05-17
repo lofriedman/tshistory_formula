@@ -50,7 +50,8 @@ def test_base_api(engine, tsh):
         index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
     )
 
-    tsh.insert(engine, test, 'test', 'Babar')
+    tsh.insert(engine, test, 'test', 'Babar',
+               _insertion_date=utcdt(2019, 1, 1))
 
     twomore = tsh.get(engine, 'test_plus_two')
     assert_df("""
@@ -58,6 +59,9 @@ def test_base_api(engine, tsh):
 2019-01-02    4.0
 2019-01-03    5.0
 """, twomore)
+
+    with pytest.raises(AttributeError):
+        nope = tsh.get(engine, 'test_plus_two', revision_date=utcdt(2018, 1, 1))
 
     evenmore = tsh.get(engine, 'test_three_plus')
     assert_df("""
