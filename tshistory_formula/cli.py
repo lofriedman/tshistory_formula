@@ -1,8 +1,10 @@
 import click
 import pandas as pd
 from dateutil.relativedelta import relativedelta
+from pathlib import Path
+
 from sqlalchemy import create_engine
-from tshistory.util import find_dburi
+from tshistory.util import find_dburi, sqlfile
 
 from tshistory_formula.tsio import timeseries
 
@@ -14,6 +16,11 @@ from tshistory_formula.tsio import timeseries
 @click.option('--namespace', default='tsh')
 def convert_aliases(dburi, namespace='tsh'):
     engine = create_engine(find_dburi(dburi))
+
+    SCHEMA = Path(__file__).parent / 'schema.sql'
+    with engine.begin() as cn:
+        cn.execute(sqlfile(SCHEMA, ns=namespace))
+
     tsh = timeseries(namespace)
     with engine.begin() as cn:
         tsh.convert_aliases(cn)
