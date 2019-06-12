@@ -32,18 +32,30 @@ def convert_aliases(dburi, skip_schema=False, namespace='tsh'):
 @click.argument('dburi')
 @click.option('--staircase', is_flag=True, default=False)
 @click.option('--series')
+@click.option('--match')
+@click.option('--processes', default=8)
 @click.option('--namespace', default='tsh')
-def compare_aliases(dburi, staircase=False, series=None, namespace='tsh'):
+def compare_aliases(dburi, staircase=False, series=None, match=None,
+                    processes=8, namespace='tsh'):
     from tshistory_alias.tsio import timeseries as TSA
     from time import time
     uri = find_dburi(dburi)
     engine = create_engine(uri)
-    if series is None:
+    if match is not None:
         series = [name for name, in engine.execute(
-            f'select name from "{namespace}-formula".formula'
+            f'select name from "{namespace}".formula '
+            f"where name like '%%{match}%%'"
+        ).fetchall()]
+    elif series is None:
+        series = [name for name, in engine.execute(
+            f'select name from "{namespace}".formula'
         ).fetchall()]
     else:
         series = [series]
+
+    print(f'computing {len(series)} series')
+
+    assert series
 
     def run(idx, uri, series, fail=False):
         tsha = TSA()
@@ -52,7 +64,7 @@ def compare_aliases(dburi, staircase=False, series=None, namespace='tsh'):
         if staircase:
             delta = relativedelta(days=1)
             sca = tsha.get
-            scf = tshf.get_delta
+            scf = tshf.staircase
         else:
             delta = None
             sca = tsha.get
@@ -61,14 +73,16 @@ def compare_aliases(dburi, staircase=False, series=None, namespace='tsh'):
             status = f'[{num}/{len(series)}]'
             try:
                 with engine.begin() as cn:
+                    if not tsha.exists(cn, name):
+                        print(f'no such alias `{name}`')
+                        continue
                     t0 = time()
                     tsa = sca(cn, name, delta=delta)
                     t1 = time() - t0
-                    if len(tsa) == 0:
-                        continue
                     t2 = time()
                     tsf = scf(cn, name, delta=delta)
                     t3 = time() - t2
+                assert len(tsa) == len(tsf)
                 assert (tsf == tsa).all()
             except AssertionError:
                 print(f'{idx} {name}  discrepancy a/f {len(tsa)} {len(tsf)} {status}')
