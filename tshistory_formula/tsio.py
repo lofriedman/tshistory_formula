@@ -204,17 +204,21 @@ class timeseries(basets):
             arith[row.alias].append(row)
 
         for alias, series in arith.items():
-            if self.formula(cn, alias):
-                print(f'skipping known formula `{alias}`')
-                continue
             form = ['(add']
             for idx, row in enumerate(series):
                 if row.coefficient != 1:
                     form.append(f' (* {row.coefficient}')
+
                 form.append(f' (series "{row.serie}"')
                 if row.fillopt:
-                    form.append(f' #:fill "{row.fillopt}"')
+                    opt = row.fillopt
+                    if opt.startswith('fill='):
+                        value = int(opt[opt.index('=') + 1:])
+                        form.append(f' #:fill {value}')
+                    else:
+                        form.append(f' #:fill "{opt}"')
                 form.append(')')
+
                 if row.coefficient != 1:
                     form.append(')')
             form.append(')')
@@ -229,7 +233,7 @@ class timeseries(basets):
             self.register_formula(
                 cn,
                 alias, text,
-                False
+                False, True
             )
 
         prio = defaultdict(list)
@@ -237,18 +241,17 @@ class timeseries(basets):
             prio[row.alias].append(row)
 
         for alias, series in prio.items():
-            if self.formula(cn, alias):
-                print(f'skipping known formula `{alias}`')
-                continue
             series.sort(key=lambda row: row.priority)
             form = ['(priority']
             for idx, row in enumerate(series):
                 if row.coefficient != 1:
                     form.append(f' (* {row.coefficient}')
+
                 form.append(f' (series "{row.serie}"')
                 if row.prune:
                     form.append(f' #:prune {row.prune}')
                 form.append(')')
+
                 if row.coefficient != 1:
                     form.append(')')
             form.append(')')
@@ -263,5 +266,5 @@ class timeseries(basets):
             self.register_formula(
                 cn,
                 alias, text,
-                False
+                False, True
             )
