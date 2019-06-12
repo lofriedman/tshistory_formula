@@ -13,13 +13,15 @@ from tshistory_formula.tsio import timeseries
 
 @click.command(name='convert-aliases')
 @click.argument('dburi')
+@click.option('--skip-schema', is_flag=True, default=False)
 @click.option('--namespace', default='tsh')
-def convert_aliases(dburi, namespace='tsh'):
+def convert_aliases(dburi, skip_schema=False, namespace='tsh'):
     engine = create_engine(find_dburi(dburi))
 
-    SCHEMA = Path(__file__).parent / 'schema.sql'
-    with engine.begin() as cn:
-        cn.execute(sqlfile(SCHEMA, ns=namespace))
+    if not skip_schema:
+        SCHEMA = Path(__file__).parent / 'schema.sql'
+        with engine.begin() as cn:
+            cn.execute(sqlfile(SCHEMA, ns=namespace))
 
     tsh = timeseries(namespace)
     with engine.begin() as cn:
