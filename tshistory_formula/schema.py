@@ -1,7 +1,7 @@
 from pathlib import Path
 
+from sqlhelp import sqlfile
 from tshistory_alias.schema import alias_schema
-from tshistory.util import sqlfile
 
 
 SCHEMA = Path(__file__).parent / 'schema.sql'

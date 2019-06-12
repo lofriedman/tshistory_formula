@@ -4,7 +4,8 @@ from dateutil.relativedelta import relativedelta
 from pathlib import Path
 
 from sqlalchemy import create_engine
-from tshistory.util import find_dburi, sqlfile
+from sqlhelp import sqlfile
+from tshistory.util import find_dburi
 
 from tshistory_formula.tsio import timeseries
 
