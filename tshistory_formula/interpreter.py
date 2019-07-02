@@ -1,5 +1,6 @@
 import json
 import typing
+import inspect
 from typing import Optional
 from functools import partial
 
@@ -13,7 +14,7 @@ def series_get(i,
                name: str,
                fill: Optional[str]=None,
                prune: Optional[str]=None) -> pd.Series:
-    ts = i.get(name)
+    ts = i.get(name, i.getargs)
     if ts is None:
         if not i.tsh.exists(i.cn, name):
             raise ValueError(f'No such series `{name}`')
@@ -61,11 +62,20 @@ class Interpreter:
         self.cn = cn
         self.tsh = tsh
         self.getargs = getargs
-        self.env = Env(registry.FUNCS)
+        # bind funcs to the interpreter
+        funcs = {}
+        for name, func in registry.FUNCS.items():
+            if '__interpreter__' in inspect.getfullargspec(func).args:
+                func = partial(func, self)
+            funcs[name] = func
+        self.env = Env(funcs)
         self.env['series'] = partial(series_get, self)
 
-    def get(self, name):
-        return self.tsh.get(self.cn, name, **self.getargs)
+    def get(self, name, getargs):
+        # `getarg` likey comes from self.getargs
+        # but we allow it being modified hence
+        # it comes back as a parameter there
+        return self.tsh.get(self.cn, name, **getargs)
 
     def evaluate(self, text):
         return evaluate(text, self.env)
@@ -78,7 +88,9 @@ class HistoryInterpreter(Interpreter):
         super().__init__(*args)
         self.histories = histories
 
-    def get(self, name):
+    def get(self, name, _getargs):
+        # getargs is moot there because histories
+        # have been precomputed
         idate = self.env.get('__idate__')
         # get the nearest inferior or equal for the given
         # insertion date

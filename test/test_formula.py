@@ -1,6 +1,6 @@
 import math
 import json
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 import pandas as pd
 
 import pytest
@@ -467,6 +467,56 @@ def test_new_func(engine, tsh):
 
     # cleanup
     FUNCS.pop('identity')
+
+
+def test_ifunc(engine, tsh):
+
+    @func('shifted')
+    def shifted(__interpreter__, name, days=0):
+        args = __interpreter__.getargs.copy()
+        fromdate = args.get('from_value_date')
+        todate = args.get('to_value_date')
+        if fromdate:
+            args['from_value_date'] = fromdate + timedelta(days=days)
+        if todate:
+            args['to_value_date'] = todate + timedelta(days=days)
+
+        return __interpreter__.get(name, args)
+
+    tsh.register_formula(
+        engine,
+        'shifting',
+        '(shifted "shiftme" #:days -1)',
+        False
+    )
+
+    ts = pd.Series(
+        [1, 2, 3, 4, 5],
+        index=pd.date_range(dt(2019, 1, 1), periods=5, freq='D')
+    )
+    tsh.insert(engine, ts, 'shiftme', 'Babar')
+
+    ts = tsh.get(engine, 'shifting')
+    assert_df("""
+2019-01-01    1.0
+2019-01-02    2.0
+2019-01-03    3.0
+2019-01-04    4.0
+2019-01-05    5.0
+""", ts)
+
+    ts = tsh.get(
+        engine, 'shifting',
+        from_value_date=dt(2019, 1, 3),
+        to_value_date=dt(2019, 1, 4)
+    )
+    assert_df("""
+2019-01-02    2.0
+2019-01-03    3.0
+""", ts)
+
+    # cleanup
+    FUNCS.pop('shifted')
 
 
 def test_types(tsh):
