@@ -515,6 +515,18 @@ def test_ifunc(engine, tsh):
 2019-01-03    3.0
 """, ts)
 
+    # now, history
+
+    ts = pd.Series(
+        [1, 2, 3, 4, 5],
+        index=pd.date_range(dt(2019, 1, 2), periods=5, freq='D')
+    )
+    tsh.insert(engine, ts, 'shiftme', 'Babar')
+    hist = tsh.history(
+        engine, 'shifting'
+    )
+    assert hist == {}  # BAAD
+
     # cleanup
     FUNCS.pop('shifted')
 
