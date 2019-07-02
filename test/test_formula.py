@@ -8,7 +8,7 @@ import pytest
 from psyl import lisp
 from tshistory.testutil import assert_df, assert_hist
 
-from tshistory_formula.registry import func, FUNCS
+from tshistory_formula.registry import func, finder, FUNCS
 from tshistory_formula.interpreter import jsontypes
 from tshistory_formula.editor import fancypresenter
 
@@ -483,6 +483,12 @@ def test_ifunc(engine, tsh):
 
         return __interpreter__.get(name, args)
 
+    @finder('shifted')
+    def find_series(cn, tsh, stree):
+        return {
+            stree[1]: tsh.exists(cn, stree[1])
+        }
+
     tsh.register_formula(
         engine,
         'shifting',
@@ -494,7 +500,10 @@ def test_ifunc(engine, tsh):
         [1, 2, 3, 4, 5],
         index=pd.date_range(dt(2019, 1, 1), periods=5, freq='D')
     )
-    tsh.insert(engine, ts, 'shiftme', 'Babar')
+    tsh.insert(
+        engine, ts, 'shiftme', 'Babar',
+        _insertion_date=utcdt(2019, 1, 1)
+    )
 
     ts = tsh.get(engine, 'shifting')
     assert_df("""
@@ -521,11 +530,41 @@ def test_ifunc(engine, tsh):
         [1, 2, 3, 4, 5],
         index=pd.date_range(dt(2019, 1, 2), periods=5, freq='D')
     )
-    tsh.insert(engine, ts, 'shiftme', 'Babar')
+    tsh.insert(
+        engine, ts, 'shiftme', 'Babar',
+        _insertion_date=utcdt(2019, 1, 2)
+
+    )
     hist = tsh.history(
         engine, 'shifting'
     )
-    assert hist == {}  # BAAD
+    assert_hist("""
+insertion_date             value_date
+2019-01-01 00:00:00+00:00  2019-01-01    1.0
+                           2019-01-02    2.0
+                           2019-01-03    3.0
+                           2019-01-04    4.0
+                           2019-01-05    5.0
+2019-01-02 00:00:00+00:00  2019-01-01    1.0
+                           2019-01-02    1.0
+                           2019-01-03    2.0
+                           2019-01-04    3.0
+                           2019-01-05    4.0
+                           2019-01-06    5.0
+""", hist)
+
+    hist = tsh.history(
+        engine, 'shifting',
+        from_value_date=dt(2019, 1, 3),
+        to_value_date=dt(2019, 1, 4)
+    )
+    assert_hist("""
+insertion_date             value_date
+2019-01-01 00:00:00+00:00  2019-01-03    3.0
+                           2019-01-04    4.0
+2019-01-02 00:00:00+00:00  2019-01-03    2.0
+                           2019-01-04    3.0
+""", hist)
 
     # cleanup
     FUNCS.pop('shifted')

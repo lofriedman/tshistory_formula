@@ -5,22 +5,17 @@ from psyl.lisp import parse, serialize
 from tshistory_alias.tsio import timeseries as basets
 
 from tshistory_formula import interpreter
+from tshistory_formula.registry import FINDERS
+from tshistory_formula.finder import find_series
 
 
 class timeseries(basets):
 
     def find_series(self, cn, stree):
-        smap = {}
-        if stree[0] == 'series':
-            name = stree[1]
-            smap[name] = self.exists(cn, name)
-            return smap
-
-        for arg in stree[1:]:
-            if isinstance(arg, list):
-                smap.update(self.find_series(cn, arg))
-
-        return smap
+        name = stree[0]
+        if name in FINDERS:
+            return FINDERS[name](cn, self, stree)
+        return find_series(cn, self, stree)
 
     def register_formula(self, cn, name, formula,
                          reject_unknown=True, update=False):

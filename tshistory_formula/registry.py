@@ -1,5 +1,6 @@
 
 FUNCS = {}
+FINDERS = {}
 
 
 def func(name):
@@ -10,3 +11,11 @@ def func(name):
 
     return decorator
 
+
+def finder(name):
+
+    def decorator(func):
+        FINDERS[name] = func
+        return func
+
+    return decorator
