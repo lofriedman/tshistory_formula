@@ -10,28 +10,14 @@ from psyl.lisp import Env, evaluate
 from tshistory_formula import funcs, registry
 
 
-def series_get(i,
-               name: str,
-               fill: Optional[str]=None,
-               prune: Optional[str]=None) -> pd.Series:
-    ts = i.get(name, i.getargs)
-    if ts is None:
-        if not i.tsh.exists(i.cn, name):
-            raise ValueError(f'No such series `{name}`')
-        ts = pd.Series(name=name)
-    ts.options = {
-        'fillopt': fill,
-        'prune': prune
-    }
-    return ts
-
-
 class fjson(json.JSONEncoder):
 
     def default(self, o):
         try:
             return super().default(o)
         except TypeError:
+            if o is str:
+                return 'str'
             stro = str(o)
             if stro.startswith('typing'):
                 stro = stro.replace(
@@ -69,7 +55,6 @@ class Interpreter:
                 func = partial(func, self)
             funcs[name] = func
         self.env = Env(funcs)
-        self.env['series'] = partial(series_get, self)
 
     def get(self, name, getargs):
         # `getarg` likey comes from self.getargs

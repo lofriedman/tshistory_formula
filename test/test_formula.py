@@ -533,7 +533,11 @@ def test_types(tsh):
                      'min': 'typing.Union[int, NoneType]',
                      'return': 'Series',
                      'series': 'Series'},
-        'priority': {'return': 'Series', 'serieslist': 'Series'}
+        'priority': {'return': 'Series', 'serieslist': 'Series'},
+        'series': {'fill': 'typing.Union[str, NoneType]',
+                   'name': 'str',
+                   'prune': 'typing.Union[str, NoneType]',
+                   'return': 'Series'}
     } == json.loads(types)
 
 

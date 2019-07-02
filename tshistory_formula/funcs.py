@@ -6,6 +6,24 @@ from tshistory.util import SeriesServices
 from tshistory_formula.registry import func
 
 
+@func('series')
+def series(__interpreter__,
+           name: str,
+           fill: Optional[str]=None,
+           prune: Optional[str]=None) -> pd.Series:
+    i = __interpreter__
+    ts = i.get(name, i.getargs)
+    if ts is None:
+        if not i.tsh.exists(i.cn, name):
+            raise ValueError(f'No such series `{name}`')
+        ts = pd.Series(name=name)
+    ts.options = {
+        'fillopt': fill,
+        'prune': prune
+    }
+    return ts
+
+
 @func('+')
 def scalar_add(
         a: Union[int, float, pd.Series],
