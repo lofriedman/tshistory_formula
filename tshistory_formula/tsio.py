@@ -1,7 +1,8 @@
 from collections import defaultdict
+import json
 
 from psyl.lisp import parse, serialize
-
+from tshistory.util import tx
 from tshistory_alias.tsio import timeseries as basets
 
 from tshistory_formula import interpreter
@@ -136,6 +137,34 @@ class timeseries(basets):
             idate: i.evaluate(formula, idate, name)
             for idate in sorted(idates)
         }
+
+    def metadata(self, cn, name):
+        """Return metadata dict of timeserie."""
+        if self.type(cn, name) != 'formula':
+            return super().metadata(cn, name)
+
+        sql = (f'select metadata from "{self.namespace}".formula '
+               'where name = %(name)s')
+        meta = cn.execute(sql, name=name).scalar()
+        return meta
+
+    @tx
+    def update_metadata(self, cn, name, metadata, internal=False):
+        if self.type(cn, name) != 'formula':
+            return super().metadata(cn, seriename)
+
+        assert isinstance(metadata, dict)
+        meta = self.metadata(cn, name) or {}
+        meta.update(metadata)
+        sql = (f'update "{self.namespace}".formula as form '
+               'set metadata = %(metadata)s '
+               'where form.name = %(name)s')
+        cn.execute(
+            sql,
+            metadata=json.dumps(meta),
+            name=name
+        )
+
 
     def rename(self, cn, oldname, newname):
         # read all formulas and parse them ...

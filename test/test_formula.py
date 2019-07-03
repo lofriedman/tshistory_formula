@@ -91,6 +91,25 @@ def test_base_api(engine, tsh):
 2019-01-03    6.0
 """, plus)
 
+    m = tsh.metadata(engine, 'test_product_a')
+    assert m is None
+
+    tsh.update_metadata(engine, 'test_product_a', {'topic': 'spot price'})
+    m = tsh.metadata(engine, 'test_product_a')
+    assert m == {'topic': 'spot price'}
+
+    tsh.update_metadata(
+        engine, 'test_product_a', {
+            'topic': 'Spot Price',
+            'unit': '€'
+        }
+    )
+    m = tsh.metadata(engine, 'test_product_a')
+    assert m == {
+        'topic': 'Spot Price',
+        'unit': '€'
+    }
+
 
 def test_linear_combo(engine, tsh):
     tsh.register_formula(
