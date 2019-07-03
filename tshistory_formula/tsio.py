@@ -18,6 +18,7 @@ class timeseries(basets):
             return FINDERS[name](cn, self, stree)
         return find_series(cn, self, stree)
 
+    @tx
     def register_formula(self, cn, name, formula,
                          reject_unknown=True, update=False):
         if not update:
@@ -69,6 +70,7 @@ class timeseries(basets):
     def exists(self, cn, name):
         return super().exists(cn, name) or self.formula(cn, name)
 
+    @tx
     def get(self, cn, name, **kw):
         formula = self.formula(cn, name)
         if formula:
@@ -80,6 +82,7 @@ class timeseries(basets):
 
         return super().get(cn, name, **kw)
 
+    @tx
     def history(self, cn, name,
                 from_insertion_date=None,
                 to_insertion_date=None,
@@ -138,6 +141,7 @@ class timeseries(basets):
             for idate in sorted(idates)
         }
 
+    @tx
     def metadata(self, cn, name):
         """Return metadata dict of timeserie."""
         if self.type(cn, name) != 'formula':
@@ -165,7 +169,7 @@ class timeseries(basets):
             name=name
         )
 
-
+    @tx
     def rename(self, cn, oldname, newname):
         # read all formulas and parse them ...
         formulas = cn.execute(
@@ -219,6 +223,7 @@ class timeseries(basets):
 
         super().rename(cn, oldname, newname)
 
+    @tx
     def convert_aliases(self, cn):
         sqla = f'select * from "{self.namespace}".arithmetic'
         sqlp = f'select * from "{self.namespace}".priority'
