@@ -14,7 +14,7 @@ MAX_LENGTH = 15
 
 def roundup(ts):
     avg = ts.mean()
-    if avg != 0:
+    if avg != 0 and not pd.isnull(avg):
         ts = ts.round(max(2, int(-log10(abs(avg)))))
     return ts
 

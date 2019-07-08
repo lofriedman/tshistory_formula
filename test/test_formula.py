@@ -774,3 +774,19 @@ def test_editor_table_callback(engine, tsh):
         {'coef': 'x 1', 'keywords': '-', 'name': 'one-a', 'type': 'primary'},
         {'coef': 'x 1', 'name': 'editor-1', 'type': 'formula: add'}
     ]
+
+    # trigger an empty series
+    presenter = fancypresenter(engine, tsh, 'editor-1',
+                               {'from_value_date': utcdt(2019, 1, 4)})
+    info = [
+        {
+            k: v for k, v in info.items() if k != 'ts'
+        }
+        for info in presenter.buildinfo()
+    ]
+    assert info == [
+        {'coef': 'x 3.1416', 'keywords': 'fill:bfill, prune:1',
+         'name': 'groundzero-a', 'type': 'primary'},
+        {'coef': 'x 1', 'keywords': '-', 'name': 'one-a', 'type': 'primary'},
+        {'coef': 'x 1', 'name': 'editor-1', 'type': 'formula: add'}
+    ]
