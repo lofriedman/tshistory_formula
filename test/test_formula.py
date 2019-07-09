@@ -790,3 +790,41 @@ def test_editor_table_callback(engine, tsh):
         {'coef': 'x 1', 'keywords': '-', 'name': 'one-a', 'type': 'primary'},
         {'coef': 'x 1', 'name': 'editor-1', 'type': 'formula: add'}
     ]
+
+
+def test_editor_no_such_series(engine, tsh):
+    with pytest.raises(AssertionError):
+        presenter = fancypresenter(engine, tsh, 'no-such-series', {})
+
+
+def test_editor_new_operator(engine, tsh):
+    @func('identity')
+    def identity(series):
+        return series
+
+    tsh.register_formula(
+        engine,
+        'identity-2',
+        '(identity (series "id-b"))',
+        False
+    )
+
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.insert(engine, ts, 'id-b', 'Babar')
+
+    ts = tsh.get(engine, 'identity-2')
+    assert_df("""
+2019-01-01    1.0
+2019-01-02    2.0
+2019-01-03    3.0
+""", ts)
+
+    presenter = fancypresenter(engine, tsh, 'identity-2', {})
+    with pytest.raises(ValueError):
+        presenter.buildinfo()
+
+    # cleanup
+    FUNCS.pop('identity')

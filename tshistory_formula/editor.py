@@ -70,6 +70,7 @@ class fancypresenter:
     __slots__ = ('engine', 'tsh', 'name', 'i', 'stack', 'infos')
 
     def __init__(self, engine, tsh, seriesname, kw):
+        assert tsh.exists(engine, seriesname)
         self.engine = engine
         self.tsh = tsh
         self.name = seriesname
