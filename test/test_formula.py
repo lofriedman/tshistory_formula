@@ -798,33 +798,37 @@ def test_editor_no_such_series(engine, tsh):
 
 
 def test_editor_new_operator(engine, tsh):
-    @func('identity')
-    def identity(series):
-        return series
+    @func('genrandomseries')
+    def genrandomseries():
+        return pd.Series(
+            [1.0, 2.0, 3.0],
+            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
 
     tsh.register_formula(
         engine,
-        'identity-2',
-        '(identity (series "id-b"))',
+        'random',
+        '(genrandomseries)',
         False
     )
 
-    ts = pd.Series(
-        [1, 2, 3],
-        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
-    )
-    tsh.insert(engine, ts, 'id-b', 'Babar')
-
-    ts = tsh.get(engine, 'identity-2')
+    ts = tsh.get(engine, 'random')
     assert_df("""
 2019-01-01    1.0
 2019-01-02    2.0
 2019-01-03    3.0
 """, ts)
 
-    presenter = fancypresenter(engine, tsh, 'identity-2', {})
-    with pytest.raises(ValueError):
-        presenter.buildinfo()
+    presenter = fancypresenter(engine, tsh, 'random', {})
+    info = [
+        {
+            k: v for k, v in info.items() if k != 'ts'
+        }
+        for info in presenter.buildinfo()
+    ]
+    assert info == [
+        {'coef': 'x 1', 'name': 'random', 'type': 'formula: genrandomseries'}
+    ]
 
     # cleanup
-    FUNCS.pop('identity')
+    FUNCS.pop('genrandomseries')

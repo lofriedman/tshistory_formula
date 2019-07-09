@@ -20,6 +20,11 @@ def roundup(ts):
     return ts
 
 
+@editor_info('__default__')
+def default(builder, expr):
+    return
+
+
 def arith(builder, expr):
     # non-leaf
     operator = expr[0]
@@ -123,7 +128,7 @@ class fancypresenter:
         if operator in EDITORINFOS:
             EDITORINFOS[operator](self, expr)
         else:
-            raise ValueError(f'Unsupported operator `{operator}`')
+            EDITORINFOS['__default__'](self, expr)
 
 
 
