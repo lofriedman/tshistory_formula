@@ -7,6 +7,7 @@ import dash_html_components as html
 from psyl.lisp import parse, serialize
 
 from tshistory_formula import interpreter
+from tshistory_formula.registry import editor_info, EDITORINFOS
 
 
 MAX_LENGTH = 15
@@ -17,6 +18,51 @@ def roundup(ts):
     if avg != 0 and not pd.isnull(avg):
         ts = ts.round(max(2, int(-log10(abs(avg)))))
     return ts
+
+
+def arith(builder, expr):
+    # non-leaf
+    operator = expr[0]
+    omap = {'+': '+', '*': 'x'}
+    builder.lastinfo['coef'] = f'{omap[operator]} {float(expr[1])}'
+    builder.handle_rest(expr)
+
+editor_info('+')(arith)
+editor_info('*')(arith)
+
+
+def func(builder, expr):
+    # non-leaf
+    assert expr[0] in ('add', 'priority')
+    for subexpr in expr[1:]:
+        # all params of a func are series
+        with builder.series_scope(subexpr):
+            builder.buildinfo_expr(subexpr)
+
+editor_info('add')(func)
+editor_info('priority')(func)
+
+
+@editor_info('series')
+def series(builder, expr):
+    # leaf, because we're lazy
+    name = expr[1]
+    rest = expr[2:]
+    kw = ', '.join(
+        f'{k}:{v}'
+        for k, v in dict(
+                zip(rest[::2], rest[1::2])
+        ).items()
+    )
+    builder.lastinfo['keywords'] = kw or '-'
+    builder.lastinfo['name'] = name
+    stype = builder.tsh.type(builder.engine, name)
+    if stype == 'formula':
+        # extra mile: compute the top-level operator
+        formula = builder.tsh.formula(builder.engine, name)
+        op = parse(formula)[0]
+        stype = f'{stype}: {builder.opmap.get(op, op)}'
+    builder.lastinfo['type'] = stype
 
 
 class fancypresenter:
@@ -73,44 +119,11 @@ class fancypresenter:
             # leaf node, we have nothing to do
             return
         operator = expr[0]
-        if operator in '+*':
-            self.buildinfo_arith(expr)
-        elif operator == 'series':
-            self.buildinfo_series(expr)
-        elif operator in ('add', 'priority'):
-            self.buildinfo_func(expr)
+        if operator in EDITORINFOS:
+            EDITORINFOS[operator](self, expr)
         else:
             raise ValueError(f'Unsupported operator `{operator}`')
 
-    def buildinfo_arith(self, expr):
-        # non-leaf
-        operator = expr[0]
-        omap = {'+': '+', '*': 'x'}
-        self.lastinfo['coef'] = f'{omap[operator]} {float(expr[1])}'
-        self.handle_rest(expr)
-
-    def buildinfo_func(self, expr):
-        # non-leaf
-        assert expr[0] in ('add', 'priority')
-        for subexpr in expr[1:]:
-            # all params of a func are series
-            with self.series_scope(subexpr):
-                self.buildinfo_expr(subexpr)
-
-    def buildinfo_series(self, expr):
-        # leaf, because we're lazy
-        name = expr[1]
-        rest = expr[2:]
-        kw = ', '.join(f'{k}:{v}' for k, v in dict(zip(rest[::2], rest[1::2])).items())
-        self.lastinfo['keywords'] = kw or '-'
-        self.lastinfo['name'] = name
-        stype = self.tsh.type(self.engine, name)
-        if stype == 'formula':
-            # extra mile: compute the top-level operator
-            formula = self.tsh.formula(self.engine, name)
-            op = parse(formula)[0]
-            stype = f'{stype}: {self.opmap.get(op, op)}'
-        self.lastinfo['type'] = stype
 
 
 def build_url(base_url, name, fromdate, todate, author):
