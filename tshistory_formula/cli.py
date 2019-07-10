@@ -34,9 +34,11 @@ def convert_aliases(dburi, skip_schema=False, namespace='tsh'):
 @click.option('--staircase', is_flag=True, default=False)
 @click.option('--series')
 @click.option('--match')
+@click.option('--only-errors', is_flag=True, default=False)
 @click.option('--processes', default=8)
 @click.option('--namespace', default='tsh')
 def compare_aliases(dburi, staircase=False, series=None, match=None,
+                    only_errors=False,
                     processes=8, namespace='tsh'):
     from tshistory_alias.tsio import timeseries as TSA
     from time import time
@@ -87,6 +89,11 @@ def compare_aliases(dburi, staircase=False, series=None, match=None,
                 assert (tsf == tsa).all()
             except AssertionError:
                 print(f'{idx} {name}  discrepancy a/f {len(tsa)} {len(tsf)} {status}')
+                if only_errors:
+                    print('formula - alias :')
+                    diff = tsf - tsa
+                    with pd.option_context('display.max_rows', None):
+                        print(diff[~(diff==0)])
                 if not fail:
                     continue
                 raise
@@ -95,8 +102,9 @@ def compare_aliases(dburi, staircase=False, series=None, match=None,
                 if not fail:
                     continue
                 raise
-            print(f'{idx} {name} -> f time/a time : {round(t3/t1, 3)} '
-                  f'size : {len(tsa)} {status}')
+            if not only_errors:
+                print(f'{idx} {name} -> f time/a time : {round(t3/t1, 3)} '
+                      f'size : {len(tsa)} {status}')
 
     if len(series) == 1:
         run(0, uri, series, fail=True)
