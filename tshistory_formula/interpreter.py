@@ -81,8 +81,12 @@ class HistoryInterpreter(Interpreter):
         # insertion date
         assert self.histories
         hist = self.histories[name]
+        tzaware = idate.tzinfo is not None
         for date in reversed(list(hist.keys())):
-            if idate >= date:
+            compdate = date
+            if not tzaware:
+                compdate = date.replace(tzinfo=None)
+            if idate >= compdate:
                 return hist[date]
 
         ts = pd.Series(name=name)

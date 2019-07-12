@@ -91,7 +91,7 @@ class timeseries(basets):
                 deltabefore=None,
                 deltaafter=None,
                 diffmode=False,
-                _revisions=None,
+                _wanted_insertion_dates=None,
                 _keep_nans=False):
         if self.type(cn, name) != 'formula':
             return super().history(
@@ -103,12 +103,11 @@ class timeseries(basets):
                 deltabefore,
                 deltaafter,
                 diffmode,
-                _revisions,
+                _wanted_insertion_dates,
                 _keep_nans
             )
 
         assert not diffmode
-        assert _revisions is None
 
         formula = self.formula(cn, name)
         series = self.find_series(cn, parse(formula))
@@ -138,6 +137,12 @@ class timeseries(basets):
             for hist in histmap.values()
             for idate in hist
         }
+
+        if _wanted_insertion_dates:
+            idates = self._prune_idates(
+                _wanted_insertion_dates,
+                sorted(idates)
+            )
 
         return {
             idate: i.evaluate(formula, idate, name)
@@ -301,14 +306,41 @@ class timeseries(basets):
                 False, True
             )
 
-    def _pruned_staircase_revisions(self, cn, name, delta,
-                                    from_value_date=None,
-                                    to_value_date=None):
+    def _pruned_revisions(self, cn, name,
+                          wanted_revisions,
+                          revisions):
         if self.formula(cn, name):
             return None
 
-        return super()._pruned_staircase_revisions(
-            cn, name, delta,
-            from_value_date,
-            to_value_date
+        return super()._pruned_revisions(
+            cn, name,
+            wanted_revisions,
+            revisions
         )
+
+    def _prune_idates(self, wanted_revisions, idates):
+        pruned = []
+        iterwanted = reversed(wanted_revisions)
+        iteridates = reversed(idates)
+
+        # for each vdate we retain the nearest inferior insertion date
+        # hence we never have more insertion dates than needed
+        wanted = next(iterwanted)
+        tzaware = wanted.tzinfo is not None
+        while True:
+            try:
+                idate = next(iteridates)
+            except StopIteration:
+                break
+            compidate = idate
+            if not tzaware:
+                compidate = compidate.replace(tzinfo=None)
+            if wanted >= compidate:
+                pruned.append(idate)
+                try:
+                    wanted = next(iterwanted)
+                except StopIteration:
+                    break
+
+        pruned.reverse()
+        return pruned
