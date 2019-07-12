@@ -91,6 +91,7 @@ class timeseries(basets):
                 deltabefore=None,
                 deltaafter=None,
                 diffmode=False,
+                _revisions=None,
                 _keep_nans=False):
         if self.type(cn, name) != 'formula':
             return super().history(
@@ -102,10 +103,12 @@ class timeseries(basets):
                 deltabefore,
                 deltaafter,
                 diffmode,
+                _revisions,
                 _keep_nans
             )
 
         assert not diffmode
+        assert _revisions is None
 
         formula = self.formula(cn, name)
         series = self.find_series(cn, parse(formula))
@@ -297,3 +300,8 @@ class timeseries(basets):
                 alias, text,
                 False, True
             )
+
+    def _pruned_staircase_revisions(self, cn, seriename, delta,
+                                    from_value_date=None,
+                                    to_value_date=None):
+        return None
