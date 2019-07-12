@@ -445,7 +445,7 @@ def test_staircase(engine, tsh):
             tsh.insert(engine, ts, 's' + name, 'Babar',
                        _insertion_date=idate)
 
-    ts = tsh.staircase(engine, 's-addition', delta=pd.Timedelta(days=1))
+    ts = tsh.staircase(engine, 's-addition', delta=pd.Timedelta(hours=12))
     assert_df("""
 2018-01-02    1.0
 2018-01-03    2.0
