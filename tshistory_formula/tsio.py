@@ -301,7 +301,14 @@ class timeseries(basets):
                 False, True
             )
 
-    def _pruned_staircase_revisions(self, cn, seriename, delta,
+    def _pruned_staircase_revisions(self, cn, name, delta,
                                     from_value_date=None,
                                     to_value_date=None):
-        return None
+        if self.formula(cn, name):
+            return None
+
+        return super()._pruned_staircase_revisions(
+            cn, name, delta,
+            from_value_date,
+            to_value_date
+        )
