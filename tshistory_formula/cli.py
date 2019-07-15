@@ -113,7 +113,6 @@ def compare_aliases(dburi, staircase=False, series=None, match=None,
     import random
     import os
     import signal
-    processes = 8
     def chunks(l, n):
         for i in range(0, len(l), n):
             yield l[i:i + n]
