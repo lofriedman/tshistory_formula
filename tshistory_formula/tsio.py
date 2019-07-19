@@ -14,9 +14,7 @@ class timeseries(basets):
 
     def find_series(self, cn, stree):
         name = stree[0]
-        if name in FINDERS:
-            return FINDERS[name](cn, self, stree)
-        return find_series(cn, self, stree)
+        return FINDERS.get(name, find_series)(cn, self, stree)
 
     @tx
     def register_formula(self, cn, name, formula,
