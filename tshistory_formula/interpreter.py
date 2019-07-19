@@ -126,15 +126,19 @@ def has_compatible_operators(cn, tsh, tree, good_operators):
 
 
 class FastStaircaseInterpreter(Interpreter):
-    __slots__ = ('env', 'cn', 'tsh', 'getargs')
+    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'delta')
+
+    def __init__(self, cn, tsh, getargs, delta):
+        assert delta is not None
+        super().__init__(cn, tsh, getargs)
+        self.delta = delta
 
     def get(self, name, getargs):
         if self.tsh.type(self.cn, name) == 'primary':
-            getargs = getargs.copy()
-            delta = getargs.pop('staircase')
             return self.tsh.staircase(
-                self.cn, name, delta=delta, **getargs
+                self.cn, name, delta=self.delta, **getargs
             )
         return self.tsh.get(
-            self.cn, name, **getargs
+            self.cn, name, **getargs,
+            __interpreter__=self
         )

@@ -73,10 +73,7 @@ class timeseries(basets):
     def get(self, cn, name, **kw):
         formula = self.formula(cn, name)
         if formula:
-            if 'staircase' in kw:
-                i = interpreter.FastStaircaseInterpreter(cn, self, kw)
-            else:
-                i = interpreter.Interpreter(cn, self, kw)
+            i = kw.get('__interpreter__') or interpreter.Interpreter(cn, self, kw)
             ts = i.evaluate(formula)
             if ts is not None:
                 ts.name = name
@@ -162,10 +159,16 @@ class timeseries(basets):
                     parse(formula),
                     self.fast_staircase_operators):
                 # go fast
-                return self.get(cn, name,
-                                from_value_date=from_value_date,
-                                to_value_date=to_value_date,
-                                staircase=delta,
+                return self.get(
+                    cn, name,
+                    from_value_date=from_value_date,
+                    to_value_date=to_value_date,
+                    __interpreter__=interpreter.FastStaircaseInterpreter(
+                        cn, self,
+                        {'from_value_date': from_value_date,
+                         'to_value_date': to_value_date},
+                        delta
+                    )
                 )
 
         return super().staircase(
