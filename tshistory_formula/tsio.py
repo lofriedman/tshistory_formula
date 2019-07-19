@@ -11,6 +11,7 @@ from tshistory_formula.finder import find_series
 
 
 class timeseries(basets):
+    fast_staircase_operators = set(['+', '*', 'series', 'add', 'priority'])
 
     def find_series(self, cn, stree):
         name = stree[0]
@@ -72,7 +73,10 @@ class timeseries(basets):
     def get(self, cn, name, **kw):
         formula = self.formula(cn, name)
         if formula:
-            i = interpreter.Interpreter(cn, self, kw)
+            if 'staircase' in kw:
+                i = interpreter.FastStaircaseInterpreter(cn, self, kw)
+            else:
+                i = interpreter.Interpreter(cn, self, kw)
             ts = i.evaluate(formula)
             if ts is not None:
                 ts.name = name
@@ -146,6 +150,29 @@ class timeseries(basets):
             idate: i.evaluate(formula, idate, name)
             for idate in sorted(idates)
         }
+
+    @tx
+    def staircase(self, cn, name, delta,
+                  from_value_date=None,
+                  to_value_date=None):
+        formula = self.formula(cn, name)
+        if formula:
+            if interpreter.has_compatible_operators(
+                    cn, self,
+                    parse(formula),
+                    self.fast_staircase_operators):
+                # go fast
+                return self.get(cn, name,
+                                from_value_date=from_value_date,
+                                to_value_date=to_value_date,
+                                staircase=delta,
+                )
+
+        return super().staircase(
+            cn, name, delta,
+            from_value_date,
+            to_value_date
+        )
 
     @tx
     def metadata(self, cn, name):

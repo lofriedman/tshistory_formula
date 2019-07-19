@@ -457,6 +457,44 @@ def test_staircase(engine, tsh):
 2018-01-09    5.0
 """, ts)
 
+    # this is not allowed in the staircase fast-path
+    # hence we will take the slow path
+    @func('identity')
+    def identity(series):
+        return series
+
+    tsh.register_formula(
+        engine,
+        'slow-down',
+        '(identity (series "sa"))',
+        False
+    )
+
+    tsh.register_formula(
+        engine,
+        's-addition-not-fast',
+        '(add (series "slow-down") (series "sb"))',
+        False
+    )
+    ts = tsh.staircase(
+        engine,
+        's-addition-not-fast',
+        delta=pd.Timedelta(hours=12)
+    )
+    assert_df("""
+2018-01-02    1.0
+2018-01-03    2.0
+2018-01-04    3.0
+2018-01-05    4.0
+2018-01-06    5.0
+2018-01-07    5.0
+2018-01-08    5.0
+2018-01-09    5.0
+""", ts)
+
+    # cleanup
+    FUNCS.pop('identity')
+
 
 def test_new_func(engine, tsh):
 

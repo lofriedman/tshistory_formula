@@ -5,9 +5,10 @@ from typing import Optional
 from functools import partial
 
 import pandas as pd
-from psyl.lisp import Env, evaluate
+from psyl.lisp import Env, evaluate, parse
 
 from tshistory_formula import funcs, registry
+from tshistory_formula.finder import find_series
 
 
 class fjson(json.JSONEncoder):
@@ -97,3 +98,43 @@ class HistoryInterpreter(Interpreter):
         ts = evaluate(text, self.env)
         ts.name = name
         return ts
+
+
+# staircase fast path
+
+
+def has_compatible_operators(cn, tsh, tree, good_operators):
+    operators = [tree[0]]
+    for param in tree[1:]:
+        if isinstance(param, list):
+            operators.append(param[0])
+    if any(op not in good_operators
+           for op in operators):
+        return False
+
+    op = operators[0]
+    names = registry.FINDERS.get(op, find_series)(cn, tsh, tree)
+    for name in names:
+        formula = tsh.formula(cn, name)
+        if formula:
+            tree = parse(formula)
+            if not has_compatible_operators(
+                    cn, tsh, tree, good_operators):
+                return False
+
+    return True
+
+
+class FastStaircaseInterpreter(Interpreter):
+    __slots__ = ('env', 'cn', 'tsh', 'getargs')
+
+    def get(self, name, getargs):
+        if self.tsh.type(self.cn, name) == 'primary':
+            getargs = getargs.copy()
+            delta = getargs.pop('staircase')
+            return self.tsh.staircase(
+                self.cn, name, delta=delta, **getargs
+            )
+        return self.tsh.get(
+            self.cn, name, **getargs
+        )
