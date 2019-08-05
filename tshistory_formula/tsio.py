@@ -87,8 +87,6 @@ class timeseries(basets):
                 to_insertion_date=None,
                 from_value_date=None,
                 to_value_date=None,
-                deltabefore=None,
-                deltaafter=None,
                 diffmode=False,
                 _wanted_insertion_dates=None,
                 _keep_nans=False):
@@ -99,8 +97,6 @@ class timeseries(basets):
                 to_insertion_date,
                 from_value_date,
                 to_value_date,
-                deltabefore,
-                deltaafter,
                 diffmode,
                 _wanted_insertion_dates,
                 _keep_nans
@@ -117,8 +113,6 @@ class timeseries(basets):
                 to_insertion_date,
                 from_value_date,
                 to_value_date,
-                deltabefore,
-                deltaafter,
                 diffmode
             ) or {}
             for name in series
