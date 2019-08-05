@@ -17,9 +17,10 @@ def series(__interpreter__,
         if not i.tsh.exists(i.cn, name):
             raise ValueError(f'No such series `{name}`')
         ts = pd.Series(name=name)
+    if prune:
+        ts = ts[:-prune]
     ts.options = {
-        'fillopt': fill,
-        'prune': prune
+        'fillopt': fill
     }
     return ts
 
@@ -96,9 +97,6 @@ def series_priority(*serieslist: pd.Series) -> pd.Series:
 
     for ts in reversed(serieslist):
         assert ts.dtype != 'O'
-        prune = ts.options.get('prune')
-        if prune:
-            ts = ts[:-prune]
         final = patcher.patch(final, ts)
 
     return final
