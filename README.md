@@ -33,6 +33,44 @@ It is not possible to `.insert` data into a formula.
 [tshistory]: https://bitbucket.org/pythonian/tshistory
 
 
+# Formula
+
+Formulas are expressed in a lisp-like syntax using `operators`,
+mandatory parameters and keyword (optional) parameters.
+
+The general form is:
+
+ `(<operator> <param1> ... <paramN> #:<keyword1> <value1> ... #:<keywordN> <valueN>)`
+
+Here are a couple examples:
+
+* `(add (series "wallonie") (series "bruxelles") (series "flandres"))`
+
+Here we see the two fundamental `add` and `series` operators at work.
+
+This would form a new synthetic series out of three base series (which
+can be either raw series or formulas themselves).
+
+A `priority` will be written like this:
+
+* `(priority (series "realized") (series "nominated") (series "forecasted"))`
+
+The `series` operator accepts several keywords:
+
+* `fill` to specify a filling policy to avoid `nans` when the series
+  will be `add`ed with others; accepted values are `"ffill"`
+  (forward-fill), `"bfill"` (backward-fill) or any floating value.
+
+* `prune` to indicate how many points must be truncated from the tail
+  end (useful for priorities).
+
+For instance in `(add (series "a" #:fill 0) (series "b")` will make
+sure that series `a`, if shorter than series `b` will get zeroes
+instead of nans where `b` provides values.
+
+In `(series "realized" #:prune 3)` we would drop the last three points.
+
+
 # API
 
 A few api calls are added to the `tshistory` base:
