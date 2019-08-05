@@ -20,7 +20,7 @@ def series(__interpreter__,
     if prune:
         ts = ts[:-prune]
     ts.options = {
-        'fillopt': fill
+        'fill': fill
     }
     return ts
 
@@ -72,8 +72,8 @@ def series_add(*serieslist: pd.Series) -> pd.Series:
     filloptmap = {}
 
     for ts in serieslist:
-        if ts.options.get('fillopt') is not None:
-            filloptmap[ts.name] = ts.options['fillopt']
+        if ts.options.get('fill') is not None:
+            filloptmap[ts.name] = ts.options['fill']
         if df is None:
             df = ts.to_frame()
             continue
