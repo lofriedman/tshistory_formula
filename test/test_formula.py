@@ -110,6 +110,9 @@ def test_base_api(engine, tsh):
         'unit': '€'
     }
 
+    tsh.delete(engine, 'test_plus_two')
+    assert not tsh.exists(engine, 'test_plus_two')
+
 
 def test_linear_combo(engine, tsh):
     tsh.register_formula(

@@ -82,6 +82,18 @@ class timeseries(basets):
         return super().get(cn, name, **kw)
 
     @tx
+    def delete(self, cn, name):
+        if self.type(cn, name) != 'formula':
+            return super().delete(cn, name)
+
+        cn.execute(
+            f'delete from "{self.namespace}".formula '
+            'where name = %(name)s',
+            name=name
+        )
+
+
+    @tx
     def history(self, cn, name,
                 from_insertion_date=None,
                 to_insertion_date=None,
