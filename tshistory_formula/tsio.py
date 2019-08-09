@@ -263,7 +263,16 @@ class timeseries(basets):
                 f'new name is already referenced by `{",".join(errors)}`'
             )
 
-        super().rename(cn, oldname, newname)
+        if self.type(cn, oldname) == 'formula':
+            cn.execute(
+                f'update "{self.namespace}".formula '
+                'set name = %(newname)s '
+                'where name = %(oldname)s',
+                oldname=oldname,
+                newname=newname
+            )
+        else:
+            super().rename(cn, oldname, newname)
 
     @tx
     def convert_aliases(self, cn):

@@ -720,6 +720,13 @@ def test_rename(engine, tsh):
 
     assert err.value.args[0] == 'new name is already referenced by `survive-renaming-2`'
 
+    # rename a formula !
+    with engine.begin() as cn:
+        tsh.rename(cn, 'survive-renaming', 'survived')
+    assert tsh.formula(
+        engine, 'survive-renaming-2'
+    ) == '(add (series "survived") (series "a-renamed" #:fill 0))'
+
 
 def test_convert_alias(engine, tsh):
     groundzero = pd.Series(
