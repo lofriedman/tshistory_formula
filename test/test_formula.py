@@ -298,6 +298,30 @@ def test_priority2(engine, tsh):
 """, prio)
 
 
+def test_options(engine, tsh):
+    @func('dummy')
+    def dummy():
+        return pd.Series(
+            [1, 2, 3],
+            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+        )
+
+    tsh.register_formula(
+        engine,
+        'test_options',
+        '(* 3 (dummy))',
+        False
+    )
+
+    assert_df("""
+2019-01-01    3
+2019-01-02    6
+2019-01-03    9
+""", tsh.get(engine, 'test_options'))
+
+    FUNCS.pop('dummy')
+
+
 def test_outliers(engine, tsh):
     tsh.register_formula(
         engine,

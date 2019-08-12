@@ -6,6 +6,10 @@ from tshistory.util import SeriesServices
 from tshistory_formula.registry import func
 
 
+def options(series):
+    return getattr(series, 'options', {})
+
+
 @func('series')
 def series(__interpreter__,
            name: str,
@@ -31,15 +35,15 @@ def scalar_add(
         b: Union[int, float, pd.Series]) -> pd.Series:
     if isinstance(a, pd.Series):
         assert isinstance(b, (int, float))
-        options = a.options
+        opts = options(a)
     else:
         assert isinstance(a, (int, float))
-        options = b.options
+        opts = options(b)
 
     ts = a + b
     # we did a series + scalar and want to propagate
     # the original series options
-    ts.options = options
+    ts.options = opts
     return ts
 
 
@@ -49,15 +53,15 @@ def scalar_prod(
         b: Union[int, float, pd.Series]) -> pd.Series:
     if isinstance(a, pd.Series):
         assert isinstance(b, (int, float))
-        options = a.options
+        opts = options(a)
     else:
         assert isinstance(a, (int, float))
-        options = b.options
+        opts = options(b)
 
     ts = a * b
     # we did a series * scalar and want to propagate
     # the original series options
-    ts.options = options
+    ts.options = opts
     return ts
 
 
@@ -72,7 +76,7 @@ def series_add(*serieslist: pd.Series) -> pd.Series:
     filloptmap = {}
 
     for ts in serieslist:
-        if ts.options.get('fill') is not None:
+        if options(ts).get('fill') is not None:
             filloptmap[ts.name] = ts.options['fill']
         if df is None:
             df = ts.to_frame()
