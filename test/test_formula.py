@@ -31,6 +31,62 @@ def test_interpreter(engine):
         lisp.parse(brokenform)
 
 
+def test_metadata(engine, tsh):
+    naive = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+
+    tsh.insert(engine, naive, 'metadata_naive', 'Babar',
+               _insertion_date=utcdt(2019, 1, 1))
+
+    tsh.register_formula(
+        engine,
+        'test_meta',
+        '(+ (series "metadata_naive") 2)',
+    )
+
+    assert tsh.metadata(engine, 'test_meta') == {
+        'index_type': 'datetime64[ns]',
+        'tzaware': False,
+        'value_type': 'float64'
+    }
+
+    aware = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.insert(engine, aware, 'metadata_tzaware', 'Babar',
+               _insertion_date=utcdt(2019, 1, 1))
+
+
+    with pytest.raises(ValueError) as err:
+        tsh.register_formula(
+            engine,
+            'test_meta_mismatch',
+            '(add (series "test_meta") (series "metadata_tzaware"))',
+        )
+    assert err.value.args[0] == (
+        "Formula `metadata_tzaware`: mismatching metadata:"
+        "`test_meta:{'tzaware': False, "
+        "'index_type': 'datetime64[ns]', 'value_type': 'float64'}`, "
+        "`metadata_tzaware:{'tzaware': "
+        "True, 'index_type': 'datetime64[ns, UTC]', 'value_type': 'float64'}`"
+    )
+
+    tsh.register_formula(
+        engine,
+        'test_meta_primary_plus_formula',
+        '(add (series "test_meta") (series "metadata_naive"))',
+    )
+    meta = tsh.metadata(engine, 'test_meta_primary_plus_formula')
+    assert meta == {
+        'index_type': 'datetime64[ns]',
+        'tzaware': False,
+        'value_type': 'float64'
+    }
+
+
 def test_base_api(engine, tsh):
     tsh.register_formula(engine, 'test_plus_two', '(+ (series "test") 2)', False)
     tsh.register_formula(engine, 'test_three_plus', '(+ 3 (series "test"))', False)
@@ -92,11 +148,20 @@ def test_base_api(engine, tsh):
 """, plus)
 
     m = tsh.metadata(engine, 'test_product_a')
-    assert m is None
+    assert m == {
+        'index_type': 'datetime64[ns]',
+        'tzaware': False,
+        'value_type': 'float64'
+    }
 
     tsh.update_metadata(engine, 'test_product_a', {'topic': 'spot price'})
     m = tsh.metadata(engine, 'test_product_a')
-    assert m == {'topic': 'spot price'}
+    assert m == {
+        'index_type': 'datetime64[ns]',
+        'tzaware': False,
+        'value_type': 'float64',
+        'topic': 'spot price'
+    }
 
     tsh.update_metadata(
         engine, 'test_product_a', {
@@ -106,6 +171,9 @@ def test_base_api(engine, tsh):
     )
     m = tsh.metadata(engine, 'test_product_a')
     assert m == {
+        'index_type': 'datetime64[ns]',
+        'tzaware': False,
+        'value_type': 'float64',
         'topic': 'Spot Price',
         'unit': '€'
     }

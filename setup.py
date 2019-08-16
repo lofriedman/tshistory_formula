@@ -18,6 +18,7 @@ setup(name='tshistory_formula',
           'convert-aliases=tshistory_formula.cli:convert_aliases',
           'compare-aliases=tshistory_formula.cli:compare_aliases',
           'ingest-formulas=tshistory_formula.cli:ingest_formulas',
+          'update-formula-metadata=tshistory_formula.cli:update_metadata',
           'shell=tshistory_formula.cli:shell'
       ]},
       classifiers=[

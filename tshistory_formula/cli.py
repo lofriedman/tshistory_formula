@@ -5,6 +5,7 @@ from pathlib import Path
 
 from sqlalchemy import create_engine
 from sqlhelp import sqlfile
+from psyl.lisp import parse
 from tshistory.util import find_dburi
 
 from tshistory_formula.tsio import timeseries
@@ -143,6 +144,37 @@ def compare_aliases(dburi, staircase=False, series=None, match=None,
 
 
 # /alias
+
+@click.command(name='update-formula-metadata')
+@click.argument('dburi')
+@click.option('--namespace', default='tsh')
+def update_metadata(dburi, namespace='tsh'):
+    engine = create_engine(find_dburi(dburi))
+    tsh = timeseries(namespace)
+
+    todo = []
+
+    def justdoit():
+        for name, kind in tsh.list_series(engine).items():
+            if kind != 'formula':
+                continue
+            print(name)
+
+            meta = tsh.metadata(engine, name)
+            tree = parse(tsh.formula(engine, name))
+            meta = tsh.find_metadata(engine, tree)
+            if meta is None:
+                todo.append(name)
+                print(' -> todo')
+                continue
+            tsh.update_metadata(engine, name, meta)
+
+    lasttodosize = -1
+    while len(todo) != lasttodosize:
+        lasttodosize = len(todo)
+        justdoit()
+
+
 
 @click.command(name='ingest-formulas')
 @click.argument('dburi')

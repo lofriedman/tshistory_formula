@@ -12,6 +12,7 @@ from tshistory_formula.finder import find_series
 
 class timeseries(basets):
     fast_staircase_operators = set(['+', '*', 'series', 'add', 'priority'])
+    internal_metakeys = set(['tzaware', 'index_type', 'value_type'])
 
     def find_series(self, cn, stree):
         name = stree[0]
@@ -26,6 +27,28 @@ class timeseries(basets):
                 newops = self.find_operators(cn, item)
                 ops.update(newops)
         return ops
+
+    def find_metadata(self, cn, tree):
+        series = self.find_series(cn, tree)
+        metamap = {}
+        for name in series:
+            meta = self.metadata(cn, name)
+            if meta:
+                metamap[name] = {
+                    k: v
+                    for k, v in meta.items()
+                    if k in self.internal_metakeys
+                }
+        if not metamap:
+            return {}
+        first = next(iter(metamap.items()))
+        for m in metamap.items():
+            if not m[1] == first[1]:
+                raise ValueError(
+                    f'Formula `{name}`: mismatching metadata:'
+                    f'{", ".join("`%s:%s`" % (k, v) for k, v in metamap.items())}'
+                )
+        return first[1]
 
     @tx
     def register_formula(self, cn, name, formula,
@@ -52,6 +75,7 @@ class timeseries(basets):
                 f'Formula `{name}` refers to unknown operators '
                 f'{", ".join("`%s`" % o for o in badoperators)}'
             )
+        meta = self.find_metadata(cn, tree)
         sql = (f'insert into "{self.namespace}".formula '
                '(name, text) '
                'values (%(name)s, %(text)s) '
@@ -62,6 +86,8 @@ class timeseries(basets):
             name=name,
             text=formula
         )
+        if meta:
+            self.update_metadata(cn, name, meta, internal=True)
 
     def formula(self, cn, name):
         formula = cn.execute(
@@ -212,9 +238,9 @@ class timeseries(basets):
         assert isinstance(metadata, dict)
         meta = self.metadata(cn, name) or {}
         meta.update(metadata)
-        sql = (f'update "{self.namespace}".formula as form '
+        sql = (f'update "{self.namespace}".formula '
                'set metadata = %(metadata)s '
-               'where form.name = %(name)s')
+               'where name = %(name)s')
         cn.execute(
             sql,
             metadata=json.dumps(meta),
