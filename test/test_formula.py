@@ -904,3 +904,17 @@ def test_editor_new_operator(engine, tsh):
 
     # cleanup
     FUNCS.pop('genrandomseries')
+
+
+def test_unknown_operator(engine, tsh):
+    with pytest.raises(ValueError) as err:
+        tsh.register_formula(
+            engine,
+            'nope',
+            '(bogus-1 (bogus-2))',
+            False
+        )
+
+    assert err.value.args[0] == (
+        'Formula `nope` refers to unknown operators `bogus-1`, `bogus-2`'
+    )

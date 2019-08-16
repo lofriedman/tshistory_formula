@@ -6,7 +6,7 @@ from tshistory.util import tx
 from tshistory_alias.tsio import timeseries as basets
 
 from tshistory_formula import interpreter
-from tshistory_formula.registry import FINDERS
+from tshistory_formula.registry import FINDERS, FUNCS
 from tshistory_formula.finder import find_series
 
 
@@ -17,21 +17,40 @@ class timeseries(basets):
         name = stree[0]
         return FINDERS.get(name, find_series)(cn, self, stree)
 
+    def find_operators(self, cn, tree):
+        ops = {
+            tree[0]: FUNCS.get(tree[0])
+        }
+        for item in tree:
+            if isinstance(item, list):
+                newops = self.find_operators(cn, item)
+                ops.update(newops)
+        return ops
+
     @tx
     def register_formula(self, cn, name, formula,
                          reject_unknown=True, update=False):
         if not update:
             assert not self.formula(cn, name), f'`{name}` already exists'
         # basic syntax check
-        smap = self.find_series(
-            cn,
-            parse(formula)
-        )
+        tree = parse(formula)
+        smap = self.find_series(cn, tree)
         if not all(smap.values()) and reject_unknown:
             badseries = [k for k, v in smap.items() if not v]
             raise ValueError(
                 f'Formula `{name}` refers to unknown series '
                 f'{", ".join("`%s`" % s for s in badseries)}'
+            )
+        operators = self.find_operators(cn, tree)
+        badoperators = [
+            op
+            for op, func in operators.items()
+            if func is None
+        ]
+        if badoperators:
+            raise ValueError(
+                f'Formula `{name}` refers to unknown operators '
+                f'{", ".join("`%s`" % o for o in badoperators)}'
             )
         sql = (f'insert into "{self.namespace}".formula '
                '(name, text) '
