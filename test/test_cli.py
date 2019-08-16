@@ -47,8 +47,6 @@ def test_convert(engine, cli, tsh):
         engine.url,
         namespace=tsh.namespace)
 
-    tsh._resetcaches()
-
     ts = tsh.get(engine, 'ones-conv')
     assert_df("""
 2019-01-01 00:00:00+00:00    1.0
@@ -82,8 +80,6 @@ def test_ingest(engine, cli, tsh, datadir):
               engine.url,
               datadir / 'formula.csv',
               namespace=tsh.namespace)
-
-    tsh._resetcaches()
 
     assert tsh.formula(engine, 'ones-imported')
     assert tsh.formula(engine, 'twos-imported')
