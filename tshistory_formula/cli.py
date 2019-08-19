@@ -104,8 +104,11 @@ def compare_aliases(dburi, staircase=False, series=None, match=None,
                     continue
                 raise
             if not only_errors:
-                print(f'{idx} {name} -> f time/a time : {round(t3/t1, 3)} '
-                      f'size : {len(tsa)} {status}')
+                if len(tsa):
+                    print(f'{idx} {name} -> f time/a time : {round(t3/t1, 3)} '
+                          f'size : {len(tsa)} {status}')
+                else:
+                    print(f'{idx} {name} {status} {t1} {t3}')
 
     if len(series) == 1:
         run(0, uri, series, fail=True)
