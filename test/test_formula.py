@@ -986,3 +986,22 @@ def test_unknown_operator(engine, tsh):
     assert err.value.args[0] == (
         'Formula `nope` refers to unknown operators `bogus-1`, `bogus-2`'
     )
+
+
+def test_editor_new_operator(engine, tsh):
+    @func('genrandomseries')
+    def genrandomseries():
+        return pd.Series(
+            [1.0, 2.0, 3.0],
+            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+
+    tsh.register_formula(
+        engine,
+        'random',
+        '(genrandomseries)',
+        False
+    )
+
+    meta = tsh.metadata(engine, 'random')
+    assert meta is None
