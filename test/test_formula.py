@@ -8,7 +8,11 @@ import pytest
 from psyl import lisp
 from tshistory.testutil import assert_df, assert_hist
 
-from tshistory_formula.registry import func, finder, FUNCS
+from tshistory_formula.registry import (
+    func,
+    FUNCS,
+    finder
+)
 from tshistory_formula.interpreter import jsontypes
 from tshistory_formula.editor import fancypresenter
 
@@ -988,20 +992,37 @@ def test_unknown_operator(engine, tsh):
     )
 
 
-def test_editor_new_operator(engine, tsh):
-    @func('genrandomseries')
-    def genrandomseries():
+def test_custom_metadata(engine, tsh):
+    @func('customseries')
+    def customseries():
         return pd.Series(
             [1.0, 2.0, 3.0],
             index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
-    )
+        )
+
+    @finder('customseries')
+    def find(cn, tsh, tree):
+        return {
+            tree[0]: {
+                'index_type': 'datetime64[ns]',
+                'tzaware': False,
+                'value_type': 'float64'
+            }
+        }
 
     tsh.register_formula(
         engine,
-        'random',
-        '(genrandomseries)',
+        'custom',
+        '(+ 3 (customseries))',
         False
     )
 
-    meta = tsh.metadata(engine, 'random')
-    assert meta is None
+    meta = tsh.metadata(engine, 'custom')
+    assert meta == {
+        'index_type': 'datetime64[ns]',
+        'tzaware': False,
+        'value_type': 'float64'
+    }
+
+    # cleanup
+    FUNCS.pop('customseries')

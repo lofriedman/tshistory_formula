@@ -6,7 +6,10 @@ from tshistory.util import tx
 from tshistory_alias.tsio import timeseries as basets
 
 from tshistory_formula import interpreter
-from tshistory_formula.registry import FINDERS, FUNCS
+from tshistory_formula.registry import (
+    FINDERS,
+    FUNCS
+)
 from tshistory_formula.finder import find_series
 
 
@@ -17,7 +20,7 @@ class timeseries(basets):
 
     def find_series(self, cn, tree):
         op = tree[0]
-        smap = FINDERS.get(op, find_series)(cn, self, tree)
+        smap = FINDERS.get(op, find_series)(cn, self, tree) or {}
         for item in tree:
             if isinstance(item, list):
                 smap.update(
@@ -35,17 +38,17 @@ class timeseries(basets):
                 ops.update(newops)
         return ops
 
-    def find_metadata(self, cn, tree):
-        series = self.find_series(cn, tree)
+    def filter_metadata(self, series):
+        " collect series metadata and make sure they are compatible "
         metamap = {}
-        for name in series:
-            meta = self.metadata(cn, name)
-            if meta:
-                metamap[name] = {
-                    k: v
-                    for k, v in meta.items()
-                    if k in self.internal_metakeys
-                }
+        for name, meta in series.items():
+            if not meta:
+                continue
+            metamap[name] = {
+                k: v
+                for k, v in meta.items()
+                if k in self.internal_metakeys
+            }
         if not metamap:
             return {}
         first = next(iter(metamap.items()))
@@ -82,7 +85,7 @@ class timeseries(basets):
                 f'Formula `{name}` refers to unknown operators '
                 f'{", ".join("`%s`" % o for o in badoperators)}'
             )
-        meta = self.find_metadata(cn, tree)
+        meta = self.filter_metadata(smap)
         sql = (f'insert into "{self.namespace}".formula '
                '(name, text) '
                'values (%(name)s, %(text)s) '
