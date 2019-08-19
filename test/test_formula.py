@@ -644,7 +644,7 @@ def test_ifunc(engine, tsh):
     tsh.register_formula(
         engine,
         'shifting',
-        '(shifted "shiftme" #:days -1)',
+        '(+ 0 (shifted "shiftme" #:days -1))',
         False
     )
 

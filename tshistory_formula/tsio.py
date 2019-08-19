@@ -14,9 +14,16 @@ class timeseries(basets):
     fast_staircase_operators = set(['+', '*', 'series', 'add', 'priority'])
     internal_metakeys = set(['tzaware', 'index_type', 'value_type'])
 
-    def find_series(self, cn, stree):
-        name = stree[0]
-        return FINDERS.get(name, find_series)(cn, self, stree)
+
+    def find_series(self, cn, tree):
+        op = tree[0]
+        smap = FINDERS.get(op, find_series)(cn, self, tree)
+        for item in tree:
+            if isinstance(item, list):
+                smap.update(
+                    self.find_series(cn, item)
+                )
+        return smap
 
     def find_operators(self, cn, tree):
         ops = {
