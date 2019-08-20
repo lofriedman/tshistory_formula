@@ -243,7 +243,7 @@ class timeseries(basets):
     @tx
     def update_metadata(self, cn, name, metadata, internal=False):
         if self.type(cn, name) != 'formula':
-            return super().metadata(cn, name)
+            return super().update_metadata(cn, name, metadata, internal)
 
         assert isinstance(metadata, dict)
         meta = self.metadata(cn, name) or {}
