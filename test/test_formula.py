@@ -42,7 +42,7 @@ def test_metadata(engine, tsh):
     )
 
     tsh.insert(engine, naive, 'metadata_naive', 'Babar',
-               _insertion_date=utcdt(2019, 1, 1))
+               insertion_date=utcdt(2019, 1, 1))
 
     tsh.register_formula(
         engine,
@@ -61,7 +61,7 @@ def test_metadata(engine, tsh):
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
     )
     tsh.insert(engine, aware, 'metadata_tzaware', 'Babar',
-               _insertion_date=utcdt(2019, 1, 1))
+               insertion_date=utcdt(2019, 1, 1))
 
 
     with pytest.raises(ValueError) as err:
@@ -111,7 +111,7 @@ def test_base_api(engine, tsh):
     )
 
     tsh.insert(engine, test, 'test', 'Babar',
-               _insertion_date=utcdt(2019, 1, 1))
+               insertion_date=utcdt(2019, 1, 1))
 
     twomore = tsh.get(engine, 'test_plus_two')
     assert_df("""
@@ -204,7 +204,7 @@ def test_linear_combo(engine, tsh):
     )
 
     tsh.insert(engine, x, 'x', 'Babar',
-               _insertion_date=idate)
+               insertion_date=idate)
 
     y = pd.Series(
         [7, 8, 9],
@@ -212,7 +212,7 @@ def test_linear_combo(engine, tsh):
     )
 
     tsh.insert(engine, y, 'y', 'Babar',
-               _insertion_date=idate)
+               insertion_date=idate)
 
     z = pd.Series(
         [0],
@@ -220,7 +220,7 @@ def test_linear_combo(engine, tsh):
     )
 
     tsh.insert(engine, z, 'z', 'Babar',
-               _insertion_date=idate)
+               insertion_date=idate)
 
     ts = tsh.get(engine, 'addseries')
     assert_df("""
@@ -249,7 +249,7 @@ def test_linear_combo(engine, tsh):
     )
 
     tsh.insert(engine, x, 'x', 'Babar',
-               _insertion_date=idate2)
+               insertion_date=idate2)
 
     y = pd.Series(
         [8, 9, 10],
@@ -257,7 +257,7 @@ def test_linear_combo(engine, tsh):
     )
 
     tsh.insert(engine, y, 'y', 'Babar',
-               _insertion_date=idate2)
+               insertion_date=idate2)
 
     ts = tsh.get(engine, 'addseries')
     assert_df("""
@@ -461,7 +461,7 @@ def test_history(engine, tsh):
             index=pd.date_range(dt(2018, 1, 1), periods=3, freq='D')
             )
             tsh.insert(engine, ts, 'h' + name, 'Babar',
-                       _insertion_date=idate)
+                       insertion_date=idate)
 
     h = tsh.history(engine, 'h-addition')
     assert_hist("""
@@ -503,7 +503,7 @@ insertion_date             value_date
             index=pd.date_range(dt(2018, 1, 3), periods=3, freq='D')
         )
         tsh.insert(engine, ts, 'hz', 'Babar',
-                   _insertion_date=idate)
+                   insertion_date=idate)
 
     h = tsh.history(engine, 'h-priority')
     assert_hist("""
@@ -542,7 +542,7 @@ def test_staircase(engine, tsh):
                 index=pd.date_range(dt(2018, 1, day), periods=5, freq='D')
             )
             tsh.insert(engine, ts, 's' + name, 'Babar',
-                       _insertion_date=idate)
+                       insertion_date=idate)
 
     ts = tsh.staircase(engine, 's-addition', delta=pd.Timedelta(hours=12))
     assert_df("""
@@ -658,7 +658,7 @@ def test_ifunc(engine, tsh):
     )
     tsh.insert(
         engine, ts, 'shiftme', 'Babar',
-        _insertion_date=utcdt(2019, 1, 1)
+        insertion_date=utcdt(2019, 1, 1)
     )
 
     ts = tsh.get(engine, 'shifting')
@@ -688,7 +688,7 @@ def test_ifunc(engine, tsh):
     )
     tsh.insert(
         engine, ts, 'shiftme', 'Babar',
-        _insertion_date=utcdt(2019, 1, 2)
+        insertion_date=utcdt(2019, 1, 2)
 
     )
     hist = tsh.history(
