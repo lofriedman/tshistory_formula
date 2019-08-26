@@ -163,9 +163,9 @@ def update_metadata(dburi, namespace='tsh'):
                 continue
             print(name)
 
-            meta = tsh.metadata(engine, name)
             tree = parse(tsh.formula(engine, name))
-            meta = tsh.find_metadata(engine, tree)
+            smap = tsh.find_series(engine, tree)
+            meta = tsh.filter_metadata(smap)
             if meta is None:
                 todo.append(name)
                 print(' -> todo')
