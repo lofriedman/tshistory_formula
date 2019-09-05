@@ -744,7 +744,13 @@ def test_types(tsh):
         'series': {'fill': 'typing.Union[str, NoneType]',
                    'name': 'str',
                    'prune': 'typing.Union[str, NoneType]',
-                   'return': 'Series'}
+                   'return': 'Series'},
+         'slice': {
+             'fromdate': 'typing.Union[tshistory_formula.funcs.iso_utc_datetime, NoneType]',
+             'return': 'Series',
+             'series': 'Series',
+             'todate': 'typing.Union[tshistory_formula.funcs.iso_utc_datetime, NoneType]'
+         }
     } == json.loads(types)
 
 
@@ -1026,3 +1032,48 @@ def test_custom_metadata(engine, tsh):
 
     # cleanup
     FUNCS.pop('customseries')
+
+
+def test_slice(engine, tsh):
+    base = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.insert(engine, base, 'test-slice', 'Babar')
+    tsh.register_formula(
+        engine,
+        'slicing-id',
+        '(slice (series "test-slice"))',
+    )
+    tsh.register_formula(
+        engine,
+        'slicing-from',
+        '(slice (series "test-slice") #:fromdate "2019-1-2")',
+    )
+    tsh.register_formula(
+        engine,
+        'slicing-fromto',
+        '(slice (series "test-slice") #:fromdate "2019-1-2" #:todate "2019-1-2")',
+    )
+    tsh.register_formula(
+        engine,
+        'slicing-empty',
+        '(slice (series "test-slice") #:fromdate "2018-1-2" #:todate "2018-1-2")',
+    )
+
+    assert_df("""
+2019-01-01 00:00:00+00:00    1.0
+2019-01-02 00:00:00+00:00    2.0
+2019-01-03 00:00:00+00:00    3.0
+""", tsh.get(engine, 'slicing-id'))
+
+    assert_df("""
+2019-01-02 00:00:00+00:00    2.0
+2019-01-03 00:00:00+00:00    3.0
+""", tsh.get(engine, 'slicing-from'))
+
+    assert_df("""
+2019-01-02 00:00:00+00:00    2.0
+""", tsh.get(engine, 'slicing-fromto'))
+
+    assert len(tsh.get(engine, 'slicing-empty')) == 0

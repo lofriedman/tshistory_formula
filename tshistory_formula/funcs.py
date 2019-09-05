@@ -115,3 +115,19 @@ def series_drop_outliers(series: pd.Series,
     if min is not None:
         series = series[series >= min]
     return series
+
+
+class iso_utc_datetime(str):
+
+    def to_datetime(self):
+        return pd.Timestamp(self, tz='UTC')
+
+
+@func('slice')
+def slice(series: pd.Series,
+          fromdate: Optional[iso_utc_datetime]=None,
+          todate: Optional[iso_utc_datetime]=None) -> pd.Series:
+    fromdate = fromdate and iso_utc_datetime(fromdate) or None
+    todate = todate and iso_utc_datetime(todate) or None
+    return series.loc[fromdate:todate]
+
