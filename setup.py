@@ -2,7 +2,7 @@ from setuptools import setup
 
 
 setup(name='tshistory_formula',
-      version='0.1.0',
+      version='0.2.0',
       author='Pythonian',
       author_email='aurelien.campeas@pythonian.fr',
       url='https://bitbucket.org/pythonian/tshistory_formula',
