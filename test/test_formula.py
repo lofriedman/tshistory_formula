@@ -1,8 +1,9 @@
 import math
 import json
 from datetime import datetime as dt, timedelta
-import pandas as pd
 
+import pandas as pd
+import numpy as np
 import pytest
 
 from psyl import lisp
@@ -736,6 +737,7 @@ def test_types(tsh):
               'b': 'typing.Union[int, float, Series]',
               'return': 'Series'},
         'add': {'return': 'Series', 'serieslist': 'Series'},
+        'mul': {'return': 'Series', 'serieslist': 'Series'},
         'outliers': {'max': 'typing.Union[int, NoneType]',
                      'min': 'typing.Union[int, NoneType]',
                      'return': 'Series',
@@ -1077,3 +1079,50 @@ def test_slice(engine, tsh):
 """, tsh.get(engine, 'slicing-fromto'))
 
     assert len(tsh.get(engine, 'slicing-empty')) == 0
+
+
+def test_mul(engine, tsh):
+    base = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.insert(engine, base, 'mul-a', 'Babar')
+    tsh.insert(engine, base, 'mul-b', 'Babar')
+    tsh.insert(engine, base, 'mul-c', 'Babar')
+    tsh.register_formula(
+        engine,
+        'multiply-aligned',
+        '(mul (series "mul-a") (series "mul-b") (series "mul-c"))',
+    )
+
+    ts = tsh.get(engine, 'multiply-aligned')
+    assert_df("""
+2019-01-01 00:00:00+00:00     1.0
+2019-01-02 00:00:00+00:00     8.0
+2019-01-03 00:00:00+00:00    27.0
+""", ts)
+
+    base = pd.Series(
+        [1, 2, np.nan],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.insert(engine, base, 'mul-b', 'Babar')
+
+    ts = tsh.get(engine, 'multiply-aligned')
+    assert_df("""
+2019-01-01 00:00:00+00:00    1.0
+2019-01-02 00:00:00+00:00    8.0
+""", ts)
+
+    tsh.register_formula(
+        engine,
+        'multiply-aligned',
+        '(mul (series "mul-a") (series "mul-b" #:fill 1) (series "mul-c"))',
+        update=True
+    )
+    ts = tsh.get(engine, 'multiply-aligned')
+    assert_df("""
+2019-01-01 00:00:00+00:00    1.0
+2019-01-02 00:00:00+00:00    8.0
+2019-01-03 00:00:00+00:00    9.0
+""", ts)

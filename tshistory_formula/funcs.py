@@ -94,6 +94,42 @@ def series_add(*serieslist: pd.Series) -> pd.Series:
     return df.dropna().sum(axis=1)
 
 
+@func('mul')
+def series_multiply(*serieslist: pd.Series) -> pd.Series:
+    assert [
+        isinstance(s, pd.Series)
+        for s in serieslist
+    ]
+
+    df = None
+    filloptmap = {}
+
+    for ts in serieslist:
+        if options(ts).get('fill') is not None:
+            filloptmap[ts.name] = ts.options['fill']
+        if df is None:
+            df = ts.to_frame()
+            continue
+        df = df.join(ts, how='outer')
+
+    for ts, fillopt in filloptmap.items():
+        if isinstance(fillopt, str):
+            for method in fillopt.split(','):
+                df[ts] = df[ts].fillna(method=method.strip())
+        else:
+            assert isinstance(fillopt, (int, float))
+            df[ts] = df[ts].fillna(value=fillopt)
+
+    res = None
+    for col in df.columns:
+        if res is None:
+            res = df[col].to_frame()
+            continue
+        res = res.multiply(df[col], axis=0)
+
+    return res[res.columns[0]].dropna()
+
+
 @func('priority')
 def series_priority(*serieslist: pd.Series) -> pd.Series:
     patcher = SeriesServices()
