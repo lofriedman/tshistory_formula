@@ -65,13 +65,7 @@ def scalar_prod(
     return ts
 
 
-@func('add')
-def series_add(*serieslist: pd.Series) -> pd.Series:
-    assert [
-        isinstance(s, pd.Series)
-        for s in serieslist
-    ]
-
+def _group_series(*serieslist):
     df = None
     filloptmap = {}
 
@@ -91,7 +85,17 @@ def series_add(*serieslist: pd.Series) -> pd.Series:
             assert isinstance(fillopt, (int, float))
             df[ts] = df[ts].fillna(value=fillopt)
 
-    return df.dropna().sum(axis=1)
+    return df
+
+
+@func('add')
+def series_add(*serieslist: pd.Series) -> pd.Series:
+    assert [
+        isinstance(s, pd.Series)
+        for s in serieslist
+    ]
+
+    return _group_series(*serieslist).dropna().sum(axis=1)
 
 
 @func('mul')
@@ -101,24 +105,7 @@ def series_multiply(*serieslist: pd.Series) -> pd.Series:
         for s in serieslist
     ]
 
-    df = None
-    filloptmap = {}
-
-    for ts in serieslist:
-        if options(ts).get('fill') is not None:
-            filloptmap[ts.name] = ts.options['fill']
-        if df is None:
-            df = ts.to_frame()
-            continue
-        df = df.join(ts, how='outer')
-
-    for ts, fillopt in filloptmap.items():
-        if isinstance(fillopt, str):
-            for method in fillopt.split(','):
-                df[ts] = df[ts].fillna(method=method.strip())
-        else:
-            assert isinstance(fillopt, (int, float))
-            df[ts] = df[ts].fillna(value=fillopt)
+    df = _group_series(*serieslist)
 
     res = None
     for col in df.columns:
@@ -128,6 +115,14 @@ def series_multiply(*serieslist: pd.Series) -> pd.Series:
         res = res.multiply(df[col], axis=0)
 
     return res[res.columns[0]].dropna()
+
+
+@func('div')
+def series_div(s1: pd.Series, s2: pd.Series) -> pd.Series:
+    df = _group_series(*(s1, s2))
+
+    c1, c2 = df.columns
+    return (df[c1] / df[c2]).dropna()
 
 
 @func('priority')

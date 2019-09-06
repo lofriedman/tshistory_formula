@@ -737,6 +737,7 @@ def test_types(tsh):
               'b': 'typing.Union[int, float, Series]',
               'return': 'Series'},
         'add': {'return': 'Series', 'serieslist': 'Series'},
+        'div': {'return': 'Series', 's1': 'Series', 's2': 'Series'},
         'mul': {'return': 'Series', 'serieslist': 'Series'},
         'outliers': {'max': 'typing.Union[int, NoneType]',
                      'min': 'typing.Union[int, NoneType]',
@@ -1125,4 +1126,50 @@ def test_mul(engine, tsh):
 2019-01-01 00:00:00+00:00    1.0
 2019-01-02 00:00:00+00:00    8.0
 2019-01-03 00:00:00+00:00    9.0
+""", ts)
+
+
+def test_div(engine, tsh):
+    base = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.insert(engine, base, 'div-a', 'Babar')
+    tsh.insert(engine, base, 'div-b', 'Babar')
+    tsh.register_formula(
+        engine,
+        'divide',
+        '(div (series "div-a") (series "div-b"))',
+    )
+
+    ts = tsh.get(engine, 'divide')
+    assert_df("""
+2019-01-01 00:00:00+00:00    1.0
+2019-01-02 00:00:00+00:00    1.0
+2019-01-03 00:00:00+00:00    1.0
+""", ts)
+
+    base = pd.Series(
+        [2, 1, np.nan],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.insert(engine, base, 'div-b', 'Babar')
+
+    ts = tsh.get(engine, 'divide')
+    assert_df("""
+2019-01-01 00:00:00+00:00    0.5
+2019-01-02 00:00:00+00:00    2.0
+""", ts)
+
+    tsh.register_formula(
+        engine,
+        'divide',
+        '(div (series "div-a") (series "div-b" #:fill 3))',
+        update=True
+    )
+    ts = tsh.get(engine, 'divide')
+    assert_df("""
+2019-01-01 00:00:00+00:00    0.5
+2019-01-02 00:00:00+00:00    2.0
+2019-01-03 00:00:00+00:00    1.0
 """, ts)
