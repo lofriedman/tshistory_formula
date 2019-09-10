@@ -203,6 +203,22 @@ def ingest_formulas(dburi, formula_file, strict=False, namespace='tsh'):
             )
 
 
+@click.command(name='test-formula')
+@click.argument('db-uri')
+@click.argument('formula')
+@click.option('--pdbshell', is_flag=True, default=False)
+@click.option('--namespace', default='tsh')
+def test_formula(db_uri, formula, pdbshell=False, namespace='tsh'):
+    engine = create_engine(find_dburi(db_uri))
+    tsh = timeseries(namespace)
+
+    ts = tsh.eval_formula(engine, formula)
+    print(ts)
+    if pdbshell:
+        import ipdb; ipdb.set_trace()
+
+
+
 @click.command(name='shell')
 @click.argument('db-uri')
 @click.option('--namespace', default='tsh')

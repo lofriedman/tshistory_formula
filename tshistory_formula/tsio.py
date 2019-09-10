@@ -128,13 +128,17 @@ class timeseries(basets):
     def get(self, cn, name, **kw):
         formula = self.formula(cn, name)
         if formula:
-            i = kw.get('__interpreter__') or interpreter.Interpreter(cn, self, kw)
-            ts = i.evaluate(formula)
+            ts = self.eval_formula(cn, formula, **kw)
             if ts is not None:
                 ts.name = name
             return ts
 
         return super().get(cn, name, **kw)
+
+    def eval_formula(self, cn, formula, **kw):
+        i = kw.get('__interpreter__') or interpreter.Interpreter(cn, self, kw)
+        ts = i.evaluate(formula)
+        return ts
 
     @tx
     def delete(self, cn, name):

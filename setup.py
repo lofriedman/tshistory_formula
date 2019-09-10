@@ -19,6 +19,7 @@ setup(name='tshistory_formula',
           'compare-aliases=tshistory_formula.cli:compare_aliases',
           'ingest-formulas=tshistory_formula.cli:ingest_formulas',
           'update-formula-metadata=tshistory_formula.cli:update_metadata',
+          'test-formula=tshistory_formula.cli:test_formula',
           'shell=tshistory_formula.cli:shell'
       ]},
       classifiers=[
