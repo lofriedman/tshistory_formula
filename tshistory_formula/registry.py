@@ -1,3 +1,5 @@
+from decorator import decorate
+import pandas as pd
 
 FUNCS = {}
 FINDERS = {}
@@ -7,8 +9,17 @@ EDITORINFOS = {}
 def func(name):
 
     def decorator(func):
-        FUNCS[name] = func
-        return func
+        def _ensure_series_options(func, *a, **kw):
+            res = func(*a, **kw)
+            if isinstance(res, pd.Series):
+                if not getattr(res, 'options', None):
+                    res.options = {}
+            return res
+
+        dec = decorate(func, _ensure_series_options)
+
+        FUNCS[name] = dec
+        return dec
 
     return decorator
 

@@ -10,6 +10,7 @@ setup(name='tshistory_formula',
 
       packages=['tshistory_formula'],
       install_requires=[
+          'decorator',
           'tshistory',
           'psyl',
           'tshistory_alias'

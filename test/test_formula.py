@@ -92,6 +92,23 @@ def test_metadata(engine, tsh):
     }
 
 
+def test_series_options(engine, tsh):
+    test = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.insert(engine, test, 'options-a', 'Babar')
+    tsh.insert(engine, test, 'options-b', 'Babar')
+    tsh.register_formula(
+        engine,
+        'test_series_option',
+        '(add (series "options-a") (series "options-b"))',
+    )
+
+    ts = tsh.get(engine, 'test_series_option')
+    assert ts.options == {}
+
+
 def test_base_api(engine, tsh):
     tsh.register_formula(engine, 'test_plus_two', '(+ (series "test") 2)', False)
     tsh.register_formula(engine, 'test_three_plus', '(+ 3 (series "test"))', False)
