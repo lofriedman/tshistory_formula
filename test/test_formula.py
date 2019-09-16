@@ -660,7 +660,7 @@ def test_ifunc(engine, tsh):
     @finder('shifted')
     def find_series(cn, tsh, stree):
         return {
-            stree[1]: tsh.exists(cn, stree[1])
+            stree[1]: tsh.metadata(cn, stree[1])
         }
 
     tsh.register_formula(
