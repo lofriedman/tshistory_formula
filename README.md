@@ -109,6 +109,17 @@ an input series has missing values for a given time stamp, the
 resulting series has no value for this timestamp (unless a fill rule
 is provided).
 
+### priority
+
+The priority operator combines its input series as layers. For each
+timestamp in the union of all series time stamps, the value comes from
+the first series that provides a value.
+
+Example: `(priority (series "realized") (series "nominated") (series "forecasted"))`
+
+Here `realized` values show up first, and any missing values come from
+`nominated` first and then only from `forecasted`.
+
 
 # API
 
