@@ -95,6 +95,20 @@ which must be numbers (integers or floats).
 
 Example: `(clip (series "must-be-positive") #:min 0)`
 
+### add
+
+Linear combination of two or more series. Takes a variable number
+of series as input.
+
+Example: `(add (series "wallonie") (series "bruxelles") (series "flandres"))`
+
+To specify the behaviour of the `add` operation in the face of missing
+data, the series can be built with the `fill` keyword. This option is
+only really applied when several series are combined. By default, if
+an input series has missing values for a given time stamp, the
+resulting series has no value for this timestamp (unless a fill rule
+is provided).
+
 
 # API
 
