@@ -120,6 +120,12 @@ This might convert a series priced in dollars to a series priced in
 euros, using a currency exchange rate series with a forward-fill
 option.
 
+### div
+
+Element wise division of two series.
+
+Example: `(div (series "$-to-€") (series "€-to-£"))`
+
 ### priority
 
 The priority operator combines its input series as layers. For each
