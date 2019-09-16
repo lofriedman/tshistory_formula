@@ -126,6 +126,18 @@ Element wise division of two series.
 
 Example: `(div (series "$-to-€") (series "€-to-£"))`
 
+### *
+
+Performs a scalar product on a series.
+
+Example: `(* -1 (series "positive-things"))`
+
+### +
+
+Add a constant quantity to a series.
+
+Example: `(+ 42 (series "i-feel-undervalued"))`
+
 ### priority
 
 The priority operator combines its input series as layers. For each
