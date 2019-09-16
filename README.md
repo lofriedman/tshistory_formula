@@ -109,6 +109,17 @@ an input series has missing values for a given time stamp, the
 resulting series has no value for this timestamp (unless a fill rule
 is provided).
 
+### mul
+
+Element wise multiplication of series. Takes a variable number of series
+as input.
+
+Example: `(mul (series "banana-spot-price ($)") (series "$-to-€" #:fill 'ffill'))`
+
+This might convert a series priced in dollars to a series priced in
+euros, using a currency exchange rate series with a forward-fill
+option.
+
 ### priority
 
 The priority operator combines its input series as layers. For each
