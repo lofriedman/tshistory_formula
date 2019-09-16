@@ -412,11 +412,11 @@ def test_options(engine, tsh):
     FUNCS.pop('dummy')
 
 
-def test_outliers(engine, tsh):
+def test_clip(engine, tsh):
     tsh.register_formula(
         engine,
-        'test_outliers',
-        '(outliers (series "a") #:min 2 #:max 4)'
+        'test_clip',
+        '(clip (series "a") #:min 2 #:max 4)'
     )
 
     a = pd.Series(
@@ -425,7 +425,7 @@ def test_outliers(engine, tsh):
     )
     tsh.insert(engine, a, 'a', 'Babar')
 
-    cleaned = tsh.get(engine, 'test_outliers')
+    cleaned = tsh.get(engine, 'test_clip')
     assert_df("""
 2019-01-02    2.0
 2019-01-03    3.0
@@ -434,7 +434,7 @@ def test_outliers(engine, tsh):
 
     restricted = tsh.get(
         engine,
-        'test_outliers',
+        'test_clip',
         from_value_date=dt(2019, 1, 3),
         to_value_date=dt(2019, 1, 3)
     )
@@ -448,7 +448,7 @@ def test_error(engine, tsh):
         tsh.register_formula(
             engine,
             'test_error',
-            '(outliers (series "a")'
+            '(clip (series "a")'
         )
 
     with pytest.raises(ValueError) as err:
@@ -756,10 +756,10 @@ def test_types(tsh):
         'add': {'return': 'Series', 'serieslist': 'Series'},
         'div': {'return': 'Series', 's1': 'Series', 's2': 'Series'},
         'mul': {'return': 'Series', 'serieslist': 'Series'},
-        'outliers': {'max': 'typing.Union[int, NoneType]',
-                     'min': 'typing.Union[int, NoneType]',
-                     'return': 'Series',
-                     'series': 'Series'},
+        'clip': {'max': 'typing.Union[float, NoneType]',
+                 'min': 'typing.Union[float, NoneType]',
+                 'return': 'Series',
+                 'series': 'Series'},
         'priority': {'return': 'Series', 'serieslist': 'Series'},
         'series': {'fill': 'typing.Union[str, NoneType]',
                    'name': 'str',

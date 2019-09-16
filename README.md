@@ -11,8 +11,6 @@ lisp-like syntax, using a pre-defined function library.
 
 Amongst the predefined functions we find:
 
-* filters for `outliers` elimination (fixed min/max values)
-
 * composition of series by arithmetic combination
 
 * scalar sum/product of series
@@ -88,6 +86,15 @@ parameter (the series) and two optional keywords `fromdate` and
 Example: `(slice (series "cut-me") #:fromdate "2018-01-01")`
 
 [iso8601]: https://en.wikipedia.org/wiki/ISO_8601
+
+### clip
+
+Set an upper/lower threashold for a series. Takes a series as
+positional parameter and accepts two optional keywords `min` and `max`
+which must be numbers (integers or floats).
+
+Example: `(clip (series "must-be-positive") #:min 0)`
+
 
 # API
 

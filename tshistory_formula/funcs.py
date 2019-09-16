@@ -137,10 +137,10 @@ def series_priority(*serieslist: pd.Series) -> pd.Series:
     return final
 
 
-@func('outliers')
-def series_drop_outliers(series: pd.Series,
-                         min: Optional[int]=None,
-                         max: Optional[int]=None) -> pd.Series:
+@func('clip')
+def series_clip(series: pd.Series,
+                min: Optional[float]=None,
+                max: Optional[float]=None) -> pd.Series:
     if max is not None:
         series = series[series <= max]
     if min is not None:
