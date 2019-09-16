@@ -20,6 +20,8 @@ Amongst the predefined functions we find:
 * composition of series by stacking series onto each others
   (named `priority`)
 
+* series slicing by date
+
 
 A `priority` is defined by a list of series, the first series
 providing baseline values, and the nexts completing missing values of
@@ -34,6 +36,8 @@ It is not possible to `.insert` data into a formula.
 
 
 # Formula
+
+## General Syntax
 
 Formulas are expressed in a lisp-like syntax using `operators`,
 mandatory parameters and keyword (optional) parameters.
@@ -55,6 +59,11 @@ A `priority` will be written like this:
 
 * `(priority (series "realized") (series "nominated") (series "forecasted"))`
 
+
+## Pre-defined operators
+
+### series
+
 The `series` operator accepts several keywords:
 
 * `fill` to specify a filling policy to avoid `nans` when the series
@@ -70,6 +79,15 @@ instead of nans where `b` provides values.
 
 In `(series "realized" #:prune 3)` we would drop the last three points.
 
+### slice
+
+This allows cutting a series at date points. It takes one positional
+parameter (the series) and two optional keywords `fromdate` and
+`todate` which must be strings in the [iso8601][iso8601] format.
+
+Example: `(slice (series "cut-me") #:fromdate "2018-01-01")`
+
+[iso8601]: https://en.wikipedia.org/wiki/ISO_8601
 
 # API
 
