@@ -142,11 +142,47 @@ A few api calls are added to the `tshistory` base:
 
 * `.register_formula` to define a formula
 
-* `.convert_aliases` to convert aliases to formulas (see the
-  superceded [tshistory_alias][tshistory_alias] component)
+* `.eval_formula` to evaluate on-the-fly a formula (useful to check
+  that it computes before registering it)
 
 [tshistory_alias]: https://bitbucket.org/pythonian/tshistory_alias
 
+## register_formula
+
+Exemple:
+
+```python
+  tsh.register_formula(
+      cn,
+      'my-sweet-formula',
+      '(* 3.14 (series "going-round"))',
+      reject_unkown=True,
+      update=True
+  )
+```
+
+First comes the db connection object, second the formula name, last
+the actual expression.
+
+The `reject_unknown` parameter, which is True by default, makes the
+method fail if one constituent of the formula does not exist
+(e.g. "going-round" is neither a primary series or a formula).
+
+The `update` parameter tells wether an existing formula can be
+overwritten (False by default).
+
+# eval_formula
+
+Example:
+
+```python
+ >>> tsh.eval_formula(cn, '(* 3.14 (series "going-round"))')
+ ...
+ 2020-01-01    3.14
+ 2020-01-02    6.28
+ 2020-01-03    9.42
+ dtype: float64
+```
 
 # Command line
 
