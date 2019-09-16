@@ -9,26 +9,16 @@ build computed series.
 Using `csv` definition files, one can define formula using a simple
 lisp-like syntax, using a pre-defined function library.
 
-Amongst the predefined functions we find:
+Formulae are read-only series (you can't `update` or `replace`
+values).
 
-* composition of series by arithmetic combination
+They also have an history, which is built, time stamps wise, using the
+union of all constituent time stamps, and value wise, by applying the
+formula.
 
-* scalar sum/product of series
-
-* composition of series by stacking series onto each others
-  (named `priority`)
-
-* series slicing by date
-
-
-A `priority` is defined by a list of series, the first series
-providing baseline values, and the nexts completing missing values of
-the previous combination (up to the baseline).
-
-For instance one could use the realised solar output as a baseline of
-a `priority` which would be completed by a forecast series.
-
-It is not possible to `.insert` data into a formula.
+Because of this the `staircase` operator is available on formulae.
+Some `staircase` operations can have a very fast implementation if the
+formula obeys commutativity rules.
 
 [tshistory]: https://bitbucket.org/pythonian/tshistory
 
@@ -38,7 +28,7 @@ It is not possible to `.insert` data into a formula.
 ## General Syntax
 
 Formulas are expressed in a lisp-like syntax using `operators`,
-mandatory parameters and keyword (optional) parameters.
+positional (mandatory) parameters and keyword (optional) parameters.
 
 The general form is:
 
@@ -52,10 +42,6 @@ Here we see the two fundamental `add` and `series` operators at work.
 
 This would form a new synthetic series out of three base series (which
 can be either raw series or formulas themselves).
-
-A `priority` will be written like this:
-
-* `(priority (series "realized") (series "nominated") (series "forecasted"))`
 
 
 ## Pre-defined operators
