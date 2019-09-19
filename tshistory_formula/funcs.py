@@ -65,25 +65,46 @@ def scalar_prod(
     return ts
 
 
+def _fill(df, colname, fillopt):
+    """ in-place application of the series fill policies
+    which can be a int/float or a coma separated string
+    like e.g. 'ffill,bfill'
+    """
+    if isinstance(fillopt, str):
+        for method in fillopt.split(','):
+            df[colname] = df[colname].fillna(
+                method=method.strip()
+            )
+    elif isinstance(fillopt, (int, float)):
+        df[colname] = df[colname].fillna(
+            value=fillopt
+        )
+
+
 def _group_series(*serieslist):
     df = None
-    filloptmap = {}
+    opts = {}
 
+    # join everything
     for ts in serieslist:
-        if options(ts).get('fill') is not None:
-            filloptmap[ts.name] = ts.options['fill']
+        while ts.name in opts:
+            ts.name = f'{id(ts)}'  # do something unique
+        fillopt = (
+            ts.options['fill']
+            if ts.options.get('fill') is not None
+            else None
+        )
+        opts[ts.name] = fillopt
         if df is None:
+            # careful here: what if len(ts) == 0 ?
             df = ts.to_frame()
             continue
+        # careful here: what if len(ts) == 0 ?
         df = df.join(ts, how='outer')
 
-    for ts, fillopt in filloptmap.items():
-        if isinstance(fillopt, str):
-            for method in fillopt.split(','):
-                df[ts] = df[ts].fillna(method=method.strip())
-        else:
-            assert isinstance(fillopt, (int, float))
-            df[ts] = df[ts].fillna(value=fillopt)
+    # apply the filling rules
+    for name, fillopt in opts.items():
+        _fill(df, name, fillopt)
 
     return df
 
@@ -160,5 +181,7 @@ def slice(series: pd.Series,
           todate: Optional[iso_utc_datetime]=None) -> pd.Series:
     fromdate = fromdate and iso_utc_datetime(fromdate) or None
     todate = todate and iso_utc_datetime(todate) or None
-    return series.loc[fromdate:todate]
+    sliced = series.loc[fromdate:todate]
+    sliced.options = series.options
+    return sliced
 

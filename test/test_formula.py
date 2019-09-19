@@ -1099,6 +1099,25 @@ def test_slice(engine, tsh):
     assert len(tsh.get(engine, 'slicing-empty')) == 0
 
 
+def test_slice_options(engine, tsh):
+    base = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.insert(engine, base, 'test-slice', 'Babar')
+    # options transmissions
+    ts = tsh.eval_formula(
+        engine,
+        '(add (series "test-slice") '
+        '     (slice (series "test-slice" #:fill 0) #:fromdate "2019-1-2"))',
+    )
+    assert_df("""
+2019-01-01 00:00:00+00:00    1.0
+2019-01-02 00:00:00+00:00    4.0
+2019-01-03 00:00:00+00:00    6.0
+""", ts)
+
+
 def test_mul(engine, tsh):
     base = pd.Series(
         [1, 2, 3],
