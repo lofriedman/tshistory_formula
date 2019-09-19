@@ -124,6 +124,12 @@ Add a constant quantity to a series.
 
 Example: `(+ 42 (series "i-feel-undervalued"))`
 
+### /
+
+Perform a scalar division between numbers or a series and a scalar.
+
+Example: `(/ (series "div-me") (/ 3 2))`
+
 ### priority
 
 The priority operator combines its input series as layers. For each

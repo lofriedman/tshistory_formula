@@ -296,6 +296,23 @@ def test_linear_combo(engine, tsh):
 """, ts)
 
 
+def test_scalar_div(engine, tsh):
+    a = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.insert(engine, a, 'div-me', 'Babar')
+    ts = tsh.eval_formula(
+        engine,
+        '(/ (series "div-me") (/ 3 2))'
+    )
+    assert_df("""
+2019-01-01    0.666667
+2019-01-02    1.333333
+2019-01-03    2.000000
+""", ts)
+
+
 def test_priority(engine, tsh):
     tsh.register_formula(
         engine,
@@ -753,6 +770,9 @@ def test_types(tsh):
         '+': {'a': 'typing.Union[int, float, Series]',
               'b': 'typing.Union[int, float, Series]',
               'return': 'Series'},
+        '/': {'a': 'typing.Union[int, float, Series]',
+              'b': 'typing.Union[int, float]',
+              'return': 'typing.Union[int, float, Series]'},
         'add': {'return': 'Series', 'serieslist': 'Series'},
         'div': {'return': 'Series', 's1': 'Series', 's2': 'Series'},
         'mul': {'return': 'Series', 'serieslist': 'Series'},

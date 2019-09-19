@@ -65,6 +65,22 @@ def scalar_prod(
     return ts
 
 
+@func('/')
+def scalar_div(
+        a: Union[int, float, pd.Series],
+        b: Union[int, float]) -> Union[int, float, pd.Series]:
+    opts = None
+    if isinstance(a, pd.Series):
+        assert isinstance(b, (int, float))
+        opts = options(a)
+
+    res = a / b
+    if opts is not None:
+        res.options = opts
+    return res
+
+
+
 def _fill(df, colname, fillopt):
     """ in-place application of the series fill policies
     which can be a int/float or a coma separated string
@@ -96,10 +112,8 @@ def _group_series(*serieslist):
         )
         opts[ts.name] = fillopt
         if df is None:
-            # careful here: what if len(ts) == 0 ?
             df = ts.to_frame()
             continue
-        # careful here: what if len(ts) == 0 ?
         df = df.join(ts, how='outer')
 
     # apply the filling rules
