@@ -42,7 +42,7 @@ def test_metadata(engine, tsh):
         index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
     )
 
-    tsh.insert(engine, naive, 'metadata_naive', 'Babar',
+    tsh.update(engine, naive, 'metadata_naive', 'Babar',
                insertion_date=utcdt(2019, 1, 1))
 
     tsh.register_formula(
@@ -63,7 +63,7 @@ def test_metadata(engine, tsh):
         [1, 2, 3],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
     )
-    tsh.insert(engine, aware, 'metadata_tzaware', 'Babar',
+    tsh.update(engine, aware, 'metadata_tzaware', 'Babar',
                insertion_date=utcdt(2019, 1, 1))
 
 
@@ -102,8 +102,8 @@ def test_series_options(engine, tsh):
         [1, 2, 3],
         index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
     )
-    tsh.insert(engine, test, 'options-a', 'Babar')
-    tsh.insert(engine, test, 'options-b', 'Babar')
+    tsh.update(engine, test, 'options-a', 'Babar')
+    tsh.update(engine, test, 'options-b', 'Babar')
     tsh.register_formula(
         engine,
         'test_series_option',
@@ -133,7 +133,7 @@ def test_base_api(engine, tsh):
         index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
     )
 
-    tsh.insert(engine, test, 'test', 'Babar',
+    tsh.update(engine, test, 'test', 'Babar',
                insertion_date=utcdt(2019, 1, 1))
 
     twomore = tsh.get(engine, 'test_plus_two')
@@ -232,7 +232,7 @@ def test_linear_combo(engine, tsh):
         index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
     )
 
-    tsh.insert(engine, x, 'x', 'Babar',
+    tsh.update(engine, x, 'x', 'Babar',
                insertion_date=idate)
 
     y = pd.Series(
@@ -240,7 +240,7 @@ def test_linear_combo(engine, tsh):
         index=pd.date_range(dt(2019, 1, 3), periods=3, freq='D')
     )
 
-    tsh.insert(engine, y, 'y', 'Babar',
+    tsh.update(engine, y, 'y', 'Babar',
                insertion_date=idate)
 
     z = pd.Series(
@@ -248,7 +248,7 @@ def test_linear_combo(engine, tsh):
         index=pd.date_range(dt(2019, 1, 3), periods=1, freq='D')
     )
 
-    tsh.insert(engine, z, 'z', 'Babar',
+    tsh.update(engine, z, 'z', 'Babar',
                insertion_date=idate)
 
     ts = tsh.get(engine, 'addseries')
@@ -277,7 +277,7 @@ def test_linear_combo(engine, tsh):
         index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
     )
 
-    tsh.insert(engine, x, 'x', 'Babar',
+    tsh.update(engine, x, 'x', 'Babar',
                insertion_date=idate2)
 
     y = pd.Series(
@@ -285,7 +285,7 @@ def test_linear_combo(engine, tsh):
         index=pd.date_range(dt(2019, 1, 3), periods=3, freq='D')
     )
 
-    tsh.insert(engine, y, 'y', 'Babar',
+    tsh.update(engine, y, 'y', 'Babar',
                insertion_date=idate2)
 
     ts = tsh.get(engine, 'addseries')
@@ -312,7 +312,7 @@ def test_scalar_div(engine, tsh):
         [1, 2, 3],
         index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
     )
-    tsh.insert(engine, a, 'div-me', 'Babar')
+    tsh.update(engine, a, 'div-me', 'Babar')
     ts = tsh.eval_formula(
         engine,
         '(/ (series "div-me") (/ 3 2))'
@@ -345,9 +345,9 @@ def test_priority(engine, tsh):
         index=pd.date_range(dt(2019, 1, 3), periods=3, freq='D')
     )
 
-    tsh.insert(engine, a, 'a', 'Babar')
-    tsh.insert(engine, b, 'b', 'Celeste')
-    tsh.insert(engine, c, 'c', 'Arthur')
+    tsh.update(engine, a, 'a', 'Babar')
+    tsh.update(engine, b, 'b', 'Celeste')
+    tsh.update(engine, c, 'c', 'Arthur')
 
     prio = tsh.get(engine, 'test_prio')
 
@@ -401,9 +401,9 @@ def test_priority2(engine, tsh):
         index=pd.date_range(dt(2019, 1, 1), periods=5, freq='D')
     )
 
-    tsh.insert(engine, real, 'real', 'Babar')
-    tsh.insert(engine, nom, 'nom', 'Celeste')
-    tsh.insert(engine, fcst, 'fcst', 'Arthur')
+    tsh.update(engine, real, 'real', 'Babar')
+    tsh.update(engine, nom, 'nom', 'Celeste')
+    tsh.update(engine, fcst, 'fcst', 'Arthur')
 
     prio = tsh.get(engine, 'test_prio2')
 
@@ -451,7 +451,7 @@ def test_clip(engine, tsh):
         [1, 2, 3, 4, 5],
         index=pd.date_range(dt(2019, 1, 1), periods=5, freq='D')
     )
-    tsh.insert(engine, a, 'a', 'Babar')
+    tsh.update(engine, a, 'a', 'Babar')
 
     cleaned = tsh.get(engine, 'test_clip')
     assert_df("""
@@ -506,7 +506,7 @@ def test_history(engine, tsh):
                 [day] * 3,
             index=pd.date_range(dt(2018, 1, 1), periods=3, freq='D')
             )
-            tsh.insert(engine, ts, 'h' + name, 'Babar',
+            tsh.update(engine, ts, 'h' + name, 'Babar',
                        insertion_date=idate)
 
     h = tsh.history(engine, 'h-addition')
@@ -548,7 +548,7 @@ insertion_date             value_date
             [41 + day] * 3,
             index=pd.date_range(dt(2018, 1, 3), periods=3, freq='D')
         )
-        tsh.insert(engine, ts, 'hz', 'Babar',
+        tsh.update(engine, ts, 'hz', 'Babar',
                    insertion_date=idate)
 
     h = tsh.history(engine, 'h-priority')
@@ -587,7 +587,7 @@ def test_staircase(engine, tsh):
                 [day / 2.] * 5,
                 index=pd.date_range(dt(2018, 1, day), periods=5, freq='D')
             )
-            tsh.insert(engine, ts, 's' + name, 'Babar',
+            tsh.update(engine, ts, 's' + name, 'Babar',
                        insertion_date=idate)
 
     ts = tsh.staircase(engine, 's-addition', delta=pd.Timedelta(hours=12))
@@ -658,7 +658,7 @@ def test_new_func(engine, tsh):
         [1, 2, 3],
         index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
     )
-    tsh.insert(engine, ts, 'id-a', 'Babar')
+    tsh.update(engine, ts, 'id-a', 'Babar')
 
     ts = tsh.get(engine, 'identity')
     assert_df("""
@@ -702,7 +702,7 @@ def test_ifunc(engine, tsh):
         [1, 2, 3, 4, 5],
         index=pd.date_range(dt(2019, 1, 1), periods=5, freq='D')
     )
-    tsh.insert(
+    tsh.update(
         engine, ts, 'shiftme', 'Babar',
         insertion_date=utcdt(2019, 1, 1)
     )
@@ -732,7 +732,7 @@ def test_ifunc(engine, tsh):
         [1, 2, 3, 4, 5],
         index=pd.date_range(dt(2019, 1, 2), periods=5, freq='D')
     )
-    tsh.insert(
+    tsh.update(
         engine, ts, 'shiftme', 'Babar',
         insertion_date=utcdt(2019, 1, 2)
 
@@ -828,7 +828,7 @@ def test_rename(engine, tsh):
         [1, 2, 3],
         index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
     )
-    tsh.insert(engine, ts, 'rename-a', 'Babar')
+    tsh.update(engine, ts, 'rename-a', 'Babar')
 
     tsh.register_formula(
         engine,
@@ -895,8 +895,8 @@ def test_editor_table_callback(engine, tsh):
         [1, 1, 1],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
     )
-    tsh.insert(engine, groundzero, 'groundzero-a', 'Babar')
-    tsh.insert(engine, one, 'one-a', 'Celeste')
+    tsh.update(engine, groundzero, 'groundzero-a', 'Babar')
+    tsh.update(engine, one, 'one-a', 'Celeste')
 
     tsh.register_formula(
         engine,
@@ -1032,7 +1032,7 @@ def test_slice(engine, tsh):
         [1, 2, 3],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
     )
-    tsh.insert(engine, base, 'test-slice', 'Babar')
+    tsh.update(engine, base, 'test-slice', 'Babar')
     tsh.register_formula(
         engine,
         'slicing-id',
@@ -1077,7 +1077,7 @@ def test_slice_options(engine, tsh):
         [1, 2, 3],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
     )
-    tsh.insert(engine, base, 'test-slice', 'Babar')
+    tsh.update(engine, base, 'test-slice', 'Babar')
     # options transmissions
     ts = tsh.eval_formula(
         engine,
@@ -1096,9 +1096,9 @@ def test_mul(engine, tsh):
         [1, 2, 3],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
     )
-    tsh.insert(engine, base, 'mul-a', 'Babar')
-    tsh.insert(engine, base, 'mul-b', 'Babar')
-    tsh.insert(engine, base, 'mul-c', 'Babar')
+    tsh.update(engine, base, 'mul-a', 'Babar')
+    tsh.update(engine, base, 'mul-b', 'Babar')
+    tsh.update(engine, base, 'mul-c', 'Babar')
     tsh.register_formula(
         engine,
         'multiply-aligned',
@@ -1116,7 +1116,7 @@ def test_mul(engine, tsh):
         [1, 2, np.nan],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
     )
-    tsh.insert(engine, base, 'mul-b', 'Babar')
+    tsh.update(engine, base, 'mul-b', 'Babar')
 
     ts = tsh.get(engine, 'multiply-aligned')
     assert_df("""
@@ -1143,8 +1143,8 @@ def test_div(engine, tsh):
         [1, 2, 3],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
     )
-    tsh.insert(engine, base, 'div-a', 'Babar')
-    tsh.insert(engine, base, 'div-b', 'Babar')
+    tsh.update(engine, base, 'div-a', 'Babar')
+    tsh.update(engine, base, 'div-b', 'Babar')
     tsh.register_formula(
         engine,
         'divide',
@@ -1162,7 +1162,7 @@ def test_div(engine, tsh):
         [2, 1, np.nan],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
     )
-    tsh.insert(engine, base, 'div-b', 'Babar')
+    tsh.update(engine, base, 'div-b', 'Babar')
 
     ts = tsh.get(engine, 'divide')
     assert_df("""
@@ -1216,9 +1216,9 @@ def test_row_mean(engine, tsh):
 2015-01-07 00:00:00+00:00  0.0  1.0  2.0
 """, summary)
 
-    tsh.insert(engine, station0, 'station0', 'Babar')
-    tsh.insert(engine, station1, 'station1', 'Celeste')
-    tsh.insert(engine, station2, 'station2', 'Arthur')
+    tsh.update(engine, station0, 'station0', 'Babar')
+    tsh.update(engine, station1, 'station1', 'Celeste')
+    tsh.update(engine, station2, 'station2', 'Arthur')
 
     formula = (
         '(row-mean '
