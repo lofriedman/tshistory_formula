@@ -12,12 +12,9 @@ setup(name='tshistory_formula',
       install_requires=[
           'decorator',
           'tshistory',
-          'psyl',
-          'tshistory_alias'
+          'psyl'
       ],
       entry_points={'tshistory.subcommands': [
-          'convert-aliases=tshistory_formula.cli:convert_aliases',
-          'compare-aliases=tshistory_formula.cli:compare_aliases',
           'ingest-formulas=tshistory_formula.cli:ingest_formulas',
           'update-formula-metadata=tshistory_formula.cli:update_metadata',
           'test-formula=tshistory_formula.cli:test_formula',

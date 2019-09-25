@@ -886,69 +886,6 @@ def test_rename(engine, tsh):
     ) == '(add (series "survived") (series "a-renamed" #:fill 0))'
 
 
-def test_convert_alias(engine, tsh):
-    groundzero = pd.Series(
-        [0, 0, 0],
-        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
-    )
-    one = pd.Series(
-        [1, 1, 1],
-        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
-    )
-    two = pd.Series(
-        [2, 2, 2, 2, 2],
-        index=pd.date_range(utcdt(2019, 1, 1), periods=5, freq='D')
-    )
-
-    tsh.insert(engine, groundzero, 'groundzero', 'Babar')
-    tsh.insert(engine, one, 'one', 'Babar')
-    tsh.insert(engine, two, 'two', 'Babar')
-
-    tsh.build_arithmetic(
-        engine, 'ones', {
-            'groundzero': round(math.pi, 4),
-            'one': 1
-        },
-        {'groundzero': 'bfill'}
-    )
-    tsh.build_priority(engine, 'twos', ['ones', 'two'],
-                       map_prune={'ones': 1})
-
-    ts = tsh.get(engine, 'twos')
-    assert_df("""
-2019-01-01 00:00:00+00:00    1.0
-2019-01-02 00:00:00+00:00    1.0
-2019-01-03 00:00:00+00:00    2.0
-2019-01-04 00:00:00+00:00    2.0
-2019-01-05 00:00:00+00:00    2.0
-""", ts)
-
-    tsh.convert_aliases(engine)
-
-    ts = tsh.get(engine, 'ones')
-    assert_df("""
-2019-01-01 00:00:00+00:00    1.0
-2019-01-02 00:00:00+00:00    1.0
-2019-01-03 00:00:00+00:00    1.0
-""", ts)
-
-    ts = tsh.get(engine, 'twos')
-    assert_df("""
-2019-01-01 00:00:00+00:00    1.0
-2019-01-02 00:00:00+00:00    1.0
-2019-01-03 00:00:00+00:00    2.0
-2019-01-04 00:00:00+00:00    2.0
-2019-01-05 00:00:00+00:00    2.0
-""", ts)
-
-    assert tsh.formula(engine, 'ones') == (
-        '(add (* 3.1416 (series "groundzero" #:fill "bfill")) (series "one"))'
-    )
-    assert tsh.formula(engine, 'twos') == (
-        '(priority (series "ones" #:prune 1) (series "two"))'
-    )
-
-
 def test_editor_table_callback(engine, tsh):
     groundzero = pd.Series(
         [0, 0, 0],

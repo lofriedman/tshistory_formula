@@ -1,13 +1,13 @@
 from pathlib import Path
 
 from sqlhelp import sqlfile
-from tshistory_alias.schema import alias_schema
+from tshistory.schema import tsschema
 
 
 SCHEMA = Path(__file__).parent / 'schema.sql'
 
 
-class formula_schema(alias_schema):
+class formula_schema(tsschema):
 
     def create(self, engine):
         super().create(engine)

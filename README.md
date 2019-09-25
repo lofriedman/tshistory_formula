@@ -339,8 +339,6 @@ A few api calls are added to the `tshistory` base:
 * `.eval_formula` to evaluate on-the-fly a formula (useful to check
   that it computes before registering it)
 
-[tshistory_alias]: https://bitbucket.org/pythonian/tshistory_alias
-
 ## register_formula
 
 Exemple:
@@ -380,9 +378,8 @@ Example:
 
 # Command line
 
-A few commands are provided to deal with the specifics of aliases. The
-`tsh` command carries them. The output below shows only the specific
-aliases subcommands:
+The `tsh` command carries formula specific subcommands. The output
+below shows only the specific formula subcommands:
 
 ```shell
 $ tsh
@@ -392,6 +389,5 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  convert-aliases
   ingest-formulas           ingest a csv file of formulas Must be a...
 ```
