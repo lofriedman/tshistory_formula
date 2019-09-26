@@ -46,6 +46,97 @@ can be either raw series or formulas themselves).
 
 ## Pre-defined operators
 
+### *
+
+Performs a scalar product on a series.
+
+Example: `(* -1 (series "positive-things"))`
+
+### +
+
+Add a constant quantity to a series.
+
+Example: `(+ 42 (series "i-feel-undervalued"))`
+
+### /
+
+Perform a scalar division between numbers or a series and a scalar.
+
+Example: `(/ (series "div-me") (/ 3 2))`
+
+### add
+
+Linear combination of two or more series. Takes a variable number
+of series as input.
+
+Example: `(add (series "wallonie") (series "bruxelles") (series "flandres"))`
+
+To specify the behaviour of the `add` operation in the face of missing
+data, the series can be built with the `fill` keyword. This option is
+only really applied when several series are combined. By default, if
+an input series has missing values for a given time stamp, the
+resulting series has no value for this timestamp (unless a fill rule
+is provided).
+
+### clip
+
+Set an upper/lower threashold for a series. Takes a series as
+positional parameter and accepts two optional keywords `min` and `max`
+which must be numbers (integers or floats).
+
+Example: `(clip (series "must-be-positive") #:min 0)`
+
+### div
+
+Element wise division of two series.
+
+Example: `(div (series "$-to-€") (series "€-to-£"))`
+
+### min
+
+Computes the row-wise minimum of its input series.
+
+Example: `(min (series "station0") (series "station1") (series "station2"))`
+
+### max
+
+Computes the row-wise maximum of its input series.
+
+Example: `(max (series "station0") (series "station1") (series "station2"))`
+
+### mul
+
+Element wise multiplication of series. Takes a variable number of series
+as input.
+
+Example: `(mul (series "banana-spot-price ($)") (series "$-to-€" #:fill 'ffill'))`
+
+This might convert a series priced in dollars to a series priced in
+euros, using a currency exchange rate series with a forward-fill
+option.
+
+### priority
+
+The priority operator combines its input series as layers. For each
+timestamp in the union of all series time stamps, the value comes from
+the first series that provides a value.
+
+Example: `(priority (series "realized") (series "nominated") (series "forecasted"))`
+
+Here `realized` values show up first, and any missing values come from
+`nominated` first and then only from `forecasted`.
+
+### row-mean
+
+This operator computes the row-wise mean of its input series using the
+series `weight` option if present. The missing points are handled as
+if the whole series were absent.
+
+Example: `(row-mean (series "station0") (series "station1" #:weight 2) (series "station2"))`
+
+Weights are provided as a keyword to `series`. No weight is
+interpreted as 1.
+
 ### series
 
 The `series` operator accepts several keywords:
@@ -72,97 +163,6 @@ parameter (the series) and two optional keywords `fromdate` and
 Example: `(slice (series "cut-me") #:fromdate "2018-01-01")`
 
 [iso8601]: https://en.wikipedia.org/wiki/ISO_8601
-
-### clip
-
-Set an upper/lower threashold for a series. Takes a series as
-positional parameter and accepts two optional keywords `min` and `max`
-which must be numbers (integers or floats).
-
-Example: `(clip (series "must-be-positive") #:min 0)`
-
-### add
-
-Linear combination of two or more series. Takes a variable number
-of series as input.
-
-Example: `(add (series "wallonie") (series "bruxelles") (series "flandres"))`
-
-To specify the behaviour of the `add` operation in the face of missing
-data, the series can be built with the `fill` keyword. This option is
-only really applied when several series are combined. By default, if
-an input series has missing values for a given time stamp, the
-resulting series has no value for this timestamp (unless a fill rule
-is provided).
-
-### mul
-
-Element wise multiplication of series. Takes a variable number of series
-as input.
-
-Example: `(mul (series "banana-spot-price ($)") (series "$-to-€" #:fill 'ffill'))`
-
-This might convert a series priced in dollars to a series priced in
-euros, using a currency exchange rate series with a forward-fill
-option.
-
-### div
-
-Element wise division of two series.
-
-Example: `(div (series "$-to-€") (series "€-to-£"))`
-
-### *
-
-Performs a scalar product on a series.
-
-Example: `(* -1 (series "positive-things"))`
-
-### +
-
-Add a constant quantity to a series.
-
-Example: `(+ 42 (series "i-feel-undervalued"))`
-
-### /
-
-Perform a scalar division between numbers or a series and a scalar.
-
-Example: `(/ (series "div-me") (/ 3 2))`
-
-### min
-
-Computes the row-wise minimum of its input series.
-
-Example: `(min (series "station0") (series "station1") (series "station2"))`
-
-### max
-
-Computes the row-wise maximum of its input series.
-
-Example: `(max (series "station0") (series "station1") (series "station2"))`
-
-### priority
-
-The priority operator combines its input series as layers. For each
-timestamp in the union of all series time stamps, the value comes from
-the first series that provides a value.
-
-Example: `(priority (series "realized") (series "nominated") (series "forecasted"))`
-
-Here `realized` values show up first, and any missing values come from
-`nominated` first and then only from `forecasted`.
-
-### row-mean
-
-This operator computes the row-wise mean of its input series using the
-series `weight` option if present. The missing points are handled as
-if the whole series were absent.
-
-Example: `(row-mean (series "station0") (series "station1" #:weight 2) (series "station2"))`
-
-Weights are provided as a keyword to `series`. No weight is
-interpreted as 1.
 
 ### std
 
