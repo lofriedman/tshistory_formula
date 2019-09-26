@@ -237,3 +237,9 @@ def row_mean(*serieslist: pd.Series) -> pd.Series:
 def row_min(*serieslist: pd.Series) -> pd.Series:
     allseries = pd.concat(serieslist, axis=1)
     return allseries.min(axis=1)
+
+
+@func('max')
+def row_max(*serieslist: pd.Series) -> pd.Series:
+    allseries = pd.concat(serieslist, axis=1)
+    return allseries.max(axis=1)

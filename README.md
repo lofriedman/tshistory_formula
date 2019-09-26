@@ -136,6 +136,13 @@ Computes the row-wise minimum of its input series.
 
 Example: `(min (series "station0") (series "station1") (series "station2"))`
 
+### max
+
+Computes the row-wise maximum of its input series.
+
+Example: `(max (series "station0") (series "station1") (series "station2"))`
+
+
 ### priority
 
 The priority operator combines its input series as layers. For each
