@@ -775,6 +775,7 @@ def test_types(tsh):
               'return': 'typing.Union[int, float, Series]'},
         'add': {'return': 'Series', 'serieslist': 'Series'},
         'div': {'return': 'Series', 's1': 'Series', 's2': 'Series'},
+        'min': {'return': 'Series', 'serieslist': 'Series'},
         'mul': {'return': 'Series', 'serieslist': 'Series'},
         'clip': {'max': 'typing.Union[float, NoneType]',
                  'min': 'typing.Union[float, NoneType]',
@@ -1292,3 +1293,21 @@ def test_row_mean(engine, tsh):
 2015-01-06 00:00:00+00:00    1.250000
 2015-01-07 00:00:00+00:00    1.250000
 """, avg_index)
+
+
+    formula = '(min (series "station0") (series "station1") (series "station2"))'
+    tsh.register_formula(
+        engine,
+        'weather_min',
+        formula
+    )
+
+    assert_df("""
+2015-01-01 00:00:00+00:00    0.0
+2015-01-02 00:00:00+00:00    0.0
+2015-01-03 00:00:00+00:00    0.0
+2015-01-04 00:00:00+00:00    0.0
+2015-01-05 00:00:00+00:00    1.0
+2015-01-06 00:00:00+00:00    0.0
+2015-01-07 00:00:00+00:00    0.0
+""", tsh.get(engine, 'weather_min'))

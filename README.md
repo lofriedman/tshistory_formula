@@ -130,6 +130,12 @@ Perform a scalar division between numbers or a series and a scalar.
 
 Example: `(/ (series "div-me") (/ 3 2))`
 
+### min
+
+Computes the row-wise minimum of its input series.
+
+Example: `(min (series "station0") (series "station1") (series "station2"))`
+
 ### priority
 
 The priority operator combines its input series as layers. For each

@@ -231,3 +231,9 @@ def row_mean(*serieslist: pd.Series) -> pd.Series:
         (weighted_sum / denominator).flatten(),
         index=allseries.index
     )
+
+
+@func('min')
+def row_min(*serieslist: pd.Series) -> pd.Series:
+    allseries = pd.concat(serieslist, axis=1)
+    return allseries.min(axis=1)
