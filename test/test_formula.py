@@ -781,9 +781,11 @@ def test_types(tsh):
                  'return': 'Series',
                  'series': 'Series'},
         'priority': {'return': 'Series', 'serieslist': 'Series'},
+        'row-mean': {'return': 'Series', 'serieslist': 'Series'},
         'series': {'fill': 'typing.Union[str, NoneType]',
                    'name': 'str',
                    'prune': 'typing.Union[str, NoneType]',
+                   'weight': 'typing.Union[float, NoneType]',
                    'return': 'Series'},
          'slice': {
              'fromdate': 'typing.Union[tshistory_formula.funcs.iso_utc_datetime, NoneType]',
@@ -1229,3 +1231,64 @@ def test_div(engine, tsh):
 2019-01-02 00:00:00+00:00    2.0
 2019-01-03 00:00:00+00:00    1.0
 """, ts)
+
+
+def test_row_mean(engine, tsh):
+    dates = pd.date_range(
+        start=utcdt(2015, 1, 1),
+        freq='D',
+        periods=7
+    )
+
+    station0 = pd.Series([0] * 7, index=dates)
+    station1 = pd.Series([1] * 7, index=dates)
+    station2 = pd.Series([2] * 7, index=dates)
+
+    # we add some perturbations:
+    station1 = station1.drop(station0.index[2])
+    station0 = station0.drop(station0.index[4])
+    station2 = station2.drop(station2.index[4])
+
+    summary = pd.concat(
+        [station0, station1, station2],
+        axis=1
+    )
+
+    assert_df("""
+                             0    1    2
+2015-01-01 00:00:00+00:00  0.0  1.0  2.0
+2015-01-02 00:00:00+00:00  0.0  1.0  2.0
+2015-01-03 00:00:00+00:00  0.0  NaN  2.0
+2015-01-04 00:00:00+00:00  0.0  1.0  2.0
+2015-01-05 00:00:00+00:00  NaN  1.0  NaN
+2015-01-06 00:00:00+00:00  0.0  1.0  2.0
+2015-01-07 00:00:00+00:00  0.0  1.0  2.0
+""", summary)
+
+    tsh.insert(engine, station0, 'station0', 'Babar')
+    tsh.insert(engine, station1, 'station1', 'Celeste')
+    tsh.insert(engine, station2, 'station2', 'Arthur')
+
+    formula = (
+        '(row-mean '
+        '  (series "station0") '
+        '  (series "station1") '
+        '  (series "station2" #:weight 2))'
+    )
+
+    tsh.register_formula(
+        engine,
+        'weather_index',
+        formula
+    )
+
+    avg_index = tsh.get(engine, 'weather_index')
+    assert_df("""
+2015-01-01 00:00:00+00:00    1.250000
+2015-01-02 00:00:00+00:00    1.250000
+2015-01-03 00:00:00+00:00    1.333333
+2015-01-04 00:00:00+00:00    1.250000
+2015-01-05 00:00:00+00:00    1.000000
+2015-01-06 00:00:00+00:00    1.250000
+2015-01-07 00:00:00+00:00    1.250000
+""", avg_index)

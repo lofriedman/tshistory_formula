@@ -1,5 +1,6 @@
 from typing import Union, Optional
 
+import numpy as np
 import pandas as pd
 
 from tshistory.util import SeriesServices
@@ -14,7 +15,8 @@ def options(series):
 def series(__interpreter__,
            name: str,
            fill: Optional[str]=None,
-           prune: Optional[str]=None) -> pd.Series:
+           prune: Optional[str]=None,
+           weight: Optional[float]=None) -> pd.Series:
     i = __interpreter__
     ts = i.get(name, i.getargs)
     if ts is None:
@@ -26,6 +28,8 @@ def series(__interpreter__,
     ts.options = {
         'fill': fill
     }
+    if weight is not None:
+        ts.options['weight'] = weight
     return ts
 
 
@@ -199,3 +203,31 @@ def slice(series: pd.Series,
     sliced.options = series.options
     return sliced
 
+
+@func('row-mean')
+def row_mean(*serieslist: pd.Series) -> pd.Series:
+    """Computes element-wise weighted mean of the input series list
+
+    Missing points are handled as missing series.
+    """
+
+    weights = [
+        series.options.get('weight', 1)
+        for series in serieslist
+    ]
+
+    allseries = pd.concat(serieslist, axis=1)
+    weights_in_vertical_matrix = np.array(
+        [[w] for w in weights]
+    )
+    weighted_sum = allseries.fillna(0).values.dot(
+        weights_in_vertical_matrix
+    )
+    denominator = (~allseries.isnull()).values.dot(
+        weights_in_vertical_matrix
+    )
+
+    return pd.Series(
+        (weighted_sum / denominator).flatten(),
+        index=allseries.index
+    )

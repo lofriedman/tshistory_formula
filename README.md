@@ -141,6 +141,17 @@ Example: `(priority (series "realized") (series "nominated") (series "forecasted
 Here `realized` values show up first, and any missing values come from
 `nominated` first and then only from `forecasted`.
 
+### row-mean
+
+This operator computes the row-wise mean of its input series using the
+series `weight` option if present. The missing points are handled as
+if the whole series were absent.
+
+Example: `(row-mean (series "station0") (series "station1" #:weight 2) (series "station2"))`
+
+Weights are provided as a keyword to `series`. No weight is
+interpreted as 1.
+
 
 # Registering new operators
 
