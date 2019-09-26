@@ -787,12 +787,12 @@ def test_types(tsh):
                    'prune': 'typing.Union[str, NoneType]',
                    'weight': 'typing.Union[float, NoneType]',
                    'return': 'Series'},
-         'slice': {
-             'fromdate': 'typing.Union[tshistory_formula.funcs.iso_utc_datetime, NoneType]',
-             'return': 'Series',
-             'series': 'Series',
-             'todate': 'typing.Union[tshistory_formula.funcs.iso_utc_datetime, NoneType]'
-         }
+        'slice': {
+            'fromdate': 'typing.Union[tshistory_formula.funcs.iso_utc_datetime, NoneType]',
+            'return': 'Series',
+            'series': 'Series',
+            'todate': 'typing.Union[tshistory_formula.funcs.iso_utc_datetime, NoneType]'
+        }
     } == json.loads(types)
 
 
