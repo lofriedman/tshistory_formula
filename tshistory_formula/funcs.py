@@ -243,3 +243,9 @@ def row_min(*serieslist: pd.Series) -> pd.Series:
 def row_max(*serieslist: pd.Series) -> pd.Series:
     allseries = pd.concat(serieslist, axis=1)
     return allseries.max(axis=1)
+
+
+@func('std')
+def row_std(*serieslist: pd.Series) -> pd.Series:
+    allseries = pd.concat(serieslist, axis=1)
+    return allseries.std(axis=1)

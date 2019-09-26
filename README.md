@@ -142,7 +142,6 @@ Computes the row-wise maximum of its input series.
 
 Example: `(max (series "station0") (series "station1") (series "station2"))`
 
-
 ### priority
 
 The priority operator combines its input series as layers. For each
@@ -164,6 +163,12 @@ Example: `(row-mean (series "station0") (series "station1" #:weight 2) (series "
 
 Weights are provided as a keyword to `series`. No weight is
 interpreted as 1.
+
+### std
+
+Computes the standard deviation over its input series.
+
+Example: `(std (series "station0") (series "station1") (series "station2"))`
 
 
 # Registering new operators

@@ -794,7 +794,8 @@ def test_types(tsh):
             'return': 'Series',
             'series': 'Series',
             'todate': 'typing.Union[tshistory_formula.funcs.iso_utc_datetime, NoneType]'
-        }
+        },
+        'std': {'return': 'Series', 'serieslist': 'Series'}
     } == json.loads(types)
 
 
@@ -1330,3 +1331,20 @@ def test_row_mean(engine, tsh):
 2015-01-06 00:00:00+00:00    2.0
 2015-01-07 00:00:00+00:00    2.0
 """, tsh.get(engine, 'weather_max'))
+
+    formula = '(std (series "station0") (series "station1") (series "station2"))'
+    tsh.register_formula(
+        engine,
+        'weather_std',
+        formula
+    )
+
+    assert_df("""
+2015-01-01 00:00:00+00:00    1.000000
+2015-01-02 00:00:00+00:00    1.000000
+2015-01-03 00:00:00+00:00    1.414214
+2015-01-04 00:00:00+00:00    1.000000
+2015-01-05 00:00:00+00:00         NaN
+2015-01-06 00:00:00+00:00    1.000000
+2015-01-07 00:00:00+00:00    1.000000
+""", tsh.get(engine, 'weather_std'))
