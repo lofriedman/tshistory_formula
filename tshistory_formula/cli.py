@@ -1,3 +1,4 @@
+import json
 import click
 import pandas as pd
 from dateutil.relativedelta import relativedelta
@@ -150,12 +151,38 @@ def compare_aliases(dburi, staircase=False, series=None, match=None,
 
 @click.command(name='update-formula-metadata')
 @click.argument('dburi')
+@click.option('--reset', is_flag=True, default=False)
 @click.option('--namespace', default='tsh')
-def update_metadata(dburi, namespace='tsh'):
+def update_metadata(dburi, reset=False, namespace='tsh'):
     engine = create_engine(find_dburi(dburi))
     tsh = timeseries(namespace)
 
+    if reset:
+        for name, kind in tsh.list_series(engine).items():
+            if kind != 'formula':
+                continue
+            # reset
+            meta = tsh.metadata(engine, name)
+            if meta:
+                meta = {
+                    k: v for k, v in meta.items()
+                    if k not in tsh.metakeys
+                }
+            else:
+                meta = {}
+            sql = (f'update "{namespace}".formula '
+                   'set metadata = %(metadata)s '
+                   'where name = %(name)s')
+            print('reset', name, 'to', meta)
+            with engine.begin() as cn:
+                cn.execute(
+                    sql,
+                    metadata=json.dumps(meta),
+                    name=name
+                )
+
     todo = []
+    errors = []
 
     def justdoit():
         for name, kind in tsh.list_series(engine).items():
@@ -165,17 +192,21 @@ def update_metadata(dburi, namespace='tsh'):
 
             tree = parse(tsh.formula(engine, name))
             smap = tsh.find_series(engine, tree)
-            meta = tsh.filter_metadata(smap)
-            if meta is None:
+            try:
+                meta = tsh.filter_metadata(smap)
+            except ValueError as err:
+                errors.append((name, err))
+                continue
+            if not meta or 'index_dtype' not in meta:
                 todo.append(name)
                 print(' -> todo')
                 continue
             tsh.update_metadata(engine, name, meta)
 
-    lasttodosize = -1
-    while len(todo) != lasttodosize:
-        lasttodosize = len(todo)
-        justdoit()
+    justdoit()
+
+    print('TODO', todo)
+    print('FAIL', errors)
 
 
 
