@@ -15,7 +15,6 @@ from tshistory_formula.finder import find_series
 
 class timeseries(basets):
     fast_staircase_operators = set(['+', '*', 'series', 'add', 'priority'])
-    internal_metakeys = set(['tzaware', 'index_type', 'value_type'])
 
     def find_series(self, cn, tree):
         op = tree[0]
@@ -46,7 +45,7 @@ class timeseries(basets):
             metamap[name] = {
                 k: v
                 for k, v in meta.items()
-                if k in self.internal_metakeys
+                if k in self.metakeys
             }
         if not metamap:
             return {}

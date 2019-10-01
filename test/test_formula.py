@@ -52,8 +52,10 @@ def test_metadata(engine, tsh):
     )
 
     assert tsh.metadata(engine, 'test_meta') == {
+        'index_dtype': '<M8[ns]',
         'index_type': 'datetime64[ns]',
         'tzaware': False,
+        'value_dtype': '<f8',
         'value_type': 'float64'
     }
 
@@ -73,10 +75,11 @@ def test_metadata(engine, tsh):
         )
     assert err.value.args[0] == (
         "Formula `metadata_tzaware`: mismatching metadata:"
-        "`test_meta:{'tzaware': False, "
-        "'index_type': 'datetime64[ns]', 'value_type': 'float64'}`, "
-        "`metadata_tzaware:{'tzaware': "
-        "True, 'index_type': 'datetime64[ns, UTC]', 'value_type': 'float64'}`"
+        "`test_meta:{'tzaware': False, 'index_type': 'datetime64[ns]', "
+        "'value_type': 'float64', 'index_dtype': '<M8[ns]', "
+        "'value_dtype': '<f8'}`, "
+        "`metadata_tzaware:{'tzaware': True, 'index_type': 'datetime64[ns, UTC]', "
+        "'value_type': 'float64', 'index_dtype': '|M8[ns]', 'value_dtype': '<f8'}`"
     )
 
     tsh.register_formula(
@@ -86,8 +89,10 @@ def test_metadata(engine, tsh):
     )
     meta = tsh.metadata(engine, 'test_meta_primary_plus_formula')
     assert meta == {
+        'index_dtype': '<M8[ns]',
         'index_type': 'datetime64[ns]',
         'tzaware': False,
+        'value_dtype': '<f8',
         'value_type': 'float64'
     }
 
@@ -171,18 +176,22 @@ def test_base_api(engine, tsh):
 
     m = tsh.metadata(engine, 'test_product_a')
     assert m == {
+        'index_dtype': '<M8[ns]',
         'index_type': 'datetime64[ns]',
         'tzaware': False,
+        'value_dtype': '<f8',
         'value_type': 'float64'
     }
 
     tsh.update_metadata(engine, 'test_product_a', {'topic': 'spot price'})
     m = tsh.metadata(engine, 'test_product_a')
     assert m == {
+        'index_dtype': '<M8[ns]',
         'index_type': 'datetime64[ns]',
+        'topic': 'spot price',
         'tzaware': False,
-        'value_type': 'float64',
-        'topic': 'spot price'
+        'value_dtype': '<f8',
+        'value_type': 'float64'
     }
 
     tsh.update_metadata(
@@ -193,11 +202,13 @@ def test_base_api(engine, tsh):
     )
     m = tsh.metadata(engine, 'test_product_a')
     assert m == {
+        'index_dtype': '<M8[ns]',
         'index_type': 'datetime64[ns]',
-        'tzaware': False,
-        'value_type': 'float64',
         'topic': 'Spot Price',
-        'unit': '€'
+        'tzaware': False,
+        'unit': '€',
+        'value_dtype': '<f8',
+        'value_type': 'float64'
     }
 
     tsh.delete(engine, 'test_plus_two')
