@@ -6,7 +6,7 @@ from pathlib import Path
 
 from sqlalchemy import create_engine
 from sqlhelp import sqlfile
-from psyl.lisp import parse
+from psyl.lisp import parse, serialize, Symbol, Keyword
 from tshistory.util import find_dburi
 
 from tshistory_formula.tsio import timeseries
@@ -112,11 +112,72 @@ def test_formula(db_uri, formula, pdbshell=False, namespace='tsh'):
         import ipdb; ipdb.set_trace()
 
 
+def rewrite(tree, clipinfo):
+    # top-level/base case, we consider only "series"
+    rewritten = []
+    op = tree[0]
+    if op == 'clip':
+        return tree  # already rewritten
+    if op == 'series':
+        sid = tree[1]
+        if sid in clipinfo:
+            rewritten = [Symbol('clip'), tree]
+            min, max = clipinfo[sid]
+            if not pd.isnull(min):
+                rewritten += [Keyword('min'), min]
+            if not pd.isnull(max):
+                rewritten += [Keyword('max'), max]
+            return rewritten
+
+    for node in tree:
+        if isinstance(node, list):
+            rewritten.append(
+                rewrite(node, clipinfo)
+            )
+        else:
+            rewritten.append(node)
+    return rewritten
+
+
 @click.command(name='drop-alias-tables')
 @click.argument('db-uri')
 @click.option('--namespace', default='tsh')
 def drop_alias_tables(db_uri, namespace='tsh'):
     engine = create_engine(find_dburi(db_uri))
+
+    # convert outliers to clip operator
+
+    elts = {
+        k: (min, max)
+        for k, min, max in engine.execute(
+                'select serie, min, max from tsh.outliers'
+        ).fetchall()
+    }
+    tsh = timeseries(namespace)
+    rewriteme = []
+    for name, kind in tsh.list_series(engine).items():
+        if kind != 'formula':
+            continue
+        tree = parse(tsh.formula(engine, name))
+        smap = tsh.find_series(engine, tree)
+        for sname in smap:
+            if sname in elts:
+                rewriteme.append((name, tree))
+                break
+
+    for name, tree in rewriteme:
+        tree2 = rewrite(tree, elts)
+        print(name)
+        print(serialize(tree))
+        print('->')
+        print(serialize(tree2))
+        print()
+        tsh.register_formula(
+            engine,
+            name,
+            serialize(tree2),
+            update=True
+        )
 
     with engine.begin() as cn:
         cn.execute(
