@@ -141,8 +141,9 @@ def rewrite(tree, clipinfo):
 
 @click.command(name='drop-alias-tables')
 @click.argument('db-uri')
+@click.option('--drop', is_flag=True, default=False)
 @click.option('--namespace', default='tsh')
-def drop_alias_tables(db_uri, namespace='tsh'):
+def drop_alias_tables(db_uri, drop=False, namespace='tsh'):
     engine = create_engine(find_dburi(db_uri))
 
     # convert outliers to clip operator
@@ -179,15 +180,20 @@ def drop_alias_tables(db_uri, namespace='tsh'):
             update=True
         )
 
+    if not drop:
+        print('DID NOT DROP the tables')
+        print('pass --drop to really drop them')
+        return
+
     with engine.begin() as cn:
         cn.execute(
-            f'drop table "{namespace}".arithmetic'
+            f'drop table if exists "{namespace}".arithmetic'
         )
         cn.execute(
-            f'drop table "{namespace}".priority'
+            f'drop table if exists "{namespace}".priority'
         )
         cn.execute(
-            f'drop table "{namespace}".outliers'
+            f'drop table if exists "{namespace}".outliers'
         )
 
 
