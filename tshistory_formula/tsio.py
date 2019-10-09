@@ -5,12 +5,12 @@ from psyl.lisp import parse, serialize
 from tshistory.tsio import timeseries as basets
 from tshistory.util import tx
 
+from tshistory_formula import funcs  # trigger registration
 from tshistory_formula import interpreter
 from tshistory_formula.registry import (
     FINDERS,
     FUNCS
 )
-from tshistory_formula.finder import find_series
 
 
 class timeseries(basets):
@@ -18,7 +18,8 @@ class timeseries(basets):
 
     def find_series(self, cn, tree):
         op = tree[0]
-        smap = FINDERS.get(op, find_series)(cn, self, tree) or {}
+        finder = FINDERS.get(op)
+        smap = finder(cn, self, tree) if finder else {}
         for item in tree:
             if isinstance(item, list):
                 smap.update(

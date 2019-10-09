@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from tshistory.util import SeriesServices
-from tshistory_formula.registry import func
+from tshistory_formula.registry import func, finder
 
 
 def options(series):
@@ -31,6 +31,12 @@ def series(__interpreter__,
     if weight is not None:
         ts.options['weight'] = weight
     return ts
+
+
+@finder('series')
+def find_series(cn, tsh, stree):
+    name = stree[1]
+    return {name: tsh.metadata(cn, name)}
 
 
 @func('+')

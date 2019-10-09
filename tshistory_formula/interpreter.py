@@ -7,8 +7,7 @@ from functools import partial
 import pandas as pd
 from psyl.lisp import Env, evaluate, parse
 
-from tshistory_formula import funcs, registry
-from tshistory_formula.finder import find_series
+from tshistory_formula import registry
 
 
 class fjson(json.JSONEncoder):
@@ -113,7 +112,7 @@ def has_compatible_operators(cn, tsh, tree, good_operators):
         return False
 
     op = operators[0]
-    names = registry.FINDERS.get(op, find_series)(cn, tsh, tree)
+    names = tsh.find_series(cn, tree)
     for name in names:
         formula = tsh.formula(cn, name)
         if formula:
