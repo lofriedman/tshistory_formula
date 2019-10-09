@@ -19,13 +19,13 @@ class timeseries(basets):
     def find_series(self, cn, tree):
         op = tree[0]
         finder = FINDERS.get(op)
-        smap = finder(cn, self, tree) if finder else {}
+        seriesmeta = finder(cn, self, tree) if finder else {}
         for item in tree:
             if isinstance(item, list):
-                smap.update(
+                seriesmeta.update(
                     self.find_series(cn, item)
                 )
-        return smap
+        return seriesmeta
 
     def find_operators(self, cn, tree):
         ops = {
@@ -37,10 +37,10 @@ class timeseries(basets):
                 ops.update(newops)
         return ops
 
-    def filter_metadata(self, series):
+    def filter_metadata(self, seriesmeta):
         " collect series metadata and make sure they are compatible "
         metamap = {}
-        for name, meta in series.items():
+        for name, meta in seriesmeta.items():
             if not meta:
                 continue
             metamap[name] = {
@@ -66,9 +66,9 @@ class timeseries(basets):
             assert not self.formula(cn, name), f'`{name}` already exists'
         # basic syntax check
         tree = parse(formula)
-        smap = self.find_series(cn, tree)
-        if not all(smap.values()) and reject_unknown:
-            badseries = [k for k, v in smap.items() if not v]
+        seriesmeta = self.find_series(cn, tree)
+        if not all(seriesmeta.values()) and reject_unknown:
+            badseries = [k for k, v in seriesmeta.items() if not v]
             raise ValueError(
                 f'Formula `{name}` refers to unknown series '
                 f'{", ".join("`%s`" % s for s in badseries)}'
@@ -84,7 +84,7 @@ class timeseries(basets):
                 f'Formula `{name}` refers to unknown operators '
                 f'{", ".join("`%s`" % o for o in badoperators)}'
             )
-        meta = self.filter_metadata(smap)
+        meta = self.filter_metadata(seriesmeta)
         sql = (f'insert into "{self.namespace}".formula '
                '(name, text) '
                'values (%(name)s, %(text)s) '
@@ -287,13 +287,13 @@ class timeseries(basets):
 
         for fname, text in formulas:
             tree = parse(text)
-            smap = self.find_series(
+            seriesmeta = self.find_series(
                 cn,
                 tree
             )
-            if newname in smap:
+            if newname in seriesmeta:
                 errors.append(fname)
-            if oldname not in smap or errors:
+            if oldname not in seriesmeta or errors:
                 continue
 
             newtree = edit(tree, oldname, newname)
