@@ -139,6 +139,31 @@ class timeseries(basets):
         ts = i.evaluate(formula)
         return ts
 
+    def expanded_formula(self, cn, name):
+        formula = self.formula(cn, name)
+        tree = parse(formula)
+
+        def expanded(tree):
+            newtree = []
+            op = tree[0]
+            finder = FINDERS.get(op)
+            seriesmeta = finder(cn, self, tree) if finder else None
+            if seriesmeta:
+                name, meta = seriesmeta.popitem()
+                if self.type(cn, name) == 'formula':
+                    formula = self.formula(cn, name)
+                    subtree = parse(formula)
+                    return expanded(subtree)
+
+            for item in tree:
+                if isinstance(item, list):
+                    newtree.append(expanded(item))
+                else:
+                    newtree.append(item)
+            return newtree
+
+        return serialize(expanded(tree))
+
     @tx
     def delete(self, cn, name):
         if self.type(cn, name) != 'formula':

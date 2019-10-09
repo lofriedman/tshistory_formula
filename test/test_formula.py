@@ -1027,6 +1027,61 @@ def test_custom_metadata(engine, tsh):
     FUNCS.pop('customseries')
 
 
+def test_expanded(engine, tsh):
+    @func('customseries')
+    def customseries():
+        return pd.Series(
+            [1.0, 2.0, 3.0],
+            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+        )
+
+    @finder('customseries')
+    def find(cn, tsh, tree):
+        return {
+            tree[0]: {
+                'tzaware': True,
+                'index_type': 'datetime64[ns, UTC]',
+                'value_type': 'float64',
+                'index_dtype': '|M8[ns]',
+                'value_dtype': '<f8'
+            }
+        }
+
+    base = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, base, 'exp-a', 'Babar')
+    tsh.update(engine, base, 'exp-b', 'Celeste')
+
+    tsh.register_formula(
+        engine,
+        'expandmebase1',
+        '(+ 3 (priority (series "exp-a") (customseries)))',
+        False
+    )
+    tsh.register_formula(
+        engine,
+        'expandmebase2',
+        '(priority (series "exp-a") (series "exp-b"))',
+        False
+    )
+    tsh.register_formula(
+        engine,
+        'expandme',
+        '(add (series "expandmebase1") (series "exp-b") (series "expandmebase2"))',
+        False
+    )
+
+    exp = tsh.expanded_formula(engine, 'expandme')
+    assert exp == (
+        '(add '
+        '(+ 3 (priority (series "exp-a") (customseries))) '
+        '(series "exp-b") '
+        '(priority (series "exp-a") (series "exp-b")))'
+    )
+
+
 def test_slice(engine, tsh):
     base = pd.Series(
         [1, 2, 3],
