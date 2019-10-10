@@ -108,7 +108,7 @@ def _fill(df, colname, fillopt):
 
 
 def _group_series(*serieslist):
-    df = None
+    dfs = []
     opts = {}
 
     # join everything
@@ -121,10 +121,9 @@ def _group_series(*serieslist):
             else None
         )
         opts[ts.name] = fillopt
-        if df is None:
-            df = ts.to_frame()
-            continue
-        df = df.join(ts, how='outer')
+        dfs.append(ts)
+
+    df = pd.concat(dfs, axis=1, join='outer')
 
     # apply the filling rules
     for name, fillopt in opts.items():
