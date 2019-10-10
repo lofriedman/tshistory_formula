@@ -42,7 +42,7 @@ def find_series(cn, tsh, stree):
 @func('+')
 def scalar_add(
         a: Union[int, float, pd.Series],
-        b: Union[int, float, pd.Series]) -> pd.Series:
+        b: Union[pd.Series, int, float]) -> pd.Series:
     if isinstance(a, pd.Series):
         assert isinstance(b, (int, float))
         opts = options(a)
@@ -60,7 +60,7 @@ def scalar_add(
 @func('*')
 def scalar_prod(
         a: Union[int, float, pd.Series],
-        b: Union[int, float, pd.Series]) -> pd.Series:
+        b: Union[pd.Series, int, float]) -> pd.Series:
     if isinstance(a, pd.Series):
         assert isinstance(b, (int, float))
         opts = options(a)
@@ -77,7 +77,7 @@ def scalar_prod(
 
 @func('/')
 def scalar_div(
-        a: Union[int, float, pd.Series],
+        a: Union[pd.Series, int, float],
         b: Union[int, float]) -> Union[int, float, pd.Series]:
     opts = None
     if isinstance(a, pd.Series):

@@ -1,4 +1,5 @@
 import json
+import re
 import typing
 import inspect
 from typing import Optional
@@ -10,24 +11,35 @@ from psyl.lisp import Env, evaluate, parse
 from tshistory_formula import registry
 
 
+CLS_NAME_PTN = re.compile("<class '([\w\.]+)'>")
+
+
+def extract_type_name(cls):
+    """Search type name inside Python class"""
+    str_cls = str(cls)
+    mobj = CLS_NAME_PTN.search(str_cls)
+    if mobj:
+        str_cls = mobj.group(1).split('.')[-1]
+    return str_cls
+
+
 class fjson(json.JSONEncoder):
 
     def default(self, o):
         try:
             return super().default(o)
         except TypeError:
-            if o is str:
-                return 'str'
-            stro = str(o)
-            if stro.startswith('typing'):
-                stro = stro.replace(
-                    'pandas.core.series.Series',
-                    'Series'
+            stro = extract_type_name(o)
+            if 'Union' in stro:
+                types = list(o.__args__)
+                prefix = 'Union'
+                if types[-1] is type(None):
+                    prefix = 'Optional'
+                    del types[-1]
+                stro = prefix + '[%s]' % ', '.join(
+                    map(extract_type_name, types)
                 )
-                return stro
-            if 'Series' in stro:
-                return 'Series'
-            raise
+            return stro
 
 
 def functypes():
