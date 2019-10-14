@@ -203,7 +203,7 @@ def components_table(engine, tsh, id_serie,
     )
     infos = presenter.buildinfo()
     head = infos.pop()
-    infos.update(0, head)
+    infos.insert(0, head)
 
     pprint([
         {
