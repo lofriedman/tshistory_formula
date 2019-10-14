@@ -773,7 +773,17 @@ insertion_date             value_date
 
 
 def test_types(tsh):
-    types = jsontypes()
+    # prune the types registered from other modules/plugins
+    # we want to only show the ones provided by the current package
+    opnames = set(
+        ('*', '+', '/', 'add', 'div', 'max', 'min', 'mul',
+         'clip', 'priority', 'row-mean', 'series', 'slice', 'std')
+    )
+    types = {
+        name: ftype
+        for name, ftype in json.loads(jsontypes()).items()
+        if name in opnames
+    }
     assert {
         '*': {'a': 'Union[int, float, Series]',
               'b': 'Union[Series, int, float]',
@@ -807,7 +817,7 @@ def test_types(tsh):
             'todate': 'Optional[iso_utc_datetime]'
         },
         'std': {'return': 'Series', 'serieslist': 'Series'}
-    } == json.loads(types)
+    } == types
 
 
 def test_formula_refers_to_nothing(engine, tsh):
