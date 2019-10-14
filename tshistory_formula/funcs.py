@@ -90,7 +90,6 @@ def scalar_div(
     return res
 
 
-
 def _fill(df, colname, fillopt):
     """ in-place application of the series fill policies
     which can be a int/float or a coma separated string

@@ -36,16 +36,20 @@ editor_info('+')(arith)
 editor_info('*')(arith)
 
 
-def func(builder, expr):
+def allargsareseries(builder, expr):
     # non-leaf
-    assert expr[0] in ('add', 'priority')
     for subexpr in expr[1:]:
-        # all params of a func are series
         with builder.series_scope(subexpr):
             builder.buildinfo_expr(subexpr)
 
-editor_info('add')(func)
-editor_info('priority')(func)
+editor_info('add')(allargsareseries)
+editor_info('priority')(allargsareseries)
+editor_info('mul')(allargsareseries)
+editor_info('div')(allargsareseries)
+editor_info('row-mean')(allargsareseries)
+editor_info('mean')(allargsareseries)
+editor_info('max')(allargsareseries)
+editor_info('std')(allargsareseries)
 
 
 @editor_info('series')
