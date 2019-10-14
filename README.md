@@ -330,6 +330,32 @@ Also note how accessing the `__interpreter__` again is used to forward
 the query arguments.
 
 
+## Editor Infos
+
+The `tshistory_formula` package provides a custom callback for the
+`editor` capabilities of [tshistory_editor][tshistory_editor].
+
+A dedicated protocol is available to inform the editor on the way
+to decompose/display a formula.
+
+Example of such a function:
+
+```python
+ from tshistory_formula.registry import editor_info
+
+ @editor_info
+ def operator_with_series(builder, expr):
+     for subexpr in expr[1:]:
+         with builder.series_scope(subexpr):
+             builder.buildinfo_expr(subexpr)
+
+```
+
+The exact ways to use the builder will be provided soon.
+
+[tshistory_editor]: https://bitbucket.org/pythonian/tshistory_editor
+
+
 # Series API
 
 A few api calls are added to the `tshistory` base:
