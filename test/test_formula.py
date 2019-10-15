@@ -215,6 +215,26 @@ def test_base_api(engine, tsh):
     assert not tsh.exists(engine, 'test_plus_two')
 
 
+def test_scalar_ops(engine, tsh):
+    x = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2020, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, x, 'scalar-ops', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'scalar-formula',
+        '(+ (+ (/ 20 (* 2 5)) 1) (series "scalar-ops"))',
+    )
+    ts = tsh.get(engine, 'scalar-formula')
+    assert_df("""
+2020-01-01    4.0
+2020-01-02    5.0
+2020-01-03    6.0
+""", ts)
+
+
 def test_linear_combo(engine, tsh):
     tsh.register_formula(
         engine,
@@ -785,10 +805,10 @@ def test_types(tsh):
         if name in opnames
     }
     assert {
-        '*': {'a': 'Union[int, float, Series]',
+        '*': {'a': 'Union[int, float]',
               'b': 'Union[Series, int, float]',
               'return': 'Series'},
-        '+': {'a': 'Union[int, float, Series]',
+        '+': {'a': 'Union[int, float]',
               'b': 'Union[Series, int, float]',
               'return': 'Series'},
         '/': {'a': 'Union[Series, int, float]',

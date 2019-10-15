@@ -41,38 +41,36 @@ def find_series(cn, tsh, stree):
 
 @func('+')
 def scalar_add(
-        a: Union[int, float, pd.Series],
+        a: Union[int, float],
         b: Union[pd.Series, int, float]) -> pd.Series:
-    if isinstance(a, pd.Series):
-        assert isinstance(b, (int, float))
-        opts = options(a)
-    else:
+    opts = None
+    if isinstance(b, pd.Series):
         assert isinstance(a, (int, float))
         opts = options(b)
 
-    ts = a + b
-    # we did a series + scalar and want to propagate
-    # the original series options
-    ts.options = opts
-    return ts
+    res = a + b
+    if opts is not None:
+        # we did a series + scalar and want to propagate
+        # the original series options
+        res.options = opts
+    return res
 
 
 @func('*')
 def scalar_prod(
-        a: Union[int, float, pd.Series],
+        a: Union[int, float],
         b: Union[pd.Series, int, float]) -> pd.Series:
-    if isinstance(a, pd.Series):
-        assert isinstance(b, (int, float))
-        opts = options(a)
-    else:
+    opts = None
+    if isinstance(b, pd.Series):
         assert isinstance(a, (int, float))
-        opts = options(b)
+        opts = options(a)
 
-    ts = a * b
-    # we did a series * scalar and want to propagate
-    # the original series options
-    ts.options = opts
-    return ts
+    res = a * b
+    if opts is not None:
+        # we did a series * scalar and want to propagate
+        # the original series options
+        res.options = opts
+    return res
 
 
 @func('/')
