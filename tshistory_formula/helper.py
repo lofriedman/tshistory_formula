@@ -1,3 +1,6 @@
+import typing
+import inspect
+
 from psyl.lisp import (
     Env,
     evaluate,
@@ -5,7 +8,10 @@ from psyl.lisp import (
     serialize
 )
 
-from tshistory_formula.registry import FINDERS
+from tshistory_formula.registry import (
+    FINDERS,
+    FUNCS
+)
 
 
 def expanded(tsh, cn, tree):
@@ -58,3 +64,27 @@ def constant_fold(tree):
 
     return newtree
 
+
+# typing
+
+def isoftype(val, typespec):
+    if isinstance(typespec, type):
+        return isinstance(val, typespec)
+
+
+def typecheck(tree, env=FUNCS):
+    op = tree[0]
+    func = env[op]
+    optypes = inspect.getfullargspec(func)
+    returntype = optypes.annotations['return']
+    expectedargtypes = [
+        optypes.annotations[elt]
+        for elt in optypes.args
+    ]
+    for idx, (arg, argtype) in enumerate(zip(tree[1:], expectedargtypes), 1):
+        if isinstance(arg, list):
+            typecheck(arg, env)
+        else:
+            atype = type(arg)
+            if not isoftype(arg, argtype):
+                raise TypeError(f'{repr(arg)} not of {argtype}')

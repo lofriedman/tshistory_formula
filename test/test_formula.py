@@ -17,11 +17,14 @@ from tshistory_formula.registry import (
     FUNCS,
     finder
 )
-from tshistory_formula.helper import constant_fold
+from tshistory_formula.helper import (
+    constant_fold,
+    typecheck
+)
 from tshistory_formula.interpreter import jsontypes
 
 
-def test_interpreter(engine):
+def test_evaluator():
     form = '(+ 2 3)'
     with pytest.raises(LookupError):
         e = lisp.evaluate(form)
@@ -41,6 +44,26 @@ def test_interpreter(engine):
     expr = ('(+ (* 8 (/ 5. 2)) (series "foo"))')
     tree = constant_fold(lisp.parse(expr))
     assert tree == ['+', 20.0, ['series', 'foo']]
+
+
+def test_typecheck():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    env = lisp.Env({'+': plus})
+    expr = ('(+ 3 4)')
+
+    expr = ('(+ 3 "hello")')
+    with pytest.raises(TypeError):
+        types = typecheck(lisp.parse(expr), env=env)
+
+    def mul(a: int, b: int) -> int:
+        return a * b
+
+    env = lisp.Env({'+': plus, '*': mul})
+    expr = ('(* 2 (+ 3 "hello"))')
+    with pytest.raises(TypeError):
+        types = typecheck(lisp.parse(expr), env=env)
 
 
 def test_metadata(engine, tsh):
