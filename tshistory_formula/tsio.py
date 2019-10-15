@@ -15,6 +15,7 @@ from tshistory_formula.registry import (
 
 class timeseries(basets):
     fast_staircase_operators = set(['+', '*', 'series', 'add', 'priority'])
+    metadata_compat_excluded = ()
 
     def find_series(self, cn, tree):
         op = tree[0]
@@ -47,6 +48,7 @@ class timeseries(basets):
                 k: v
                 for k, v in meta.items()
                 if k in self.metakeys
+                and k not in self.metadata_compat_excluded
             }
         if not metamap:
             return {}
