@@ -89,7 +89,7 @@ def test_editor_pure_scalar_op(engine, tsh):
         for info in presenter.buildinfo()
     ]
     assert info == [
-        {'coef': 'x 1', 'name': 'formula-pure-scalar-ops', 'type': 'formula: +'}
+        {'coef': '+ 9.0', 'keywords': '-', 'name': 'pure-scalar-ops', 'type': 'primary'}
     ]
 
 

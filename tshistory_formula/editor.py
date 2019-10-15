@@ -6,7 +6,10 @@ import pandas as pd
 import dash_html_components as html
 from psyl.lisp import parse, serialize
 
-from tshistory_formula import interpreter
+from tshistory_formula import (
+    helper,
+    interpreter
+)
 from tshistory_formula.registry import editor_info, EDITORINFOS
 
 
@@ -96,7 +99,7 @@ class fancypresenter:
 
     def buildinfo(self):
         formula = self.tsh.formula(self.engine, self.name)
-        parsed = parse(formula)
+        parsed = helper.constant_fold(parse(formula))
         print(formula)
         pprint(parsed)
         with self.series_scope(parsed):
