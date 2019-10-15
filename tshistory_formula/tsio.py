@@ -6,7 +6,10 @@ from tshistory.tsio import timeseries as basets
 from tshistory.util import tx
 
 from tshistory_formula import funcs  # trigger registration
-from tshistory_formula import interpreter
+from tshistory_formula import (
+    interpreter,
+    helper
+)
 from tshistory_formula.registry import (
     FINDERS,
     FUNCS
@@ -145,26 +148,9 @@ class timeseries(basets):
         formula = self.formula(cn, name)
         tree = parse(formula)
 
-        def expanded(tree):
-            newtree = []
-            op = tree[0]
-            finder = FINDERS.get(op)
-            seriesmeta = finder(cn, self, tree) if finder else None
-            if seriesmeta:
-                name, meta = seriesmeta.popitem()
-                if self.type(cn, name) == 'formula':
-                    formula = self.formula(cn, name)
-                    subtree = parse(formula)
-                    return expanded(subtree)
-
-            for item in tree:
-                if isinstance(item, list):
-                    newtree.append(expanded(item))
-                else:
-                    newtree.append(item)
-            return newtree
-
-        return serialize(expanded(tree))
+        return serialize(
+            helper.expanded(self, cn, tree)
+        )
 
     @tx
     def delete(self, cn, name):
