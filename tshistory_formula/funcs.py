@@ -248,4 +248,4 @@ def row_max(*serieslist: pd.Series) -> pd.Series:
 @func('std')
 def row_std(*serieslist: pd.Series) -> pd.Series:
     allseries = pd.concat(serieslist, axis=1)
-    return allseries.std(axis=1)
+    return allseries.std(axis=1).dropna()
