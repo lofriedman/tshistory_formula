@@ -1,4 +1,3 @@
-import math
 import json
 from datetime import datetime as dt, timedelta
 
@@ -7,7 +6,11 @@ import numpy as np
 import pytest
 
 from psyl import lisp
-from tshistory.testutil import assert_df, assert_hist
+from tshistory.testutil import (
+    assert_df,
+    assert_hist,
+    utcdt
+)
 
 from tshistory_formula.registry import (
     func,
@@ -16,10 +19,6 @@ from tshistory_formula.registry import (
 )
 from tshistory_formula.interpreter import jsontypes
 from tshistory_formula.editor import fancypresenter
-
-
-def utcdt(*dtargs):
-    return pd.Timestamp(dt(*dtargs), tz='UTC')
 
 
 def test_interpreter(engine):
@@ -524,7 +523,7 @@ def test_history(engine, tsh):
         for name in 'ab':
             ts = pd.Series(
                 [day] * 3,
-            index=pd.date_range(dt(2018, 1, 1), periods=3, freq='D')
+                index=pd.date_range(dt(2018, 1, 1), periods=3, freq='D')
             )
             tsh.update(engine, ts, 'h' + name, 'Babar',
                        insertion_date=idate)
