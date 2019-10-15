@@ -29,8 +29,11 @@ def arith(builder, expr):
     # non-leaf
     operator = expr[0]
     omap = {'+': '+', '*': 'x'}
-    builder.lastinfo['coef'] = f'{omap[operator]} {float(expr[1])}'
-    builder.handle_rest(expr)
+    if isinstance(expr[1], (int, float)):
+        builder.lastinfo['coef'] = f'{omap[operator]} {float(expr[1])}'
+        builder.handle_rest(expr)
+    else:
+        return default(builder, expr)
 
 editor_info('+')(arith)
 editor_info('*')(arith)

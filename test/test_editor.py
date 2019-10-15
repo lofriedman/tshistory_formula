@@ -69,6 +69,30 @@ def test_editor_no_such_series(engine, tsh):
         presenter = fancypresenter(engine, tsh, 'no-such-series', {})
 
 
+def test_editor_pure_scalar_op(engine, tsh):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, ts, 'pure-scalar-ops', 'Babar')
+    tsh.register_formula(
+        engine,
+        'formula-pure-scalar-ops',
+        '(+ (* 3 (/ 6 2)) (series "pure-scalar-ops"))'
+    )
+    presenter = fancypresenter(engine, tsh, 'formula-pure-scalar-ops',
+                               {'from_value_date': utcdt(2019, 1, 4)})
+    info = [
+        {
+            k: v for k, v in info.items() if k != 'ts'
+        }
+        for info in presenter.buildinfo()
+    ]
+    assert info == [
+        {'coef': 'x 1', 'name': 'formula-pure-scalar-ops', 'type': 'formula: +'}
+    ]
+
+
 def test_editor_new_operator(engine, tsh):
     @func('genrandomseries')
     def genrandomseries():
