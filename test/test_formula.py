@@ -17,6 +17,7 @@ from tshistory_formula.registry import (
     FUNCS,
     finder
 )
+from tshistory_formula.helper import constant_fold
 from tshistory_formula.interpreter import jsontypes
 
 
@@ -32,6 +33,14 @@ def test_interpreter(engine):
     brokenform = '(+ 2 3'
     with pytest.raises(SyntaxError):
         lisp.parse(brokenform)
+
+    expr = ('(+ (* 8 (/ 5. 2)) 1.1)')
+    tree = constant_fold(lisp.parse(expr))
+    assert tree == 21.1
+
+    expr = ('(+ (* 8 (/ 5. 2)) (series "foo"))')
+    tree = constant_fold(lisp.parse(expr))
+    assert tree == ['+', 20.0, ['series', 'foo']]
 
 
 def test_metadata(engine, tsh):
