@@ -222,6 +222,42 @@ def test_base_api(engine, tsh):
     assert not tsh.exists(engine, 'test_plus_two')
 
 
+def test_boolean_support(engine, tsh):
+    @func('op-with-boolean-kw')
+    def customseries(zeroes: bool=False) -> pd.Series:
+        return pd.Series(
+            np.array([1.0, 2.0, 3.0]) * zeroes,
+            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+        )
+
+    tsh.register_formula(
+        engine,
+        'no-zeroes',
+        '(op-with-boolean-kw)'
+    )
+    tsh.register_formula(
+        engine,
+        'zeroes',
+        '(op-with-boolean-kw #:zeroes #t)'
+    )
+
+    ts1 = tsh.get(engine, 'no-zeroes')
+    assert_df("""
+2019-01-01    0.0
+2019-01-02    0.0
+2019-01-03    0.0
+""", ts1)
+
+    ts2 = tsh.get(engine, 'zeroes')
+    assert_df("""
+2019-01-01    1.0
+2019-01-02    2.0
+2019-01-03    3.0
+""", ts2)
+
+    FUNCS.pop('op-with-boolean-kw')
+
+
 def test_scalar_ops(engine, tsh):
     x = pd.Series(
         [1, 2, 3],

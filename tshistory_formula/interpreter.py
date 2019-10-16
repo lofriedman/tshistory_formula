@@ -66,6 +66,8 @@ class Interpreter:
             if '__interpreter__' in inspect.getfullargspec(func).args:
                 func = partial(func, self)
             funcs[name] = func
+        funcs['#t'] = True
+        funcs['#f'] = False
         self.env = Env(funcs)
 
     def get(self, name, getargs):
