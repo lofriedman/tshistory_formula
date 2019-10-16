@@ -113,3 +113,9 @@ def test_failing_kw(engine, tsh):
         typecheck(lisp.parse(expr), i.env)
 
     assert err.value.args[0] == "keyword `prune` = 'toto' not of typing.Union[int, NoneType]"
+
+
+def test_kw_subexpr(engine, tsh):
+    expr = '(+ 1 (series "types-a" #:prune (+ 1 2)))'
+    i = Interpreter(engine, tsh, {})
+    typecheck(lisp.parse(expr), i.env)

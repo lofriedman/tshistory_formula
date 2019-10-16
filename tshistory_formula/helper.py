@@ -148,7 +148,13 @@ def typecheck(tree, env=FUNCS):
 
     for name, val in kwargs.items():
         expecttype = kwargstypes[name]
-        if not isoftype(val, expecttype):
+        if isinstance(val, list):
+            exprtype = typecheck(val, env)
+            if not sametype(expecttype, exprtype):
+                raise TypeError(
+                    f'item {idx}: expect {expecttype}, got {exprtype}'
+                )
+        elif not isoftype(val, expecttype):
             raise TypeError(
                 f'keyword `{name}` = {repr(val)} not of {expecttype}'
             )
