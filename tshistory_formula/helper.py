@@ -71,6 +71,9 @@ def isoftype(val, typespec):
     if isinstance(typespec, type):
         return isinstance(val, typespec)
 
+    if typespec.__origin__ is typing.Union:
+        return isinstance(val, typespec.__args__)
+
 
 def typecheck(tree, env=FUNCS):
     op = tree[0]
@@ -81,10 +84,20 @@ def typecheck(tree, env=FUNCS):
         optypes.annotations[elt]
         for elt in optypes.args
     ]
-    for idx, (arg, argtype) in enumerate(zip(tree[1:], expectedargtypes), 1):
+    if optypes.varargs:
+        atype = optypes.annotations[optypes.varargs]
+        for arg in tree[1+len(expectedargtypes):]:
+            expectedargtypes.append(atype)
+
+    # unfortunately args vs kwargs separation is only
+    # clean in python 3.8 -- see PEP 570
+    assert len(expectedargtypes) >= len(tree[1:])
+    for arg, argtype in zip(tree[1:], expectedargtypes):
         if isinstance(arg, list):
-            typecheck(arg, env)
+            atype = typecheck(arg, env)
         else:
             atype = type(arg)
             if not isoftype(arg, argtype):
                 raise TypeError(f'{repr(arg)} not of {argtype}')
+
+    return returntype

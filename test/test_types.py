@@ -1,8 +1,14 @@
 import json
 import pytest
 from psyl import lisp
+import pandas as pd
 
-from tshistory_formula.interpreter import jsontypes
+from tshistory.testutil import utcdt
+
+from tshistory_formula.interpreter import (
+    Interpreter,
+    jsontypes
+)
 from tshistory_formula.helper import (
     typecheck
 )
@@ -56,7 +62,7 @@ def test_types(tsh):
     } == types
 
 
-def test_typecheck():
+def test_basic_typecheck():
     def plus(a: int, b: int) -> int:
         return a + b
 
@@ -66,7 +72,7 @@ def test_typecheck():
 
     expr = ('(+ 3 "hello")')
     with pytest.raises(TypeError):
-        types = typecheck(lisp.parse(expr), env=env)
+        typecheck(lisp.parse(expr), env=env)
 
     def mul(a: int, b: int) -> int:
         return a * b
@@ -74,4 +80,33 @@ def test_typecheck():
     env = lisp.Env({'+': plus, '*': mul})
     expr = ('(* 2 (+ 3 "hello"))')
     with pytest.raises(TypeError):
-        types = typecheck(lisp.parse(expr), env=env)
+        typecheck(lisp.parse(expr), env=env)
+
+
+def test_complex_typecheck(engine, tsh):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2020, 1, 1), freq='D', periods=3)
+    )
+
+    tsh.update(engine, ts, 'types-a', 'Babar')
+    tsh.update(engine, ts, 'types-b', 'Celeste')
+
+    expr = ('(add (series "types-a") '
+            '     (priority (series "types-a") '
+            '               (* 2 (series "types-b"))))'
+    )
+
+    i = Interpreter(engine, tsh, {})
+    typecheck(lisp.parse(expr), i.env)
+
+    expr = ('(add (series "types-a") '
+            '     (priority (series "types-a") '
+            '               (* "toto" (series "types-b"))))'
+    )
+
+    i = Interpreter(engine, tsh, {})
+    with pytest.raises(TypeError) as err:
+        typecheck(lisp.parse(expr), i.env)
+
+    assert err.value.args[0] == "'toto' not of typing.Union[int, float]"
