@@ -4,6 +4,7 @@ import inspect
 from psyl.lisp import (
     Env,
     evaluate,
+    Keyword,
     parse,
     serialize
 )
@@ -68,11 +69,43 @@ def constant_fold(tree):
 # typing
 
 def isoftype(val, typespec):
-    if isinstance(typespec, type):
-        return isinstance(val, typespec)
+    return sametype(type(val), typespec)
 
-    if typespec.__origin__ is typing.Union:
-        return isinstance(val, typespec.__args__)
+
+def sametype(basetype, atype):
+    if isinstance(basetype, type):
+        if isinstance(atype, type):
+            # basetype = atype (standard python types)
+            if basetype == atype:
+                return True
+        elif atype.__origin__ is typing.Union:
+            # basetype ∈ atype (type vs typing)
+            if basetype in atype.__args__:
+                return True
+    else:
+        if isinstance(atype, type):
+            # atype ∈ basetype (type vs typing)
+            if basetype.__origin__ is typing.Union:
+                if atype in basetype.__args__:
+                    return True
+        elif atype.__origin__ is typing.Union:
+            # typing vs typing
+            # basetype ∩ atype
+            if set(atype.__args__).intersection(basetype.__args__):
+                return True
+    return False
+
+
+def findtype(typeinfo, argidx=None, argname=None):
+    if argidx is not None:
+        if typeinfo.args and argidx < len(typeinfo.args):
+            name = typeinfo.args[argidx]
+            return typeinfo.annotations[name]
+        else:
+            return typeinfo.annotations[typeinfo.varargs]
+
+    assert argname is not None
+    return typeinfo.annotations[argname]
 
 
 def typecheck(tree, env=FUNCS):
@@ -80,24 +113,44 @@ def typecheck(tree, env=FUNCS):
     func = env[op]
     optypes = inspect.getfullargspec(func)
     returntype = optypes.annotations['return']
-    expectedargtypes = [
-        optypes.annotations[elt]
-        for elt in optypes.args
-    ]
-    if optypes.varargs:
-        atype = optypes.annotations[optypes.varargs]
-        for arg in tree[1+len(expectedargtypes):]:
-            expectedargtypes.append(atype)
-
+    # build args list and kwargs dict
     # unfortunately args vs kwargs separation is only
     # clean in python 3.8 -- see PEP 570
-    assert len(expectedargtypes) >= len(tree[1:])
-    for arg, argtype in zip(tree[1:], expectedargtypes):
+    treeargs = []
+    kwargs = {}
+    treeargstypes = []
+    kwargstypes = {}
+    kw = None
+    for idx, arg in enumerate(tree[1:]):
+        if isinstance(arg, Keyword):
+            kw = arg
+            continue
+        if kw:
+            kwargs[kw] = arg
+            kwargstypes[kw] = findtype(optypes, argname=kw)
+            kw = None
+            continue
+        treeargs.append(arg)
+        treeargstypes.append(
+            findtype(optypes, argidx=idx)
+        )
+
+    for idx, (arg, expecttype) in enumerate(zip(tree[1:], treeargstypes)):
         if isinstance(arg, list):
-            atype = typecheck(arg, env)
+            exprtype = typecheck(arg, env)
+            if not sametype(expecttype, exprtype):
+                raise TypeError(
+                    f'item {idx}: expect {expecttype}, got {exprtype}'
+                )
         else:
-            atype = type(arg)
-            if not isoftype(arg, argtype):
-                raise TypeError(f'{repr(arg)} not of {argtype}')
+            if not isoftype(arg, expecttype):
+                raise TypeError(f'{repr(arg)} not of {expecttype}')
+
+    for name, val in kwargs.items():
+        expecttype = kwargstypes[name]
+        if not isoftype(val, expecttype):
+            raise TypeError(
+                f'keyword `{name}` = {repr(val)} not of {expecttype}'
+            )
 
     return returntype

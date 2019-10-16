@@ -95,7 +95,7 @@ def test_editor_pure_scalar_op(engine, tsh):
 
 def test_editor_new_operator(engine, tsh):
     @func('genrandomseries')
-    def genrandomseries():
+    def genrandomseries() -> pd.Series:
         return pd.Series(
             [1.0, 2.0, 3.0],
             index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')

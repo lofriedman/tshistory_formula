@@ -1,4 +1,3 @@
-import json
 from datetime import datetime as dt, timedelta
 
 import pandas as pd
@@ -57,7 +56,7 @@ def test_metadata(engine, tsh):
     tsh.register_formula(
         engine,
         'test_meta',
-        '(+ (series "metadata_naive") 2)',
+        '(+ 2 (series "metadata_naive"))',
     )
 
     assert tsh.metadata(engine, 'test_meta') == {
@@ -124,18 +123,17 @@ def test_series_options(engine, tsh):
 
 
 def test_base_api(engine, tsh):
-    tsh.register_formula(engine, 'test_plus_two', '(+ (series "test") 2)', False)
+    tsh.register_formula(engine, 'test_plus_two', '(+ 2 (series "test"))', False)
     tsh.register_formula(engine, 'test_three_plus', '(+ 3 (series "test"))', False)
 
     with pytest.raises(AssertionError):
-        tsh.register_formula(engine, 'test_plus_two', '(+ (series "test") 2)',
+        tsh.register_formula(engine, 'test_plus_two', '(+ 2 (series "test"))',
                              reject_unknown=False,
                              update=False)
     # accept an update
-    tsh.register_formula(engine, 'test_plus_two', '(+ (series "test") 2)',
+    tsh.register_formula(engine, 'test_plus_two', '(+ 2 (series "test"))',
                          reject_unknown=False,
                          update=True)
-
 
     test = pd.Series(
         [1, 2, 3],
@@ -162,7 +160,7 @@ def test_base_api(engine, tsh):
 2019-01-03    6.0
 """, evenmore)
 
-    tsh.register_formula(engine, 'test_product_a', '(* (series "test") 1.5)', False)
+    tsh.register_formula(engine, 'test_product_a', '(* 1.5 (series "test"))', False)
     tsh.register_formula(engine, 'test_product_b', '(* 2 (series "test"))', False)
 
     series = tsh.list_series(engine)
@@ -447,7 +445,7 @@ def test_priority2(engine, tsh):
 
 def test_options(engine, tsh):
     @func('dummy')
-    def dummy():
+    def dummy() -> pd.Series:
         return pd.Series(
             [1, 2, 3],
             index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
@@ -634,7 +632,7 @@ def test_staircase(engine, tsh):
     # this is not allowed in the staircase fast-path
     # hence we will take the slow path
     @func('identity')
-    def identity(series):
+    def identity(series: pd.Series) -> pd.Series:
         return series
 
     tsh.register_formula(
@@ -673,7 +671,7 @@ def test_staircase(engine, tsh):
 def test_new_func(engine, tsh):
 
     @func('identity')
-    def identity(series):
+    def identity(series: pd.Series) -> pd.Series:
         return series
 
     tsh.register_formula(
@@ -703,7 +701,7 @@ def test_new_func(engine, tsh):
 def test_ifunc(engine, tsh):
 
     @func('shifted')
-    def shifted(__interpreter__, name, days=0):
+    def shifted(__interpreter__, name: str, days: int=0) -> pd.Series:
         args = __interpreter__.getargs.copy()
         fromdate = args.get('from_value_date')
         todate = args.get('to_value_date')
@@ -893,7 +891,7 @@ def test_unknown_operator(engine, tsh):
 
 def test_custom_metadata(engine, tsh):
     @func('customseries')
-    def customseries():
+    def customseries() -> pd.Series:
         return pd.Series(
             [1.0, 2.0, 3.0],
             index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
@@ -929,7 +927,7 @@ def test_custom_metadata(engine, tsh):
 
 def test_expanded(engine, tsh):
     @func('customseries')
-    def customseries():
+    def customseries() -> pd.Series:
         return pd.Series(
             [1.0, 2.0, 3.0],
             index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')

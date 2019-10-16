@@ -71,6 +71,7 @@ class timeseries(basets):
             assert not self.formula(cn, name), f'`{name}` already exists'
         # basic syntax check
         tree = parse(formula)
+        # build metadata & check compat
         seriesmeta = self.find_series(cn, tree)
         if not all(seriesmeta.values()) and reject_unknown:
             badseries = [k for k, v in seriesmeta.items() if not v]
@@ -78,6 +79,7 @@ class timeseries(basets):
                 f'Formula `{name}` refers to unknown series '
                 f'{", ".join("`%s`" % s for s in badseries)}'
             )
+        # bad operators
         operators = self.find_operators(cn, tree)
         badoperators = [
             op
@@ -89,6 +91,10 @@ class timeseries(basets):
                 f'Formula `{name}` refers to unknown operators '
                 f'{", ".join("`%s`" % o for o in badoperators)}'
             )
+        # type checking
+        i = interpreter.Interpreter(cn, self, {})
+        helper.typecheck(tree, env=i.env)
+
         meta = self.filter_metadata(seriesmeta)
         sql = (f'insert into "{self.namespace}".formula '
                '(name, text) '

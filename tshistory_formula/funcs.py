@@ -14,9 +14,9 @@ def options(series):
 @func('series')
 def series(__interpreter__,
            name: str,
-           fill: Optional[str]=None,
-           prune: Optional[str]=None,
-           weight: Optional[float]=None) -> pd.Series:
+           fill: Union[str, int, float, type(None)]=None,
+           prune: Optional[int]=None,
+           weight: Union[float, int, type(None)]=None) -> pd.Series:
     i = __interpreter__
     ts = i.get(name, i.getargs)
     if ts is None:
@@ -42,7 +42,7 @@ def find_series(cn, tsh, stree):
 @func('+')
 def scalar_add(
         a: Union[int, float],
-        b: Union[pd.Series, int, float]) -> pd.Series:
+        b: Union[int, float, pd.Series]) -> Union[int, float, pd.Series]:
     opts = None
     if isinstance(b, pd.Series):
         assert isinstance(a, (int, float))
@@ -59,7 +59,7 @@ def scalar_add(
 @func('*')
 def scalar_prod(
         a: Union[int, float],
-        b: Union[pd.Series, int, float]) -> pd.Series:
+        b: Union[int, float, pd.Series]) -> Union[int, float, pd.Series]:
     opts = None
     if isinstance(b, pd.Series):
         assert isinstance(a, (int, float))
@@ -75,7 +75,7 @@ def scalar_prod(
 
 @func('/')
 def scalar_div(
-        a: Union[pd.Series, int, float],
+        a: Union[int, float, pd.Series],
         b: Union[int, float]) -> Union[int, float, pd.Series]:
     opts = None
     if isinstance(a, pd.Series):
@@ -180,8 +180,8 @@ def series_priority(*serieslist: pd.Series) -> pd.Series:
 
 @func('clip')
 def series_clip(series: pd.Series,
-                min: Optional[float]=None,
-                max: Optional[float]=None) -> pd.Series:
+                min: Union[int, float, type(None)]=None,
+                max: Union[int, float, type(None)]=None) -> pd.Series:
     if max is not None:
         series = series[series <= max]
     if min is not None:
@@ -197,8 +197,8 @@ class iso_utc_datetime(str):
 
 @func('slice')
 def slice(series: pd.Series,
-          fromdate: Optional[iso_utc_datetime]=None,
-          todate: Optional[iso_utc_datetime]=None) -> pd.Series:
+          fromdate: Optional[str]=None,
+          todate: Optional[str]=None) -> pd.Series:
     fromdate = fromdate and iso_utc_datetime(fromdate) or None
     todate = todate and iso_utc_datetime(todate) or None
     sliced = series.loc[fromdate:todate]

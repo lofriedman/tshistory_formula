@@ -28,12 +28,12 @@ def test_types(tsh):
     }
     assert {
         '*': {'a': 'Union[int, float]',
-              'b': 'Union[Series, int, float]',
-              'return': 'Series'},
+              'b': 'Union[int, float, Series]',
+              'return': 'Union[int, float, Series]'},
         '+': {'a': 'Union[int, float]',
-              'b': 'Union[Series, int, float]',
-              'return': 'Series'},
-        '/': {'a': 'Union[Series, int, float]',
+              'b': 'Union[int, float, Series]',
+              'return': 'Union[int, float, Series]'},
+        '/': {'a': 'Union[int, float, Series]',
               'b': 'Union[int, float]',
               'return': 'Union[int, float, Series]'},
         'add': {'return': 'Series', 'serieslist': 'Series'},
@@ -41,22 +41,22 @@ def test_types(tsh):
         'max': {'return': 'Series', 'serieslist': 'Series'},
         'min': {'return': 'Series', 'serieslist': 'Series'},
         'mul': {'return': 'Series', 'serieslist': 'Series'},
-        'clip': {'max': 'Optional[float]',
-                 'min': 'Optional[float]',
+        'clip': {'max': 'Optional[float, int]',
+                 'min': 'Optional[float, int]',
                  'return': 'Series',
                  'series': 'Series'},
         'priority': {'return': 'Series', 'serieslist': 'Series'},
         'row-mean': {'return': 'Series', 'serieslist': 'Series'},
-        'series': {'fill': 'Optional[str]',
+        'series': {'fill': 'Optional[str, int, float]',
                    'name': 'str',
-                   'prune': 'Optional[str]',
-                   'weight': 'Optional[float]',
+                   'prune': 'Optional[int]',
+                   'weight': 'Optional[float, int]',
                    'return': 'Series'},
         'slice': {
-            'fromdate': 'Optional[iso_utc_datetime]',
+            'fromdate': 'Optional[str]',
             'return': 'Series',
             'series': 'Series',
-            'todate': 'Optional[iso_utc_datetime]'
+            'todate': 'Optional[str]'
         },
         'std': {'return': 'Series', 'serieslist': 'Series'}
     } == types
@@ -84,14 +84,6 @@ def test_basic_typecheck():
 
 
 def test_complex_typecheck(engine, tsh):
-    ts = pd.Series(
-        [1, 2, 3],
-        index=pd.date_range(utcdt(2020, 1, 1), freq='D', periods=3)
-    )
-
-    tsh.update(engine, ts, 'types-a', 'Babar')
-    tsh.update(engine, ts, 'types-b', 'Celeste')
-
     expr = ('(add (series "types-a") '
             '     (priority (series "types-a") '
             '               (* 2 (series "types-b"))))'
@@ -100,6 +92,8 @@ def test_complex_typecheck(engine, tsh):
     i = Interpreter(engine, tsh, {})
     typecheck(lisp.parse(expr), i.env)
 
+
+def test_failing_arg(engine, tsh):
     expr = ('(add (series "types-a") '
             '     (priority (series "types-a") '
             '               (* "toto" (series "types-b"))))'
@@ -110,3 +104,12 @@ def test_complex_typecheck(engine, tsh):
         typecheck(lisp.parse(expr), i.env)
 
     assert err.value.args[0] == "'toto' not of typing.Union[int, float]"
+
+
+def test_failing_kw(engine, tsh):
+    expr = '(+ 1 (series "types-a" #:fill "ffill" #:prune "toto"))'
+    i = Interpreter(engine, tsh, {})
+    with pytest.raises(TypeError) as err:
+        typecheck(lisp.parse(expr), i.env)
+
+    assert err.value.args[0] == "keyword `prune` = 'toto' not of typing.Union[int, NoneType]"
