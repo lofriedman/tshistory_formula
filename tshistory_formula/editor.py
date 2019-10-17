@@ -46,6 +46,7 @@ def allargsareseries(builder, expr):
     # non-leaf
     for subexpr in expr[1:]:
         with builder.series_scope(subexpr):
+            builder.lastinfo['name'] = serialize(subexpr)
             builder.buildinfo_expr(subexpr)
 
 editor_info('add')(allargsareseries)
@@ -100,8 +101,6 @@ class fancypresenter:
     def buildinfo(self):
         formula = self.tsh.formula(self.engine, self.name)
         parsed = helper.constant_fold(parse(formula))
-        print(formula)
-        pprint(parsed)
         with self.series_scope(parsed):
             op = parsed[0]
             self.lastinfo.update({
@@ -214,14 +213,6 @@ def components_table(engine, tsh, id_serie,
     infos = presenter.buildinfo()
     head = infos.pop()
     infos.insert(0, head)
-
-    pprint([
-        {
-            k: v for k,v in info.items()
-            if k != 'ts'
-        }
-        for info in infos
-    ])
 
     # collect base series
     df = infos[0]['ts'].to_frame()

@@ -9,6 +9,7 @@ from tshistory.testutil import (
 )
 
 from tshistory_formula.registry import (
+    finder,
     func,
     FUNCS
 )
@@ -101,11 +102,28 @@ def test_editor_new_operator(engine, tsh):
             index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
     )
 
+    @finder('genrandomseries')
+    def genrandomseries(cn, tsh, tree):
+        return {
+            tree[0]: {
+                'index_dtype': '<M8[ns]',
+                'index_type': 'datetime64[ns]',
+                'tzaware': False,
+                'value_dtype': '<f8',
+                'value_type': 'float64'
+            }
+        }
+
+    @func('frobulated')
+    def frobulate(a: str, b: str) -> pd.Series:
+        sa = tsh.get(engine, a)
+        sb = tsh.get(engine, b)
+        return (sa + 1) * sb
+
     tsh.register_formula(
         engine,
         'random',
         '(genrandomseries)',
-        False
     )
 
     ts = tsh.get(engine, 'random')
@@ -126,5 +144,36 @@ def test_editor_new_operator(engine, tsh):
         {'coef': 'x 1', 'name': 'random', 'type': 'formula: genrandomseries'}
     ]
 
+    tsh.update(
+        engine,
+        pd.Series(
+            [1, 2, 3],
+            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+        ),
+        'new-op',
+        'Baabar'
+    )
+
+    tsh.register_formula(
+        engine,
+        'frobulating',
+        '(* 2 (add (series "random")'
+        '          (frobulated "new-op" "new-op")))'
+    )
+    presenter = fancypresenter(engine, tsh, 'frobulating', {})
+    info = [
+        {
+            k: v for k, v in info.items() if k != 'ts'
+        }
+        for info in presenter.buildinfo()
+    ]
+    assert info == [
+        {'coef': 'x 1', 'keywords': '-', 'name': 'random',
+         'type': 'formula: genrandomseries'},
+        {'coef': 'x 1', 'name': '(frobulated "new-op" "new-op")'},
+        {'coef': 'x 2.0', 'name': 'frobulating', 'type': 'formula: x'}
+    ]
+
     # cleanup
     FUNCS.pop('genrandomseries')
+    FUNCS.pop('frobulated')
