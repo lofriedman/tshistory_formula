@@ -23,23 +23,27 @@ def extract_type_name(cls):
     return str_cls
 
 
+def normalize_types(obj, typename):
+    types = list(obj.__args__)
+    prefix = 'Union'
+    if types[-1] is type(None):
+        prefix = 'Optional'
+        del types[-1]
+    return prefix + '[%s]' % ', '.join(
+        map(extract_type_name, types)
+    )
+
+
 class fjson(json.JSONEncoder):
 
     def default(self, o):
         try:
             return super().default(o)
         except TypeError:
-            stro = extract_type_name(o)
-            if 'Union' in stro:
-                types = list(o.__args__)
-                prefix = 'Union'
-                if types[-1] is type(None):
-                    prefix = 'Optional'
-                    del types[-1]
-                stro = prefix + '[%s]' % ', '.join(
-                    map(extract_type_name, types)
-                )
-            return stro
+            typename = extract_type_name(o)
+            if 'Union' in typename:
+                typename = normalize_types(o, typename)
+            return typename
 
 
 def functypes():
