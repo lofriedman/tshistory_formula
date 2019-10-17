@@ -23,14 +23,16 @@ def extract_type_name(cls):
     return str_cls
 
 
-def normalize_types(obj, typename):
+NONETYPE = type(None)
+
+def normalize_union_types(obj):
     types = list(obj.__args__)
-    prefix = 'Union'
-    if types[-1] is type(None):
-        prefix = 'Optional'
-        del types[-1]
-    return prefix + '[%s]' % ', '.join(
-        map(extract_type_name, types)
+    wrapper = '{}'
+    if NONETYPE in types:
+        wrapper = 'Optional[{}]'
+        types = filter(lambda x: not x is NONETYPE, types)
+    return wrapper.format(
+        f'Union[{", ".join(map(extract_type_name, types))}]'
     )
 
 
@@ -42,7 +44,7 @@ class fjson(json.JSONEncoder):
         except TypeError:
             typename = extract_type_name(o)
             if 'Union' in typename:
-                typename = normalize_types(o, typename)
+                typename = normalize_union_types(o)
             return typename
 
 
