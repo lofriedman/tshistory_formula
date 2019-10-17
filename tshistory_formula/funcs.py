@@ -7,6 +7,9 @@ from tshistory.util import SeriesServices
 from tshistory_formula.registry import func, finder
 
 
+NONETYPE = type(None)
+
+
 def options(series):
     return getattr(series, 'options', {})
 
@@ -14,9 +17,9 @@ def options(series):
 @func('series')
 def series(__interpreter__,
            name: str,
-           fill: Union[str, int, float, type(None)]=None,
+           fill: Union[str, int, float, NONETYPE]=None,
            prune: Optional[int]=None,
-           weight: Union[float, int, type(None)]=None) -> pd.Series:
+           weight: Union[float, int, NONETYPE]=None) -> pd.Series:
     i = __interpreter__
     ts = i.get(name, i.getargs)
     if ts is None:
@@ -180,8 +183,8 @@ def series_priority(*serieslist: pd.Series) -> pd.Series:
 
 @func('clip')
 def series_clip(series: pd.Series,
-                min: Union[int, float, type(None)]=None,
-                max: Union[int, float, type(None)]=None) -> pd.Series:
+                min: Union[int, float, NONETYPE]=None,
+                max: Union[int, float, NONETYPE]=None) -> pd.Series:
     if max is not None:
         series = series[series <= max]
     if min is not None:
