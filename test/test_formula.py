@@ -25,7 +25,7 @@ from tshistory_formula.helper import (
 def test_evaluator():
     form = '(+ 2 3)'
     with pytest.raises(LookupError):
-        e = lisp.evaluate(form)
+        e = lisp.evaluate(form, lisp.Env())
 
     env = lisp.Env({'+': lambda a, b: a + b})
     e = lisp.evaluate(form, env)
