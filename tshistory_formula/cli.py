@@ -10,6 +10,8 @@ from psyl.lisp import parse, serialize, Symbol, Keyword
 from tshistory.util import find_dburi
 
 from tshistory_formula.tsio import timeseries
+from tshistory_formula.helper import typecheck
+from tshistory_formula.interpreter import Interpreter
 
 
 @click.command(name='update-formula-metadata')
@@ -95,6 +97,25 @@ def ingest_formulas(dburi, formula_file, strict=False, namespace='tsh'):
                 row.formula,
                 strict
             )
+
+
+@click.command(name='typecheck-formula')
+@click.argument('db-uri')
+@click.option('--pdbshell', is_flag=True, default=False)
+@click.option('--namespace', default='tsh')
+def typecheck_formula(db_uri, pdbshell=False, namespace='tsh'):
+    engine = create_engine(find_dburi(db_uri))
+    tsh = timeseries(namespace)
+
+    i = Interpreter(engine, tsh, {})
+    for name, kind in tsh.list_series(engine).items():
+        if kind != 'formula':
+            continue
+
+        formula = tsh.formula(engine, name)
+        parsed = parse(formula)
+        print(name, f'`{parsed[0]}`')
+        typecheck(parsed, env=i.env)
 
 
 @click.command(name='test-formula')
