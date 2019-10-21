@@ -258,6 +258,26 @@ def test_boolean_support(engine, tsh):
     FUNCS.pop('op-with-boolean-kw')
 
 
+def test_naive_tzone(engine, tsh):
+    x = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, x, 'non-naive', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'to-naive',
+        '(naive (series "non-naive") "Europe/Moscow")',
+    )
+    ts = tsh.get(engine, 'to-naive')
+    assert_df("""
+2020-01-01 03:00:00    1.0
+2020-01-02 03:00:00    2.0
+2020-01-03 03:00:00    3.0
+""", ts)
+
+
 def test_scalar_ops(engine, tsh):
     x = pd.Series(
         [1, 2, 3],
