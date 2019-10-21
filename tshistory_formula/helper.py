@@ -112,6 +112,10 @@ def typecheck(tree, env=FUNCS):
     op = tree[0]
     func = env[op]
     optypes = inspect.getfullargspec(func)
+    if 'return' not in optypes.annotations:
+        raise TypeError(
+            f'operator `{op}` does not specify its return type'
+        )
     returntype = optypes.annotations['return']
     # build args list and kwargs dict
     # unfortunately args vs kwargs separation is only
