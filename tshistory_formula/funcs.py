@@ -20,6 +20,23 @@ def series(__interpreter__,
            fill: Union[str, int, float, NONETYPE]=None,
            prune: Optional[int]=None,
            weight: Union[float, int, NONETYPE]=None) -> pd.Series:
+    """
+    The `series` operator accepts several keywords:
+
+    * `fill` to specify a filling policy to avoid `nans` when the
+      series will be `add`ed with others; accepted values are
+      `"ffill"` (forward-fill), `"bfill"` (backward-fill) or any
+      floating value.
+
+    * `prune` to indicate how many points must be truncated from the
+      tail end (useful for priorities).
+
+    For instance in `(add (series "a" #:fill 0) (series "b")` will
+    make sure that series `a`, if shorter than series `b` will get
+    zeroes instead of nans where `b` provides values.
+
+    In `(series "realized" #:prune 3)` we would drop the last three points.
+    """
     i = __interpreter__
     ts = i.get(name, i.getargs)
     if ts is None:
@@ -38,6 +55,15 @@ def series(__interpreter__,
 
 @func('naive')
 def naive(series: pd.Series, tzone: str) -> pd.Series:
+    """
+    Allow demoting a series from a tz-aware index (strongly recommended)
+    to a tz-naive index (unfortunately sometimes unavoidable for interop
+    with other tz-naive series).
+
+    One must provide a country code and a target timezone.
+
+    Example: `(naive (series "tz-aware-series-from-poland") "PL" "Europe/Warsaw")`
+    """
     series.index = series.index.tz_convert(tzone).tz_localize(None)
     return series
 
@@ -52,6 +78,11 @@ def find_series(cn, tsh, stree):
 def scalar_add(
         a: Union[int, float],
         b: Union[int, float, pd.Series]) -> Union[int, float, pd.Series]:
+    """
+    Add a constant quantity to a series.
+
+    Example: `(+ 42 (series "i-feel-undervalued"))`
+    """
     opts = None
     if isinstance(b, pd.Series):
         assert isinstance(a, (int, float))
@@ -69,6 +100,11 @@ def scalar_add(
 def scalar_prod(
         a: Union[int, float],
         b: Union[int, float, pd.Series]) -> Union[int, float, pd.Series]:
+    """
+    Performs a scalar product on a series.
+
+    Example: `(* -1 (series "positive-things"))`
+    """
     opts = None
     if isinstance(b, pd.Series):
         assert isinstance(a, (int, float))
@@ -86,6 +122,11 @@ def scalar_prod(
 def scalar_div(
         a: Union[int, float, pd.Series],
         b: Union[int, float]) -> Union[int, float, pd.Series]:
+    """
+    Perform a scalar division between numbers or a series and a scalar.
+
+    Example: `(/ (series "div-me") (/ 3 2))`
+    """
     opts = None
     if isinstance(a, pd.Series):
         assert isinstance(b, (int, float))
@@ -140,6 +181,20 @@ def _group_series(*serieslist):
 
 @func('add')
 def series_add(*serieslist: pd.Series) -> pd.Series:
+    """
+    Linear combination of two or more series. Takes a variable number
+    of series as input.
+
+    Example: `(add (series "wallonie") (series "bruxelles") (series "flandres"))`
+
+    To specify the behaviour of the `add` operation in the face of
+    missing data, the series can be built with the `fill`
+    keyword. This option is only really applied when several series
+    are combined. By default, if an input series has missing values
+    for a given time stamp, the resulting series has no value for this
+    timestamp (unless a fill rule is provided).
+
+    """
     assert [
         isinstance(s, pd.Series)
         for s in serieslist
@@ -150,6 +205,16 @@ def series_add(*serieslist: pd.Series) -> pd.Series:
 
 @func('mul')
 def series_multiply(*serieslist: pd.Series) -> pd.Series:
+    """
+    Element wise multiplication of series. Takes a variable number of
+    series as input.
+
+    Example: `(mul (series "banana-spot-price ($)") (series "$-to-€" #:fill 'ffill'))`
+
+    This might convert a series priced in dollars to a series priced
+    in euros, using a currency exchange rate series with a
+    forward-fill option.
+    """
     assert [
         isinstance(s, pd.Series)
         for s in serieslist
@@ -169,6 +234,11 @@ def series_multiply(*serieslist: pd.Series) -> pd.Series:
 
 @func('div')
 def series_div(s1: pd.Series, s2: pd.Series) -> pd.Series:
+    """
+    Element wise division of two series.
+
+    Example: `(div (series "$-to-€") (series "€-to-£"))`
+    """
     df = _group_series(*(s1, s2))
 
     c1, c2 = df.columns
@@ -177,6 +247,16 @@ def series_div(s1: pd.Series, s2: pd.Series) -> pd.Series:
 
 @func('priority')
 def series_priority(*serieslist: pd.Series) -> pd.Series:
+    """
+    The priority operator combines its input series as layers. For
+    each timestamp in the union of all series time stamps, the value
+    comes from the first series that provides a value.
+
+    Example: `(priority (series "realized") (series "nominated") (series "forecasted"))`
+
+    Here `realized` values show up first, and any missing values come
+    from `nominated` first and then only from `forecasted`.
+    """
     patcher = SeriesServices()
     final = pd.Series()
 
@@ -191,6 +271,13 @@ def series_priority(*serieslist: pd.Series) -> pd.Series:
 def series_clip(series: pd.Series,
                 min: Union[int, float, NONETYPE]=None,
                 max: Union[int, float, NONETYPE]=None) -> pd.Series:
+    """
+    Set an upper/lower threashold for a series. Takes a series as
+    positional parameter and accepts two optional keywords `min` and
+    `max` which must be numbers (integers or floats).
+
+    Example: `(clip (series "must-be-positive") #:min 0)`
+    """
     if max is not None:
         series = series[series <= max]
     if min is not None:
@@ -208,6 +295,14 @@ class iso_utc_datetime(str):
 def slice(series: pd.Series,
           fromdate: Optional[str]=None,
           todate: Optional[str]=None) -> pd.Series:
+    """
+    This allows cutting a series at date points. It takes one
+    positional parameter (the series) and two optional keywords
+    `fromdate` and `todate` which must be strings in the
+    iso8601 format.
+
+    Example: `(slice (series "cut-me") #:fromdate "2018-01-01")`
+    """
     fromdate = fromdate and iso_utc_datetime(fromdate) or None
     todate = todate and iso_utc_datetime(todate) or None
     sliced = series.loc[fromdate:todate]
@@ -217,11 +312,16 @@ def slice(series: pd.Series,
 
 @func('row-mean')
 def row_mean(*serieslist: pd.Series) -> pd.Series:
-    """Computes element-wise weighted mean of the input series list
-
-    Missing points are handled as missing series.
     """
+    This operator computes the row-wise mean of its input series using
+    the series `weight` option if present. The missing points are
+    handled as if the whole series were absent.
 
+    Example: `(row-mean (series "station0") (series "station1" #:weight 2) (series "station2"))`
+
+    Weights are provided as a keyword to `series`. No weight is
+    interpreted as 1.
+    """
     weights = [
         series.options.get('weight', 1)
         for series in serieslist
@@ -246,17 +346,32 @@ def row_mean(*serieslist: pd.Series) -> pd.Series:
 
 @func('min')
 def row_min(*serieslist: pd.Series) -> pd.Series:
+    """
+    Computes the row-wise minimum of its input series.
+
+    Example: `(min (series "station0") (series "station1") (series "station2"))`
+    """
     allseries = pd.concat(serieslist, axis=1)
     return allseries.min(axis=1)
 
 
 @func('max')
 def row_max(*serieslist: pd.Series) -> pd.Series:
+    """
+    Computes the row-wise maximum of its input series.
+
+    Example: `(max (series "station0") (series "station1") (series "station2"))`
+    """
     allseries = pd.concat(serieslist, axis=1)
     return allseries.max(axis=1)
 
 
 @func('std')
 def row_std(*serieslist: pd.Series) -> pd.Series:
+    """
+    Computes the standard deviation over its input series.
+
+    Example: `(std (series "station0") (series "station1") (series "station2"))`
+    """
     allseries = pd.concat(serieslist, axis=1)
     return allseries.std(axis=1).dropna()
