@@ -43,6 +43,13 @@ Here we see the two fundamental `add` and `series` operators at work.
 This would form a new synthetic series out of three base series (which
 can be either raw series or formulas themselves).
 
+Some notes:
+
+* operator names can contain dashes or arbitrary caracters
+
+* literal values can be: `3` (integer), `5.2` (float), `"hello"`
+  (string) and `#t` or `#f` (true ot false)
+
 
 ## Pre-defined operators
 
