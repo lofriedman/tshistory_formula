@@ -115,6 +115,16 @@ This might convert a series priced in dollars to a series priced in
 euros, using a currency exchange rate series with a forward-fill
 option.
 
+### naive
+
+Allow demoting a series from a tz-aware index (strongly recommended)
+to a tz-naive index (unfortunately sometimes unavoidable for interop
+with other tz-naive series).
+
+One must provide a country code and a target timezone.
+
+Example: `(naive (series "tz-aware-series-from-poland") "PL" "Europe/Warsaw")`
+
 ### priority
 
 The priority operator combines its input series as layers. For each
