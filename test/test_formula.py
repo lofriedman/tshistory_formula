@@ -122,6 +122,22 @@ def test_series_options(engine, tsh):
     assert ts.options == {}
 
 
+def test_normalization(engine, tsh):
+    test = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, test, 'normalize', 'Babar')
+    tsh.register_formula(
+        engine,
+        'test_normalization',
+        '( add ( series "normalize") ( series  "normalize" )\n  ) ',
+    )
+
+    form = tsh.formula(engine, 'test_normalization')
+    assert form == '( add ( series "normalize") ( series  "normalize" )\n  ) '
+
+
 def test_base_api(engine, tsh):
     tsh.register_formula(engine, 'test_plus_two', '(+ 2 (series "test"))', False)
     tsh.register_formula(engine, 'test_three_plus', '(+ 3 (series "test"))', False)
