@@ -135,7 +135,7 @@ def test_normalization(engine, tsh):
     )
 
     form = tsh.formula(engine, 'test_normalization')
-    assert form == '( add ( series "normalize") ( series  "normalize" )\n  ) '
+    assert form == '(add (series "normalize") (series "normalize"))'
 
 
 def test_base_api(engine, tsh):

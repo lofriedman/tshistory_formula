@@ -71,6 +71,7 @@ class timeseries(basets):
             assert not self.formula(cn, name), f'`{name}` already exists'
         # basic syntax check
         tree = parse(formula)
+        formula = serialize(tree)
         # build metadata & check compat
         seriesmeta = self.find_series(cn, tree)
         if not all(seriesmeta.values()) and reject_unknown:
