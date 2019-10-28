@@ -9,11 +9,15 @@ setup(name='tshistory_formula',
       description='Computed timeseries plugin for `tshistory`',
 
       packages=['tshistory_formula'],
+      zip_safe=False,
       install_requires=[
           'decorator',
           'tshistory',
           'psyl'
       ],
+      package_data={'tshistory_formula': [
+          'schema.sql'
+      ]},
       entry_points={'tshistory.subcommands': [
           'ingest-formulas=tshistory_formula.cli:ingest_formulas',
           'update-formula-metadata=tshistory_formula.cli:update_metadata',
