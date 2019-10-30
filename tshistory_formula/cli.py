@@ -94,7 +94,7 @@ def ingest_formulas(dburi, formula_file, strict=False, namespace='tsh'):
             tsh.register_formula(
                 cn,
                 row.name,
-                row.formula,
+                row.text,
                 strict
             )
 
