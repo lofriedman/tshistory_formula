@@ -10,9 +10,6 @@ from tshistory_formula.registry import func, finder
 NONETYPE = type(None)
 
 
-def options(series):
-    return getattr(series, 'options', {})
-
 
 @func('series')
 def series(__interpreter__,
@@ -86,7 +83,7 @@ def scalar_add(
     opts = None
     if isinstance(b, pd.Series):
         assert isinstance(a, (int, float))
-        opts = options(b)
+        opts = b.options
 
     res = a + b
     if opts is not None:
@@ -108,7 +105,7 @@ def scalar_prod(
     opts = None
     if isinstance(b, pd.Series):
         assert isinstance(a, (int, float))
-        opts = options(a)
+        opts = b.options
 
     res = a * b
     if opts is not None:
@@ -130,7 +127,7 @@ def scalar_div(
     opts = None
     if isinstance(a, pd.Series):
         assert isinstance(b, (int, float))
-        opts = options(a)
+        opts = a.options
 
     res = a / b
     if opts is not None:

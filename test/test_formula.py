@@ -517,24 +517,28 @@ def test_priority2(engine, tsh):
 
 def test_options(engine, tsh):
     @func('dummy')
-    def dummy() -> pd.Series:
-        return pd.Series(
+    def dummy(option: int=None) -> pd.Series:
+        series = pd.Series(
             [1, 2, 3],
             index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
         )
+        series.options = {'option': option}
+        return series
 
     tsh.register_formula(
         engine,
         'test_options',
-        '(* 3 (dummy))',
+        '(* 3 (dummy #:option 42))',
         False
     )
 
+    ts = tsh.get(engine, 'test_options')
     assert_df("""
 2019-01-01    3
 2019-01-02    6
 2019-01-03    9
-""", tsh.get(engine, 'test_options'))
+""", ts)
+    assert ts.options == {'option': 42}
 
     FUNCS.pop('dummy')
 
