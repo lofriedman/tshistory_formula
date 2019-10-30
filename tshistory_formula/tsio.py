@@ -224,6 +224,27 @@ class timeseries(basets):
         }
 
     @tx
+    def insertion_dates(self, cn, name,
+                        fromdate=None, todate=None):
+        if self.type(cn, name) != 'formula':
+            return super().insertion_dates(
+                cn, name,
+                fromdate=fromdate,
+                todate=todate
+            )
+
+        formula = self.formula(cn, name)
+        series = self.find_series(cn, parse(formula))
+        allrevs = []
+        for name in series:
+            allrevs += self._revisions(
+                cn, name,
+                from_insertion_date=fromdate,
+                to_insertion_date=todate
+            )
+        return sorted(set(allrevs))
+
+    @tx
     def staircase(self, cn, name, delta,
                   from_value_date=None,
                   to_value_date=None):

@@ -626,6 +626,13 @@ insertion_date             value_date
                            2018-01-03    6.0
 """, h)
 
+    dates = tsh.insertion_dates(engine, 'h-addition')
+    assert dates == [
+        (1, pd.Timestamp('2019-01-01 00:00:00+0000', tz='UTC')),
+        (2, pd.Timestamp('2019-01-02 00:00:00+0000', tz='UTC')),
+        (3, pd.Timestamp('2019-01-03 00:00:00+0000', tz='UTC'))
+    ]
+
     h = tsh.history(
         engine, 'h-addition',
         from_insertion_date=utcdt(2019, 1, 2),
