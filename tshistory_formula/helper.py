@@ -68,6 +68,37 @@ def constant_fold(tree):
 
 # typing
 
+def assert_typed(func):
+    types = inspect.getfullargspec(func)
+    badargs = []
+    badvararg = None
+    badreturn = False
+    for arg in types.args:
+        if arg == '__interpreter__':
+            continue
+        if arg not in types.annotations:
+            badargs.append(arg)
+    if types.varargs and types.varargs not in types.annotations:
+        badvararg = types.varargs
+    if 'return' not in types.annotations:
+        badreturn = True
+
+    if not (badargs or badvararg or badreturn):
+        return
+
+    msg = []
+    if badargs:
+        msg.append(f'arguments {", ".join(badargs)} are untyped')
+    if badvararg:
+        msg.append(f'vararg {badvararg} is untyped')
+    if badreturn:
+        msg.append(f'return type is not provided')
+
+    raise TypeError(
+        f'operator `{func.__name__}` has type issues: {", ".join(msg)}'
+    )
+
+
 def isoftype(val, typespec):
     return sametype(type(val), typespec)
 

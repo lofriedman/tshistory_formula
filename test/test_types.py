@@ -9,6 +9,7 @@ from tshistory_formula.interpreter import (
     Interpreter,
     jsontypes
 )
+from tshistory_formula.registry import func
 from tshistory_formula.helper import (
     typecheck
 )
@@ -58,6 +59,18 @@ def test_types(tsh):
                   'todate': 'Optional[Union[str]]'},
         'std': {'return': 'Series', 'serieslist': 'Series'}
     } == types
+
+
+def test_operators_is_typed():
+    def foo(x, *y, z=42):
+        return x
+
+    with pytest.raises(TypeError) as err:
+        func('foo')(foo)
+    assert err.value.args[0] == (
+        'operator `foo` has type issues: arguments x are untyped, '
+        'vararg y is untyped, return type is not provided'
+    )
 
 
 def test_basic_typecheck():
