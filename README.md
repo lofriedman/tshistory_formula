@@ -203,6 +203,16 @@ delta elements.
 
 Example: `(timedelta (date "2020-1-1") #:weeks 1 #:hours 2)`
 
+### today
+
+Produces a timezone-aware timestamp as of today
+
+The `tz` keyword allows to specify an alternate time zone.
+The `naive` keyword forces production of a naive timestamp.
+Both `tz` and `naive` keywords are mutually exlcusive.
+
+Example: `(today)`
+
 
 # Registering new operators
 

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Union, Optional
 
 import numpy as np
@@ -115,6 +116,27 @@ def timedelta_eval(date: pd.Timestamp,
         hours=hours,
         minutes=minutes
     )
+
+
+@func('today')
+def today(naive: bool=False,
+          tz:Optional[str]=None) -> pd.Timestamp:
+    """
+    Produces a timezone-aware timestamp as of today
+
+    The `tz` keyword allows to specify an alternate time zone.
+    The `naive` keyword forces production of a naive timestamp.
+    Both `tz` and `naive` keywords are mutually exlcusive.
+
+    Example: `(today)`
+    """
+    if tz:
+        assert not naive, f'date cannot be naive and have a tz'
+        pytz.timezone(tz)
+        tz = pytz.timezone(tz)
+    if naive:
+        return pd.Timestamp(datetime.today())
+    return pd.Timestamp(datetime.today(), tz=tz or 'utc')
 
 
 @func('+')
