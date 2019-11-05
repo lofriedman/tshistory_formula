@@ -1362,3 +1362,30 @@ def test_date(engine, tsh):
     assert d == pd.Timestamp('2018-01-01 00:00:00+0000', tz='UTC')
     assert e == pd.Timestamp('2018-01-01 12:00:00+0300', tz='Europe/Moscow')
     assert f == pd.Timestamp('2020-01-01 06:42:30+0000', tz='UTC')
+
+
+def test_timedelta(engine, tsh):
+    e1 = '(timedelta (date "2020-1-1"))'  # null
+    e2 = '(timedelta (date "2020-1-1") #:years 1)'
+    e3 = '(timedelta (date "2020-1-1") #:months 1) '
+    e4 = '(timedelta (date "2020-1-1") #:weeks 1)'
+    e5 = '(timedelta (date "2020-1-1") #:days 1)'
+    e6 = '(timedelta (date "2020-1-1") #:hours 1)'
+    e7 = '(timedelta (date "2020-1-1") #:minutes 1)'
+
+    i = Interpreter(engine, tsh, {})
+    a = lisp.evaluate(e1, i.env)
+    b = lisp.evaluate(e2, i.env)
+    c = lisp.evaluate(e3, i.env)
+    d = lisp.evaluate(e4, i.env)
+    e = lisp.evaluate(e5, i.env)
+    f = lisp.evaluate(e6, i.env)
+    g = lisp.evaluate(e7, i.env)
+
+    assert a == pd.Timestamp('2020-01-01 00:00:00+0000', tz='UTC')
+    assert b == pd.Timestamp('2021-01-01 00:00:00+0000', tz='UTC')
+    assert c == pd.Timestamp('2020-02-01 00:00:00+0000', tz='UTC')
+    assert d == pd.Timestamp('2020-01-08 00:00:00+0000', tz='UTC')
+    assert e == pd.Timestamp('2020-01-02 00:00:00+0000', tz='UTC')
+    assert f == pd.Timestamp('2020-01-01 01:00:00+0000', tz='UTC')
+    assert g == pd.Timestamp('2020-01-01 00:01:00+0000', tz='UTC')

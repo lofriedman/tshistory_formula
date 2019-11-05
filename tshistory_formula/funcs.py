@@ -3,6 +3,7 @@ from typing import Union, Optional
 import numpy as np
 import pandas as pd
 import pytz
+from dateutil.relativedelta import relativedelta
 
 from tshistory.util import SeriesServices
 from tshistory_formula.registry import func, finder
@@ -88,6 +89,32 @@ def timestamp(strdate: str,
     if naive:
         return pd.Timestamp(strdate)
     return pd.Timestamp(strdate, tz=tz or 'utc')
+
+
+@func('timedelta')
+def timedelta_eval(date: pd.Timestamp,
+                   years: int=0,
+                   months: int=0,
+                   weeks: int=0,
+                   days: int=0,
+                   hours: int=0,
+                   minutes: int=0) -> pd.Timestamp:
+    """
+    Takes a timestamp and a number of years, months, weekds, days,
+    hours, minutes (int) and computes a new date according to the asked
+    delta elements.
+
+    Example: `(timedelta (date "2020-1-1") #:weeks 1 #:hours 2)`
+
+    """
+    return date + relativedelta(
+        years=years,
+        months=months,
+        weeks=weeks,
+        days=days,
+        hours=hours,
+        minutes=minutes
+    )
 
 
 @func('+')

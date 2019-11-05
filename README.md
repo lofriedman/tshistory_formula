@@ -195,6 +195,14 @@ Computes the standard deviation over its input series.
 
 Example: `(std (series "station0") (series "station1") (series "station2"))`
 
+### timedelta
+
+Takes a timestamp and a number of years, months, weekds, days,
+hours, minutes (int) and computes a new date according to the asked
+delta elements.
+
+Example: `(timedelta (date "2020-1-1") #:weeks 1 #:hours 2)`
+
 
 # Registering new operators
 
