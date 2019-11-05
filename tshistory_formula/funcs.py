@@ -2,6 +2,7 @@ from typing import Union, Optional
 
 import numpy as np
 import pandas as pd
+import pytz
 
 from tshistory.util import SeriesServices
 from tshistory_formula.registry import func, finder
@@ -69,6 +70,25 @@ def naive(series: pd.Series, tzone: str) -> pd.Series:
     """
     series.index = series.index.tz_convert(tzone).tz_localize(None)
     return series
+
+
+@func('date')
+def timestamp(strdate: str,
+              naive: bool=False,
+              tz: Optional[str]=None) -> pd.Timestamp:
+    """
+    Produces an utc timestamp from its input string date in iso format.
+
+    The `tz` keyword allows to specify an alternate time zone.
+    The `naive` keyword forces production of a naive timestamp.
+    Both `tz` and `naive` keywords are mutually exlcusive.
+    """
+    if tz:
+        assert not naive, f'date cannot be naive and have a tz'
+        pytz.timezone(tz)
+    if naive:
+        return pd.Timestamp(strdate)
+    return pd.Timestamp(strdate, tz=tz or 'utc')
 
 
 @func('+')

@@ -93,6 +93,14 @@ which must be numbers (integers or floats).
 
 Example: `(clip (series "must-be-positive") #:min 0)`
 
+### date
+
+Produces an utc timestamp from its input string date in iso format.
+
+The `tz` keyword allows to specify an alternate time zone.
+The `naive` keyword forces production of a naive timestamp.
+Both `tz` and `naive` keywords are mutually exlcusive.
+
 ### div
 
 Element wise division of two series.
