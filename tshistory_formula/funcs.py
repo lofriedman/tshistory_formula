@@ -50,6 +50,12 @@ def series(__interpreter__,
     return ts
 
 
+@finder('series')
+def find_series(cn, tsh, stree):
+    name = stree[1]
+    return {name: tsh.metadata(cn, name)}
+
+
 @func('naive')
 def naive(series: pd.Series, tzone: str) -> pd.Series:
     """
@@ -63,12 +69,6 @@ def naive(series: pd.Series, tzone: str) -> pd.Series:
     """
     series.index = series.index.tz_convert(tzone).tz_localize(None)
     return series
-
-
-@finder('series')
-def find_series(cn, tsh, stree):
-    name = stree[1]
-    return {name: tsh.metadata(cn, name)}
 
 
 @func('+')
