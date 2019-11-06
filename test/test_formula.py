@@ -1079,17 +1079,23 @@ def test_slice(engine, tsh):
     tsh.register_formula(
         engine,
         'slicing-from',
-        '(slice (series "test-slice") #:fromdate "2019-1-2")',
+        '(slice (series "test-slice") #:fromdate (date "2019-1-2"))',
     )
     tsh.register_formula(
         engine,
         'slicing-fromto',
-        '(slice (series "test-slice") #:fromdate "2019-1-2" #:todate "2019-1-2")',
+        '(slice (series "test-slice") '
+        ' #:fromdate (date "2019-1-2") '
+        ' #:todate (date "2019-1-2")'
+        ')',
     )
     tsh.register_formula(
         engine,
         'slicing-empty',
-        '(slice (series "test-slice") #:fromdate "2018-1-2" #:todate "2018-1-2")',
+        '(slice (series "test-slice") '
+        ' #:fromdate (date "2018-1-2") '
+        ' #:todate (date "2018-1-2")'
+        ')',
     )
 
     assert_df("""
@@ -1120,7 +1126,7 @@ def test_slice_options(engine, tsh):
     ts = tsh.eval_formula(
         engine,
         '(add (series "test-slice") '
-        '     (slice (series "test-slice" #:fill 0) #:fromdate "2019-1-2"))',
+        '     (slice (series "test-slice" #:fill 0) #:fromdate (date "2019-1-2")))',
     )
     assert_df("""
 2019-01-01 00:00:00+00:00    1.0

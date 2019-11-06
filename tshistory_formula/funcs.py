@@ -358,18 +358,16 @@ class iso_utc_datetime(str):
 
 @func('slice')
 def slice(series: pd.Series,
-          fromdate: Optional[str]=None,
-          todate: Optional[str]=None) -> pd.Series:
+          fromdate: Optional[pd.Timestamp]=None,
+          todate: Optional[pd.Timestamp]=None) -> pd.Series:
     """
     This allows cutting a series at date points. It takes one
     positional parameter (the series) and two optional keywords
     `fromdate` and `todate` which must be strings in the
     iso8601 format.
 
-    Example: `(slice (series "cut-me") #:fromdate "2018-01-01")`
+    Example: `(slice (series "cut-me") #:fromdate (date "2018-01-01"))`
     """
-    fromdate = fromdate and iso_utc_datetime(fromdate) or None
-    todate = todate and iso_utc_datetime(todate) or None
     sliced = series.loc[fromdate:todate]
     sliced.options = series.options
     return sliced

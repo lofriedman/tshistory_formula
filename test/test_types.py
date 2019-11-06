@@ -53,10 +53,10 @@ def test_types(tsh):
                    'prune': 'Optional[Union[int]]',
                    'return': 'Series',
                    'weight': 'Optional[Union[float, int]]'},
-        'slice': {'fromdate': 'Optional[Union[str]]',
+        'slice': {'fromdate': 'Optional[Union[Timestamp]]',
                   'return': 'Series',
                   'series': 'Series',
-                  'todate': 'Optional[Union[str]]'},
+                  'todate': 'Optional[Union[Timestamp]]'},
         'std': {'return': 'Series', 'serieslist': 'Series'}
     } == types
 

@@ -10,7 +10,10 @@ from psyl.lisp import parse, serialize, Symbol, Keyword
 from tshistory.util import find_dburi
 
 from tshistory_formula.tsio import timeseries
-from tshistory_formula.helper import typecheck
+from tshistory_formula.helper import (
+    rewrite_slice,
+    typecheck
+)
 from tshistory_formula.interpreter import Interpreter
 
 
@@ -216,6 +219,40 @@ def drop_alias_tables(db_uri, drop=False, namespace='tsh'):
         cn.execute(
             f'drop table if exists "{namespace}".outliers'
         )
+
+
+@click.command(name='fix-slice-operator')
+@click.argument('db-uri')
+@click.option('--really', is_flag=True, default=False)
+@click.option('--namespace', default='tsh')
+def fix_slice(db_uri, really=False, namespace='tsh'):
+    e = create_engine(find_dburi(db_uri))
+
+
+    tsh = timeseries(namespace)
+    for name, kind in tsh.list_series(engine).items():
+        if kind != 'formula':
+            continue
+
+        form = tsh.formule(engine, name)
+        tree = parse(form)
+        newtree = rewrite_slice(tree)
+        newform = serialize(newtree)
+        if form != newform:
+            print('rewritten', name)
+            print(' was', form)
+            print(' ->', newform)
+            if not really:
+                continue
+            tsh.register_formula(
+                engine,
+                name,
+                newform,
+                update=True
+            )
+
+    if not really:
+        print('UNCHANGED. To apply changes, pass --really')
 
 
 @click.command(name='shell')
