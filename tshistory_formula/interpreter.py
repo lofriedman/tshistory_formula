@@ -6,7 +6,7 @@ from typing import Optional
 from functools import partial
 
 import pandas as pd
-from psyl.lisp import Env, evaluate, parse
+from psyl.lisp import Env, pevaluate, parse
 
 from tshistory_formula import registry
 
@@ -83,7 +83,7 @@ class Interpreter:
         return self.tsh.get(self.cn, name, **getargs)
 
     def evaluate(self, text):
-        return evaluate(text, self.env)
+        return pevaluate(text, self.env)
 
 
 class HistoryInterpreter(Interpreter):
@@ -114,7 +114,7 @@ class HistoryInterpreter(Interpreter):
 
     def evaluate(self, text, idate, name):
         self.env['__idate__'] = idate
-        ts = evaluate(text, self.env)
+        ts = pevaluate(text, self.env)
         ts.name = name
         return ts
 
