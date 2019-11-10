@@ -17,17 +17,21 @@ from tshistory_formula.registry import (
 
 
 def expanded(tsh, cn, tree):
-    newtree = []
+    # base case: check the current operation
     op = tree[0]
     finder = FINDERS.get(op)
     seriesmeta = finder(cn, tsh, tree) if finder else None
     if seriesmeta:
+        # hidden assumption: true series operators
+        # operate one series at a time (e.g.  `series`)
+        # hence we can be brutal ...
         name, meta = seriesmeta.popitem()
         if tsh.type(cn, name) == 'formula':
             formula = tsh.formula(cn, name)
             subtree = parse(formula)
             return expanded(tsh, cn, subtree)
 
+    newtree = []
     for item in tree:
         if isinstance(item, list):
             newtree.append(expanded(tsh, cn, item))
