@@ -884,6 +884,50 @@ insertion_date             value_date
     FUNCS.pop('shifted')
 
 
+def test_newop_expansion(engine, tsh):
+    @func('combine')
+    def shifted(__interpreter__, name1: str, name2: str) -> pd.Series:
+        args = __interpreter__.getargs.copy()
+        return (
+            __interpreter__.get(name1, args) +
+            __interpreter__.get(name1, args)
+        )
+
+    @finder('combine')
+    def find_series(cn, tsh, stree):
+        return {
+            stree[1]: tsh.metadata(cn, stree[1])
+        }
+
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, ts, 'base-comb', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'comb-a',
+        '(add (series "base-comb") (series "base-comb"))'
+    )
+    tsh.register_formula(
+        engine,
+        'comb-b',
+        '(priority (series "base-comb") (series "base-comb"))'
+    )
+
+    tsh.register_formula(
+        engine,
+        'combinator',
+        '(combine "comb-a" "comb-b")',
+        False
+    )
+
+    exp = tsh.expanded_formula(engine, 'combinator')
+    # this is obviously bogus ...
+    assert exp == '(add (series "base-comb") (series "base-comb"))'
+
+
 def test_formula_refers_to_nothing(engine, tsh):
     tsh.register_formula(
         engine,
