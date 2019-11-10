@@ -1031,8 +1031,10 @@ def test_custom_metadata(engine, tsh):
         return {
             tree[0]: {
                 'index_type': 'datetime64[ns]',
+                'index_dtype': '|M8[ns]',
                 'tzaware': False,
-                'value_type': 'float64'
+                'value_type': 'float64',
+                'value_dtype': '<f8'
             }
         }
 
@@ -1046,8 +1048,10 @@ def test_custom_metadata(engine, tsh):
     meta = tsh.metadata(engine, 'custom')
     assert meta == {
         'index_type': 'datetime64[ns]',
+        'index_dtype': '|M8[ns]',
         'tzaware': False,
-        'value_type': 'float64'
+        'value_type': 'float64',
+        'value_dtype': '<f8'
     }
 
     # cleanup

@@ -32,8 +32,22 @@ def func(name):
 def finder(name):
 
     def decorator(func):
-        FINDERS[name] = func
-        return func
+        def _ensure_finder_keys(func, *a, **kw):
+            res = func(*a, **kw)
+            for name, meta in res.items():
+                if meta is None:
+                    # underlying series is void, must be
+                    # register_formula(..., reject_unknown=False)
+                    continue
+                assert sorted(meta.keys()) == [
+                    'index_dtype', 'index_type', 'tzaware',
+                    'value_dtype', 'value_type'
+                ], f'{name} has missing metadata keys'
+            return res
+
+        dec = decorate(func, _ensure_finder_keys)
+        FINDERS[name] = dec
+        return dec
 
     return decorator
 
