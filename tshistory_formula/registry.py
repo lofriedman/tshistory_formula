@@ -29,6 +29,14 @@ def func(name):
     return decorator
 
 
+_KEYS = set([
+    'index_dtype',
+    'index_type',
+    'tzaware',
+    'value_dtype',
+    'value_type'
+])
+
 def finder(name):
 
     def decorator(func):
@@ -39,10 +47,9 @@ def finder(name):
                     # underlying series is void, must be
                     # register_formula(..., reject_unknown=False)
                     continue
-                assert sorted(meta.keys()) == [
-                    'index_dtype', 'index_type', 'tzaware',
-                    'value_dtype', 'value_type'
-                ], f'{name} has missing metadata keys'
+                assert not len(
+                    _KEYS - set(meta.keys())
+                ) , f'{name} has missing metadata keys'
             return res
 
         dec = decorate(func, _ensure_finder_keys)

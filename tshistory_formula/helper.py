@@ -25,11 +25,13 @@ def expanded(tsh, cn, tree):
         # hidden assumption: true series operators
         # operate one series at a time (e.g.  `series`)
         # hence we can be brutal ...
-        name, meta = seriesmeta.popitem()
-        if tsh.type(cn, name) == 'formula':
-            formula = tsh.formula(cn, name)
-            subtree = parse(formula)
-            return expanded(tsh, cn, subtree)
+        if len(seriesmeta) == 1:  # if not: unexpandable
+            name, meta = seriesmeta.popitem()
+            if meta.get('expandable', False):
+                if tsh.type(cn, name) == 'formula':
+                    formula = tsh.formula(cn, name)
+                    subtree = parse(formula)
+                    return expanded(tsh, cn, subtree)
 
     newtree = []
     for item in tree:

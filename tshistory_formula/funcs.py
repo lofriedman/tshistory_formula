@@ -56,7 +56,10 @@ def series(__interpreter__,
 @finder('series')
 def find_series(cn, tsh, stree):
     name = stree[1]
-    return {name: tsh.metadata(cn, name)}
+    meta = tsh.metadata(cn, name)
+    if meta:
+        meta['expandable'] = True
+    return {name: meta}
 
 
 @func('naive')

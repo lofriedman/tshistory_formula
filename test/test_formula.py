@@ -924,8 +924,7 @@ def test_newop_expansion(engine, tsh):
     )
 
     exp = tsh.expanded_formula(engine, 'combinator')
-    # this is obviously bogus ...
-    assert exp == '(add (series "base-comb") (series "base-comb"))'
+    assert exp == '(combine "comb-a" "comb-b")'
 
 
 def test_formula_refers_to_nothing(engine, tsh):
