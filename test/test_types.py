@@ -15,6 +15,21 @@ from tshistory_formula.helper import (
 )
 
 
+def test_dtypes():
+    index = pd.date_range(
+        pd.Timestamp('2021-1-1'),
+        periods=3,
+        freq='H'
+    )
+    assert index.dtype.str == '<M8[ns]'
+    index2 = pd.date_range(
+        pd.Timestamp('2021-1-1', tz='UTC'),
+        periods=3,
+        freq='H'
+    )
+    assert index2.dtype.str == '|M8[ns]'
+
+
 def test_types(tsh):
     # prune the types registered from other modules/plugins
     # we want to only show the ones provided by the current package
