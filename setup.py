@@ -22,6 +22,7 @@ setup(name='tshistory_formula',
           'ingest-formulas=tshistory_formula.cli:ingest_formulas',
           'update-formula-metadata=tshistory_formula.cli:update_metadata',
           'typecheck-formula=tshistory_formula.cli:typecheck_formula',
+          'fix-slice-operator=tshistory_formula.cli:fix_slice',
           'test-formula=tshistory_formula.cli:test_formula',
           'drop-alias-tables=tshistory_formula.cli:drop_alias_tables',
           'shell=tshistory_formula.cli:shell'

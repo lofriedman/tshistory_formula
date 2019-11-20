@@ -228,13 +228,13 @@ def drop_alias_tables(db_uri, drop=False, namespace='tsh'):
 def fix_slice(db_uri, really=False, namespace='tsh'):
     e = create_engine(find_dburi(db_uri))
 
-
     tsh = timeseries(namespace)
-    for name, kind in tsh.list_series(engine).items():
+    for name, kind in tsh.list_series(e).items():
         if kind != 'formula':
             continue
 
-        form = tsh.formule(engine, name)
+        # parse+serialize -> normalization step
+        form = serialize(parse(tsh.formula(e, name)))
         tree = parse(form)
         newtree = rewrite_slice(tree)
         newform = serialize(newtree)
@@ -245,7 +245,7 @@ def fix_slice(db_uri, really=False, namespace='tsh'):
             if not really:
                 continue
             tsh.register_formula(
-                engine,
+                e,
                 name,
                 newform,
                 update=True
