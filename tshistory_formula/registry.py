@@ -47,9 +47,10 @@ def finder(name):
                     # underlying series is void, must be
                     # register_formula(..., reject_unknown=False)
                     continue
-                assert not len(
-                    _KEYS - set(meta.keys())
-                ) , f'{name} has missing metadata keys'
+                missing = _KEYS - set(meta.keys())
+                assert not len(missing), (
+                    f'{name} has missing metadata keys ({missing})'
+                )
             return res
 
         dec = decorate(func, _ensure_finder_keys)
