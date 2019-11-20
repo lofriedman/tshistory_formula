@@ -1,4 +1,8 @@
+from pathlib import Path
 from setuptools import setup
+
+
+doc = Path(__file__).parent / 'README.md'
 
 
 setup(name='tshistory_formula',
@@ -7,6 +11,8 @@ setup(name='tshistory_formula',
       author_email='aurelien.campeas@pythonian.fr',
       url='https://bitbucket.org/pythonian/tshistory_formula',
       description='Computed timeseries plugin for `tshistory`',
+      long_description=doc.read_text(),
+      long_description_content_type='text/markdown',
 
       packages=['tshistory_formula'],
       zip_safe=False,
