@@ -1,3 +1,5 @@
+from warnings import warn
+
 from decorator import decorate
 import pandas as pd
 
@@ -48,9 +50,10 @@ def finder(name):
                     # register_formula(..., reject_unknown=False)
                     continue
                 missing = _KEYS - set(meta.keys())
-                assert not len(missing), (
-                    f'{name} has missing metadata keys ({missing})'
-                )
+                if len(missing):
+                    warn(
+                        f'{name} has missing metadata keys ({missing})'
+                    )
             return res
 
         dec = decorate(func, _ensure_finder_keys)
