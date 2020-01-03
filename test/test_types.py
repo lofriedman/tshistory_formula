@@ -53,8 +53,8 @@ def test_types(tsh):
               'b': 'Number',
               'return': 'Union[Number, Series]'},
         'add': {'return': 'Series', 'serieslist': 'Series'},
-        'clip': {'max': 'Optional[Union[Number]]',
-                 'min': 'Optional[Union[Number]]',
+        'clip': {'max': 'Optional[Number]',
+                 'min': 'Optional[Number]',
                  'return': 'Series',
                  'series': 'Series'},
         'div': {'return': 'Series', 's1': 'Series', 's2': 'Series'},
@@ -65,13 +65,13 @@ def test_types(tsh):
         'row-mean': {'return': 'Series', 'serieslist': 'Series'},
         'series': {'fill': 'Optional[Union[str, Number]]',
                    'name': 'str',
-                   'prune': 'Optional[Union[int]]',
+                   'prune': 'Optional[int]',
                    'return': 'Series',
-                   'weight': 'Optional[Union[Number]]'},
-        'slice': {'fromdate': 'Optional[Union[Timestamp]]',
+                   'weight': 'Optional[Number]'},
+        'slice': {'fromdate': 'Optional[Timestamp]',
                   'return': 'Series',
                   'series': 'Series',
-                  'todate': 'Optional[Union[Timestamp]]'},
+                  'todate': 'Optional[Timestamp]'},
         'std': {'return': 'Series', 'serieslist': 'Series'}
     } == types
 

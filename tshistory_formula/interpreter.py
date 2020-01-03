@@ -27,12 +27,20 @@ NONETYPE = type(None)
 
 def normalize_union_types(obj):
     types = list(obj.__args__)
-    wrapper = '{}'
+    optwrapper = '{}'
+    unionwrapper = '{}'
     if NONETYPE in types:
-        wrapper = 'Optional[{}]'
-        types = filter(lambda x: not x is NONETYPE, types)
-    return wrapper.format(
-        f'Union[{", ".join(map(extract_type_name, types))}]'
+        optwrapper = 'Optional[{}]'
+        types = [
+            t for t in types
+            if t is not NONETYPE
+        ]
+    if len(types) > 1:
+        unionwrapper = 'Union[{}]'
+    return optwrapper.format(
+        unionwrapper.format(
+            ", ".join(map(extract_type_name, types))
+        )
     )
 
 
