@@ -1,5 +1,7 @@
+import abc
 import typing
 import inspect
+import itertools
 
 from psyl.lisp import (
     Env,
@@ -112,13 +114,14 @@ def isoftype(val, typespec):
 
 def sametype(basetype, atype):
     if isinstance(basetype, type):
-        if isinstance(atype, type):
-            # basetype = atype (standard python types)
-            if basetype == atype:
+        if isinstance(atype, (type, abc.ABCMeta)):
+            # basetype = atype (standard python types or abc.Meta)
+            if issubclass(basetype, atype):
                 return True
         elif atype.__origin__ is typing.Union:
             # basetype ∈ atype (type vs typing)
-            if basetype in atype.__args__:
+            if any(issubclass(basetype, sometype)
+                   for sometype in atype.__args__):
                 return True
     else:
         if isinstance(atype, type):
@@ -129,8 +132,10 @@ def sametype(basetype, atype):
         elif atype.__origin__ is typing.Union:
             # typing vs typing
             # basetype ∩ atype
-            if set(atype.__args__).intersection(basetype.__args__):
-                return True
+            for subtype, supertype in itertools.product(basetype.__args__,
+                                                        atype.__args__):
+                if issubclass(subtype, supertype):
+                    return True
     return False
 
 

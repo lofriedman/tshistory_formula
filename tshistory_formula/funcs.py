@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Union, Optional
+from numbers import Number
 
 import numpy as np
 import pandas as pd
@@ -17,9 +18,9 @@ NONETYPE = type(None)
 @func('series')
 def series(__interpreter__,
            name: str,
-           fill: Union[str, int, float, NONETYPE]=None,
+           fill: Union[str, Number, NONETYPE]=None,
            prune: Optional[int]=None,
-           weight: Union[float, int, NONETYPE]=None) -> pd.Series:
+           weight: Optional[Number]=None) -> pd.Series:
     """
     The `series` operator accepts several keywords:
 
@@ -144,8 +145,8 @@ def today(naive: bool=False,
 
 @func('+')
 def scalar_add(
-        a: Union[int, float],
-        b: Union[int, float, pd.Series]) -> Union[int, float, pd.Series]:
+        a: Number,
+        b: Union[Number, pd.Series]) -> Union[Number, pd.Series]:
     """
     Add a constant quantity to a series.
 
@@ -166,8 +167,8 @@ def scalar_add(
 
 @func('*')
 def scalar_prod(
-        a: Union[int, float],
-        b: Union[int, float, pd.Series]) -> Union[int, float, pd.Series]:
+        a: Number,
+        b: Union[Number, pd.Series]) -> Union[Number, pd.Series]:
     """
     Performs a scalar product on a series.
 
@@ -188,8 +189,8 @@ def scalar_prod(
 
 @func('/')
 def scalar_div(
-        a: Union[int, float, pd.Series],
-        b: Union[int, float]) -> Union[int, float, pd.Series]:
+        a: Union[Number, pd.Series],
+        b: Number) -> Union[Number, pd.Series]:
     """
     Perform a scalar division between numbers or a series and a scalar.
 
@@ -337,8 +338,8 @@ def series_priority(*serieslist: pd.Series) -> pd.Series:
 
 @func('clip')
 def series_clip(series: pd.Series,
-                min: Union[int, float, NONETYPE]=None,
-                max: Union[int, float, NONETYPE]=None) -> pd.Series:
+                min: Optional[Number]=None,
+                max: Optional[Number]=None) -> pd.Series:
     """
     Set an upper/lower threashold for a series. Takes a series as
     positional parameter and accepts two optional keywords `min` and

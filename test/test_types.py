@@ -43,18 +43,18 @@ def test_types(tsh):
         if name in opnames
     }
     assert {
-        '*': {'a': 'Union[int, float]',
-              'b': 'Union[int, float, Series]',
-              'return': 'Union[int, float, Series]'},
-        '+': {'a': 'Union[int, float]',
-              'b': 'Union[int, float, Series]',
-              'return': 'Union[int, float, Series]'},
-        '/': {'a': 'Union[int, float, Series]',
-              'b': 'Union[int, float]',
-              'return': 'Union[int, float, Series]'},
+        '*': {'a': 'Number',
+              'b': 'Union[Number, Series]',
+              'return': 'Union[Number, Series]'},
+        '+': {'a': 'Number',
+              'b': 'Union[Number, Series]',
+              'return': 'Union[Number, Series]'},
+        '/': {'a': 'Union[Number, Series]',
+              'b': 'Number',
+              'return': 'Union[Number, Series]'},
         'add': {'return': 'Series', 'serieslist': 'Series'},
-        'clip': {'max': 'Optional[Union[float, int]]',
-                 'min': 'Optional[Union[float, int]]',
+        'clip': {'max': 'Optional[Union[Number]]',
+                 'min': 'Optional[Union[Number]]',
                  'return': 'Series',
                  'series': 'Series'},
         'div': {'return': 'Series', 's1': 'Series', 's2': 'Series'},
@@ -63,11 +63,11 @@ def test_types(tsh):
         'mul': {'return': 'Series', 'serieslist': 'Series'},
         'priority': {'return': 'Series', 'serieslist': 'Series'},
         'row-mean': {'return': 'Series', 'serieslist': 'Series'},
-        'series': {'fill': 'Optional[Union[str, int, float]]',
+        'series': {'fill': 'Optional[Union[str, Number]]',
                    'name': 'str',
                    'prune': 'Optional[Union[int]]',
                    'return': 'Series',
-                   'weight': 'Optional[Union[float, int]]'},
+                   'weight': 'Optional[Union[Number]]'},
         'slice': {'fromdate': 'Optional[Union[Timestamp]]',
                   'return': 'Series',
                   'series': 'Series',
@@ -129,7 +129,7 @@ def test_failing_arg(engine, tsh):
     with pytest.raises(TypeError) as err:
         typecheck(lisp.parse(expr), i.env)
 
-    assert err.value.args[0] == "'toto' not of typing.Union[int, float]"
+    assert err.value.args[0] == "'toto' not of <class 'numbers.Number'>"
 
 
 def test_failing_kw(engine, tsh):
