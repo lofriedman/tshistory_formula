@@ -7,6 +7,7 @@ from tshistory.util import tx
 
 from tshistory_formula import funcs  # trigger registration
 from tshistory_formula import (
+    api,  # trigger extension
     interpreter,
     helper
 )
@@ -145,7 +146,13 @@ class timeseries(basets):
                 ts.name = name
             return ts
 
-        return super().get(cn, name, **kw)
+        ts = super().get(cn, name, **kw)
+        if ts is None and self.othersources:
+            ts = self.othersources.get(
+                name, **kw
+            )
+
+        return ts
 
     def eval_formula(self, cn, formula, **kw):
         i = kw.get('__interpreter__') or interpreter.Interpreter(cn, self, kw)
@@ -179,8 +186,9 @@ class timeseries(basets):
                 to_value_date=None,
                 diffmode=False,
                 _keep_nans=False):
+
         if self.type(cn, name) != 'formula':
-            return super().history(
+            hist = super().history(
                 cn, name,
                 from_insertion_date,
                 to_insertion_date,
@@ -189,6 +197,16 @@ class timeseries(basets):
                 diffmode,
                 _keep_nans
             )
+            if hist is None and self.othersources:
+                hist = self.othersources.history(
+                    name,
+                    from_value_date=from_value_date,
+                    to_value_date=to_value_date,
+                    from_insertion_date=from_insertion_date,
+                    to_insertion_date=to_insertion_date,
+                    _keep_nans=_keep_nans
+                )
+            return hist
 
         assert not diffmode
 

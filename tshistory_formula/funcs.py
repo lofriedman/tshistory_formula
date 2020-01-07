@@ -58,6 +58,9 @@ def series(__interpreter__,
 def find_series(cn, tsh, stree):
     name = stree[1]
     meta = tsh.metadata(cn, name)
+    # alt sources lookup
+    if meta is None and tsh.othersources:
+        meta = tsh.othersources.metadata(name, all=True)
     if meta:
         meta['expandable'] = True
     return {name: meta}

@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from pytest_sa_pg import db
 from click.testing import CliRunner
 
-from tshistory import cli as command
+from tshistory import cli as command, api
 from tshistory_formula.schema import formula_schema
 from tshistory_formula.tsio import timeseries
 
@@ -28,6 +28,22 @@ def engine(request):
 @pytest.fixture(scope='session')
 def tsh(request, engine):
     return timeseries()
+
+
+@pytest.fixture(scope='session')
+def mapi(engine):
+    formula_schema('test-mapi').create(engine)
+    formula_schema('test-mapi-2').create(engine)
+
+    return api.timeseries(
+        str(engine.url),
+        namespace='test-mapi',
+        handler=timeseries,
+        sources=[
+            (str(engine.url), 'test-mapi-2')
+        ]
+    )
+
 
 
 @pytest.fixture
