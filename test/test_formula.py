@@ -295,6 +295,9 @@ def test_naive_tzone(engine, tsh):
 2020-01-03 03:00:00    3.0
 """, ts)
 
+    meta = tsh.metadata(engine, 'to-naive')
+    assert meta['tzaware'] == True
+
 
 def test_scalar_ops(engine, tsh):
     x = pd.Series(
