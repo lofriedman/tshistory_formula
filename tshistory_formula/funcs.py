@@ -77,6 +77,19 @@ def naive(series: pd.Series, tzone: str) -> pd.Series:
     return series
 
 
+@finder('naive')
+def find_holidays(cn, tsh, tree):
+    return {
+        'naive': {
+            'index_dtype': '<M8[ns]',
+            'index_type': 'datetime64[ns]',
+            'tzaware': False,
+            'value_dtype': '<f8',
+            'value_type': 'float64'
+        }
+    }
+
+
 @func('date')
 def timestamp(strdate: str,
               naive: bool=False,

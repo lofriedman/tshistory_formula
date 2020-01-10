@@ -58,10 +58,11 @@ class timeseries(basets):
         first = next(iter(metamap.items()))
         for m in metamap.items():
             if not m[1] == first[1]:
-                raise ValueError(
-                    f'Formula `{name}`: mismatching metadata:'
-                    f'{", ".join("`%s:%s`" % (k, v) for k, v in metamap.items())}'
-                )
+                if first[0] != 'naive':  # a very special operator !
+                    raise ValueError(
+                        f'Formula `{name}`: mismatching metadata:'
+                        f'{", ".join("`%s:%s`" % (k, v) for k, v in metamap.items())}'
+                    )
         return first[1]
 
     @tx

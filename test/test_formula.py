@@ -296,7 +296,7 @@ def test_naive_tzone(engine, tsh):
 """, ts)
 
     meta = tsh.metadata(engine, 'to-naive')
-    assert meta['tzaware'] == True
+    assert meta['tzaware'] == False
 
 
 def test_scalar_ops(engine, tsh):
