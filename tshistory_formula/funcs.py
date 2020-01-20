@@ -458,3 +458,24 @@ def row_std(*serieslist: pd.Series) -> pd.Series:
     """
     allseries = pd.concat(serieslist, axis=1)
     return allseries.std(axis=1).dropna()
+
+
+@func('resample')
+def resample(series: pd.Series,
+             freq: str,
+             method: str='mean') -> pd.Series:
+    """Resamples its input series using `freq` and the aggregation method
+    `method` (as described in the pandas documentation).
+
+    Example: `(resample (series "hourly") "D")`
+
+    """
+
+    resampled = series.resample(freq)
+
+    # check method
+    meth = getattr(resampled, method, None)
+    if meth is None:
+        raise ValueError(f'bad resampling method `{method}`')
+
+    return resampled.apply(method)

@@ -151,6 +151,13 @@ Example: `(priority (series "realized") (series "nominated") (series "forecasted
 Here `realized` values show up first, and any missing values come from
 `nominated` first and then only from `forecasted`.
 
+### resample
+
+Resamples its input series using `freq` and the aggregation method
+`method` (as described in the pandas documentation).
+
+Example: `(resample (series "hourly") "D")`
+
 ### row-mean
 
 This operator computes the row-wise mean of its input series using the

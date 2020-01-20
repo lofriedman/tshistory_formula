@@ -1471,3 +1471,59 @@ def test_today(engine, tsh):
     assert b.tz is None
     assert d.tz == pytz.utc
     assert e.tz.zone == 'Europe/Moscow'
+
+
+def test_resample(engine, tsh):
+    hourly = pd.Series(
+        list(range(36)),
+        index=pd.date_range(utcdt(2020, 1, 1), periods=36, freq='H')
+    )
+
+    gasday = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2020, 1, 1, 5), periods=3, freq='D')
+    )
+
+    tsh.update(engine, hourly, 'hourly', 'Babar')
+    tsh.update(engine, gasday, 'gasday', 'Celeste')
+
+    tsh.register_formula(
+        engine,
+        'hourly2daily',
+        '(resample (series "hourly") "D")'
+    )
+    tsh.register_formula(
+        engine,
+        'hourly2dailysum',
+        '(resample (series "hourly") "D" "sum")'
+    )
+    tsh.register_formula(
+        engine,
+        'gasdaytoday',
+        '(resample (series "gasday") "D")'
+    )
+    tsh.register_formula(
+        engine,
+        'badmethod',
+        '(resample (series "gasday") "D" "NO-SUCH-METHOD")'
+    )
+
+    assert_df("""
+2020-01-01 00:00:00+00:00    11.5
+2020-01-02 00:00:00+00:00    29.5
+""", tsh.get(engine, 'hourly2daily'))
+
+    assert_df("""
+2020-01-01 00:00:00+00:00    276.0
+2020-01-02 00:00:00+00:00    354.0
+""", tsh.get(engine, 'hourly2dailysum'))
+
+    assert_df("""
+2020-01-01 00:00:00+00:00    1.0
+2020-01-02 00:00:00+00:00    2.0
+2020-01-03 00:00:00+00:00    3.0
+""", tsh.get(engine, 'gasdaytoday'))
+
+    with pytest.raises(ValueError) as err:
+        tsh.get(engine, 'badmethod')
+    assert err.value.args[0] == 'bad resampling method `NO-SUCH-METHOD`'
