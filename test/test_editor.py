@@ -16,7 +16,7 @@ from tshistory_formula.registry import (
 from tshistory_formula.editor import fancypresenter
 
 
-def test_editor_table_callback(engine, tsh):
+def test_editor_table_callback(mapi):
     groundzero = pd.Series(
         [0, 0, 0],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
@@ -25,16 +25,15 @@ def test_editor_table_callback(engine, tsh):
         [1, 1, 1],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
     )
-    tsh.update(engine, groundzero, 'groundzero-a', 'Babar')
-    tsh.update(engine, one, 'one-a', 'Celeste')
+    mapi.update('groundzero-a', groundzero, 'Babar')
+    mapi.update('one-a', one, 'Celeste')
 
-    tsh.register_formula(
-        engine,
+    mapi.register_formula(
         'editor-1',
         '(add (* 3.1416 (series "groundzero-a" #:fill "bfill" #:prune 1)) (series "one-a"))',
     )
 
-    presenter = fancypresenter(engine, tsh, 'editor-1', {})
+    presenter = fancypresenter(mapi, 'editor-1', {})
     info = [
         {
             k: v for k, v in info.items() if k != 'ts'
@@ -49,7 +48,7 @@ def test_editor_table_callback(engine, tsh):
     ]
 
     # trigger an empty series
-    presenter = fancypresenter(engine, tsh, 'editor-1',
+    presenter = fancypresenter(mapi, 'editor-1',
                                {'from_value_date': utcdt(2019, 1, 4)})
     info = [
         {
@@ -65,23 +64,22 @@ def test_editor_table_callback(engine, tsh):
     ]
 
 
-def test_editor_no_such_series(engine, tsh):
+def test_editor_no_such_series(mapi):
     with pytest.raises(AssertionError):
-        presenter = fancypresenter(engine, tsh, 'no-such-series', {})
+        presenter = fancypresenter(mapi, 'no-such-series', {})
 
 
-def test_editor_pure_scalar_op(engine, tsh):
+def test_editor_pure_scalar_op(mapi):
     ts = pd.Series(
         [1, 2, 3],
         index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
     )
-    tsh.update(engine, ts, 'pure-scalar-ops', 'Babar')
-    tsh.register_formula(
-        engine,
+    mapi.update('pure-scalar-ops', ts, 'Babar')
+    mapi.register_formula(
         'formula-pure-scalar-ops',
         '(+ (* 3 (/ 6 2)) (series "pure-scalar-ops"))'
     )
-    presenter = fancypresenter(engine, tsh, 'formula-pure-scalar-ops',
+    presenter = fancypresenter(mapi, 'formula-pure-scalar-ops',
                                {'from_value_date': utcdt(2019, 1, 4)})
     info = [
         {
@@ -94,7 +92,7 @@ def test_editor_pure_scalar_op(engine, tsh):
     ]
 
 
-def test_editor_new_operator(engine, tsh):
+def test_editor_new_operator(mapi):
     @func('genrandomseries')
     def genrandomseries() -> pd.Series:
         return pd.Series(
@@ -116,24 +114,23 @@ def test_editor_new_operator(engine, tsh):
 
     @func('frobulated')
     def frobulate(a: str, b: str) -> pd.Series:
-        sa = tsh.get(engine, a)
-        sb = tsh.get(engine, b)
+        sa = mapi.get(a)
+        sb = mapi.get(b)
         return (sa + 1) * sb
 
-    tsh.register_formula(
-        engine,
+    mapi.register_formula(
         'random',
         '(genrandomseries)',
     )
 
-    ts = tsh.get(engine, 'random')
+    ts = mapi.get('random')
     assert_df("""
 2019-01-01    1.0
 2019-01-02    2.0
 2019-01-03    3.0
 """, ts)
 
-    presenter = fancypresenter(engine, tsh, 'random', {})
+    presenter = fancypresenter(mapi, 'random', {})
     info = [
         {
             k: v for k, v in info.items() if k != 'ts'
@@ -144,23 +141,21 @@ def test_editor_new_operator(engine, tsh):
         {'coef': 'x 1', 'name': 'random', 'type': 'formula: genrandomseries'}
     ]
 
-    tsh.update(
-        engine,
+    mapi.update(
+        'new-op',
         pd.Series(
             [1, 2, 3],
             index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
         ),
-        'new-op',
         'Baabar'
     )
 
-    tsh.register_formula(
-        engine,
+    mapi.register_formula(
         'frobulating',
         '(* 2 (add (series "random")'
         '          (frobulated "new-op" "new-op")))'
     )
-    presenter = fancypresenter(engine, tsh, 'frobulating', {})
+    presenter = fancypresenter(mapi, 'frobulating', {})
     info = [
         {
             k: v for k, v in info.items() if k != 'ts'

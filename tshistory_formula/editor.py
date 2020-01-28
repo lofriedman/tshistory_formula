@@ -72,10 +72,10 @@ def series(builder, expr):
     )
     builder.lastinfo['keywords'] = kw or '-'
     builder.lastinfo['name'] = name
-    stype = builder.tsh.type(builder.engine, name)
+    stype = builder.tsa.type(name)
     if stype == 'formula':
         # extra mile: compute the top-level operator
-        formula = builder.tsh.formula(builder.engine, name)
+        formula = builder.tsa.formula(name)
         op = parse(formula)[0]
         stype = f'{stype}: {builder.opmap.get(op, op)}'
     builder.lastinfo['type'] = stype
@@ -83,15 +83,14 @@ def series(builder, expr):
 
 class fancypresenter:
     opmap = {'*': 'x'}
-    __slots__ = ('engine', 'tsh', 'name', 'i', 'stack', 'infos')
+    __slots__ = ('tsa', 'name', 'i', 'stack', 'infos')
 
-    def __init__(self, engine, tsh, seriesname, kw):
-        assert tsh.exists(engine, seriesname)
-        self.engine = engine
-        self.tsh = tsh
+    def __init__(self, tsa, seriesname, kw):
+        assert tsa.exists(seriesname)
+        self.tsa = tsa
         self.name = seriesname
         self.i = interpreter.Interpreter(
-            engine, tsh, kw
+            tsa.engine, tsa.tsh, kw
         )
         self.stack = []
         self.infos = []
@@ -99,7 +98,7 @@ class fancypresenter:
     # api
 
     def buildinfo(self):
-        formula = self.tsh.formula(self.engine, self.name)
+        formula = self.tsa.formula(self.name)
         parsed = helper.constant_fold(parse(formula))
         with self.series_scope(parsed):
             op = parsed[0]
@@ -195,17 +194,17 @@ def build_div_header(engine, info, href, more_info=None):
     return html.Div(header)
 
 
-def components_table(engine, tsh, id_serie,
+def components_table(tsa, id_serie,
                      fromdate=None, todate=None,
                      author=None, additionnal_info=None,
                      base_url=''):
     " function used as callback for tseditor to handle formula "
-    kind = tsh.type(engine, id_serie)
+    kind = tsa.type(id_serie)
     if kind != 'formula':
         return None
 
     presenter = fancypresenter(
-        engine, tsh, id_serie, {
+        tsa, id_serie, {
             'from_value_date': fromdate,
             'to_value_date': todate
         }
@@ -242,7 +241,8 @@ def components_table(engine, tsh, id_serie,
     header = html.Tr([corner] + [
         html.Th(
             build_div_header(
-                engine, info,
+                tsa.engine,
+                info,
                 build_url(
                     base_url, info['name'],
                     fromdate, todate, author
