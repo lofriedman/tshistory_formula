@@ -39,3 +39,24 @@ insertion_date             value_date
                            2020-01-01 01:00:00    3.0
                            2020-01-01 02:00:00    4.0
 """, hist)
+
+    f = mapi.formula('test-localformula-remoteseries')
+    assert f == '(+ 1 (series "remote-series"))'
+
+    none = mapi.formula('nosuchformula')
+    assert none is None
+
+    # altsource formula
+    rtsh.register_formula(
+        mapi.engine,
+        'remote-formula-remote-series',
+        '(+ 2 (series "remote-series"))'
+    )
+    f = mapi.formula('remote-formula-remote-series')
+    assert f == '(+ 2 (series "remote-series"))'
+
+    assert_df("""
+2020-01-01 00:00:00    3.0
+2020-01-01 01:00:00    4.0
+2020-01-01 02:00:00    5.0
+""", mapi.get('remote-formula-remote-series'))
