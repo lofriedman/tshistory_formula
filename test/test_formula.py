@@ -1060,6 +1060,42 @@ def test_custom_metadata(engine, tsh):
     FUNCS.pop('customseries')
 
 
+def test_custom_history(engine, tsh):
+    @func('made-up-series')
+    def madeup(base: int, coeff: float=1.) -> pd.Series:
+        return pd.Series(
+            np.array([base, base + 1, base + 2]) * coeff,
+            index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+        )
+
+    @finder('made-up-series')
+    def find(cn, tsh, tree):
+        return {
+            tree[0]: {
+                'index_type': 'datetime64[ns]',
+                'index_dtype': '|M8[ns]',
+                'tzaware': False,
+                'value_type': 'float64',
+                'value_dtype': '<f8'
+            }
+        }
+
+    tsh.register_formula(
+        engine,
+        'made-up',
+        '(+ 3 (made-up-series 1 #:coeff 2.))',
+        False
+    )
+    assert_df("""
+2019-01-01    5.0
+2019-01-02    7.0
+2019-01-03    9.0
+""", tsh.get(engine, 'made-up'))
+
+    hist = tsh.history(engine, 'made-up')
+    assert hist == {}
+
+
 def test_expanded(engine, tsh):
     @func('customseries')
     def customseries() -> pd.Series:
@@ -1337,7 +1373,6 @@ def test_row_mean(engine, tsh):
 2015-01-06 00:00:00+00:00    1.250000
 2015-01-07 00:00:00+00:00    1.250000
 """, avg_index)
-
 
     formula = '(min (series "station0") (series "station1") (series "station2"))'
     tsh.register_formula(
