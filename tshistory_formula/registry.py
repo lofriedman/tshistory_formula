@@ -6,6 +6,7 @@ import pandas as pd
 
 
 FUNCS = {}
+HISTORY = {}
 FINDERS = {}
 EDITORINFOS = {}
 
@@ -27,6 +28,15 @@ def func(name):
 
         FUNCS[name] = dec
         return dec
+
+    return decorator
+
+
+def history(name):
+
+    def decorator(func):
+        HISTORY[name] = func
+        return func
 
     return decorator
 

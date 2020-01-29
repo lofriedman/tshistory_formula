@@ -6,7 +6,13 @@ from typing import Optional
 from functools import partial
 
 import pandas as pd
-from psyl.lisp import Env, pevaluate, parse
+from psyl.lisp import (
+    Env,
+    parse,
+    pevaluate,
+    pexpreval,
+    quasiexpreval
+)
 
 from tshistory_formula import registry
 
@@ -69,6 +75,13 @@ def jsontypes():
 
 class Interpreter:
     __slots__ = ('env', 'cn', 'tsh', 'getargs')
+    FUNCS = None
+
+    @property
+    def operators(self):
+        if Interpreter.FUNCS is None:
+            Interpreter.FUNCS = registry.FUNCS
+        return Interpreter.FUNCS
 
     def __init__(self, cn, tsh, getargs):
         self.cn = cn
@@ -76,7 +89,7 @@ class Interpreter:
         self.getargs = getargs
         # bind funcs to the interpreter
         funcs = {}
-        for name, func in registry.FUNCS.items():
+        for name, func in self.operators.items():
             if '__interpreter__' in inspect.getfullargspec(func).args:
                 func = partial(func, self)
             funcs[name] = func
@@ -92,6 +105,26 @@ class Interpreter:
 
     def evaluate(self, text):
         return pevaluate(text, self.env)
+
+
+class OperatorHistory(Interpreter):
+    __slots__ = ('env', 'cn', 'tsh', 'getargs')
+    FUNCS = None
+
+    @property
+    def operators(self):
+        if OperatorHistory.FUNCS is None:
+            OperatorHistory.FUNCS = {**registry.FUNCS, **registry.HISTORY}
+        return OperatorHistory.FUNCS
+
+    def evaluate_history(self, tree):
+        return pexpreval(
+            quasiexpreval(
+                tree,
+                env=self.env
+            ),
+            env=self.env
+        )
 
 
 class HistoryInterpreter(Interpreter):

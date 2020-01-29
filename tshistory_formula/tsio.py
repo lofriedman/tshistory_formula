@@ -13,7 +13,8 @@ from tshistory_formula import (
 )
 from tshistory_formula.registry import (
     FINDERS,
-    FUNCS
+    FUNCS,
+    HISTORY
 )
 
 
@@ -31,6 +32,18 @@ class timeseries(basets):
                     self.find_series(cn, item)
                 )
         return seriesmeta
+
+    def find_callsites(self, cn, operator, tree):
+        op = tree[0]
+        sites = []
+        if op == operator:
+            sites.append(tree)
+        for item in tree:
+            if isinstance(item, list):
+                sites.extend(
+                    self.find_callsites(cn, operator, item)
+                )
+        return sites
 
     def find_operators(self, cn, tree):
         ops = {
@@ -185,9 +198,27 @@ class timeseries(basets):
                 from_value_date=None,
                 to_value_date=None,
                 diffmode=False,
-                _keep_nans=False):
+                _keep_nans=False,
+                _tree=None):
 
         if self.type(cn, name) != 'formula':
+
+            # autotrophic operator ?
+            if name is None:
+                assert _tree
+                i = interpreter.OperatorHistory(
+                    cn, self, {
+                        'from_value_date': from_value_date,
+                        'to_value_date': to_value_date,
+                        'from_insertion_date': from_insertion_date,
+                        'to_insertion_date': to_insertion_date,
+                        'diffmode': diffmode,
+                        '_keep_nans': _keep_nans
+                    }
+                )
+                return i.evaluate_history(_tree)
+
+            # normal series ?
             hist = super().history(
                 cn, name,
                 from_insertion_date,
@@ -197,6 +228,8 @@ class timeseries(basets):
                 diffmode,
                 _keep_nans
             )
+
+            # alternative source ?
             if hist is None and self.othersources:
                 hist = self.othersources.history(
                     name,
@@ -211,7 +244,10 @@ class timeseries(basets):
         assert not diffmode
 
         formula = self.formula(cn, name)
-        series = self.find_series(cn, parse(formula))
+        tree = parse(formula)
+        series = self.find_series(cn, tree)
+
+        # normal history
         histmap = {
             name: self.history(
                 cn, name,
@@ -223,6 +259,27 @@ class timeseries(basets):
             ) or {}
             for name in series
         }
+
+        # prepare work for autotrophic operator history
+        callsites = []
+        for sname in HISTORY:
+            for call in self.find_callsites(cn, sname, tree):
+                callsites.append(call)
+
+        # autotrophic history
+        histmap.update({
+            name: self.history(
+                cn,
+                None, # just mark that we won't work "by name" there
+                from_insertion_date,
+                to_insertion_date,
+                from_value_date,
+                to_value_date,
+                diffmode,
+                _tree=callsite
+            ) or {}
+            for callsite in callsites
+        })
 
         i = interpreter.HistoryInterpreter(
             cn, self, {

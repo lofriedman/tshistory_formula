@@ -15,7 +15,8 @@ from tshistory.testutil import (
 from tshistory_formula.registry import (
     func,
     FUNCS,
-    finder
+    finder,
+    history
 )
 from tshistory_formula.helper import (
     constant_fold,
@@ -1080,20 +1081,41 @@ def test_custom_history(engine, tsh):
             }
         }
 
+    @history('made-up-series')
+    def madeup_history(__interpreter__, base, coeff):
+        hist = {}
+        for i in (1, 2, 3):
+            hist[pd.Timestamp(f'2020-1-{i}', tz='utc')] = pd.Series(
+                np.array([base, base + 1, base + 2]) * coeff,
+                index=pd.date_range(dt(2019, 1, i), periods=3, freq='D')
+            )
+        return hist
+
     tsh.register_formula(
         engine,
         'made-up',
-        '(+ 3 (made-up-series 1 #:coeff 2.))',
+        '(+ 3 (add (made-up-series 1 #:coeff 2.) (made-up-series 2 #:coeff .5)))',
         False
     )
     assert_df("""
-2019-01-01    5.0
-2019-01-02    7.0
-2019-01-03    9.0
+2019-01-01     6.0
+2019-01-02     8.5
+2019-01-03    11.0
 """, tsh.get(engine, 'made-up'))
 
     hist = tsh.history(engine, 'made-up')
-    assert hist == {}
+    assert_hist("""
+insertion_date             value_date
+2020-01-01 00:00:00+00:00  2019-01-01     6.0
+                           2019-01-02     8.5
+                           2019-01-03    11.0
+2020-01-02 00:00:00+00:00  2019-01-01     6.0
+                           2019-01-02     8.5
+                           2019-01-03    11.0
+2020-01-03 00:00:00+00:00  2019-01-01     6.0
+                           2019-01-02     8.5
+                           2019-01-03    11.0
+""", hist)
 
 
 def test_expanded(engine, tsh):
