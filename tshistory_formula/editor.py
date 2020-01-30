@@ -16,128 +16,24 @@ from tshistory_formula.registry import editor_info, EDITORINFOS
 MAX_LENGTH = 15
 
 
-def roundup(ts):
-    avg = ts.mean()
-    if avg != 0 and not pd.isnull(avg):
-        ts = ts.round(max(2, int(-log10(abs(avg)))))
-    return ts
-
-
-@editor_info('__default__')
-def default(builder, expr):
-    return
-
-
-def arith(builder, expr):
-    # non-leaf
-    operator = expr[0]
-    omap = {'+': '+', '*': 'x'}
-    if isinstance(expr[1], (int, float)):
-        builder.lastinfo['coef'] = f'{omap[operator]} {float(expr[1])}'
-        builder.handle_rest(expr)
-    else:
-        return default(builder, expr)
-
-editor_info('+')(arith)
-editor_info('*')(arith)
-
-
-def allargsareseries(builder, expr):
-    # non-leaf
-    for subexpr in expr[1:]:
-        with builder.series_scope(subexpr):
-            builder.lastinfo['name'] = serialize(subexpr)
-            builder.buildinfo_expr(subexpr)
-
-editor_info('add')(allargsareseries)
-editor_info('priority')(allargsareseries)
-editor_info('mul')(allargsareseries)
-editor_info('div')(allargsareseries)
-editor_info('row-mean')(allargsareseries)
-editor_info('mean')(allargsareseries)
-editor_info('max')(allargsareseries)
-editor_info('std')(allargsareseries)
-
-
-@editor_info('series')
-def series(builder, expr):
-    # leaf, because we're lazy
-    name = expr[1]
-    rest = expr[2:]
-    kw = ', '.join(
-        f'{k}:{v}'
-        for k, v in dict(
-                zip(rest[::2], rest[1::2])
-        ).items()
-    )
-    builder.lastinfo['keywords'] = kw or '-'
-    builder.lastinfo['name'] = name
-    stype = builder.tsa.type(name)
-    if stype == 'formula':
-        # extra mile: compute the top-level operator
-        formula = builder.tsa.formula(name)
-        op = parse(formula)[0]
-        stype = f'{stype}: {builder.opmap.get(op, op)}'
-    builder.lastinfo['type'] = stype
-
-
 class fancypresenter:
-    opmap = {'*': 'x'}
-    __slots__ = ('tsa', 'name', 'i', 'stack', 'infos')
+    __slots__ = ('tsa', 'name', 'infos', 'formula')
 
-    def __init__(self, tsa, seriesname, kw):
+    def __init__(self, tsa, seriesname, getargs):
         assert tsa.exists(seriesname)
-        self.tsa = tsa
-        self.name = seriesname
-        self.i = interpreter.Interpreter(
-            tsa.engine, tsa.tsh, kw
-        )
-        self.stack = []
-        self.infos = []
-
-    # api
-
-    def buildinfo(self):
-        formula = self.tsa.formula(self.name)
-        parsed = helper.constant_fold(parse(formula))
-        with self.series_scope(parsed):
-            op = parsed[0]
-            self.lastinfo.update({
-                'name': self.name,
-                'type': f'formula: {self.opmap.get(op, op)}',
-            })
-            self.buildinfo_expr(parsed)
-        return self.infos
-
-    # /api, now the code walker
-
-    @property
-    def lastinfo(self):
-        return self.stack[-1] if self.stack else None
-
-    @contextmanager
-    def series_scope(self, expr):
-        self.stack.append({'coef': 'x 1'})
-        yield
-        infos = self.stack.pop()
-        infos['ts'] = roundup(self.i.evaluate(serialize(expr)))
-        infos['ts'].name = infos['name']
-        self.infos.append(infos)
-
-    def handle_rest(self, expr):
-        for subexpr in expr[1:]:
-            self.buildinfo_expr(subexpr)
-
-    def buildinfo_expr(self, expr):
-        if not isinstance(expr, list):
-            # leaf node, we have nothing to do
-            return
-        operator = expr[0]
-        if operator in EDITORINFOS:
-            EDITORINFOS[operator](self, expr)
-        else:
-            EDITORINFOS['__default__'](self, expr)
-
+        formula = tsa.formula(seriesname)
+        tree = parse(formula)
+        self.infos = [
+            {
+                'name': name,
+                'ts': tsa.get(name, **getargs)
+            }
+            for name in tsa.tsh.find_series(tsa.engine, tree)
+        ]
+        self.infos.insert(0, {
+            'name': seriesname,
+            'ts': tsa.get(seriesname, **getargs)
+        })
 
 
 def build_url(base_url, name, fromdate, todate, author):
@@ -167,13 +63,6 @@ def short_div(content):
 
 
 def build_div_header(engine, info, href, more_info=None):
-    add = [
-        html.Div(
-            info.get(key, '-'),
-            style={'font-size':'small'}
-        )
-        for key in ['type', 'keywords', 'coef']
-    ]
     name = [
         html.A(
             href=href,
@@ -182,7 +71,7 @@ def build_div_header(engine, info, href, more_info=None):
             style={'font-size':'small', 'word-wrap': 'break-word'}
         )
     ]
-    header = name + add
+    header = name
     if more_info is not None:
         info_metadata = more_info(engine, info['name'])
         if info_metadata:
@@ -209,9 +98,7 @@ def components_table(tsa, id_serie,
             'to_value_date': todate
         }
     )
-    infos = presenter.buildinfo()
-    head = infos.pop()
-    infos.insert(0, head)
+    infos = presenter.infos
 
     # collect base series
     df = infos[0]['ts'].to_frame()

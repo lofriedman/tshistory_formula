@@ -38,13 +38,12 @@ def test_editor_table_callback(mapi):
         {
             k: v for k, v in info.items() if k != 'ts'
         }
-        for info in presenter.buildinfo()
+        for info in presenter.infos
     ]
     assert info == [
-        {'coef': 'x 3.1416', 'keywords': 'fill:bfill, prune:1',
-         'name': 'groundzero-a', 'type': 'primary'},
-        {'coef': 'x 1', 'keywords': '-', 'name': 'one-a', 'type': 'primary'},
-        {'coef': 'x 1', 'name': 'editor-1', 'type': 'formula: add'}
+        {'name': 'editor-1'},
+        {'name': 'groundzero-a'},
+        {'name': 'one-a'}
     ]
 
     # trigger an empty series
@@ -54,13 +53,12 @@ def test_editor_table_callback(mapi):
         {
             k: v for k, v in info.items() if k != 'ts'
         }
-        for info in presenter.buildinfo()
+        for info in presenter.infos
     ]
     assert info == [
-        {'coef': 'x 3.1416', 'keywords': 'fill:bfill, prune:1',
-         'name': 'groundzero-a', 'type': 'primary'},
-        {'coef': 'x 1', 'keywords': '-', 'name': 'one-a', 'type': 'primary'},
-        {'coef': 'x 1', 'name': 'editor-1', 'type': 'formula: add'}
+        {'name': 'editor-1'},
+        {'name': 'groundzero-a'},
+        {'name': 'one-a'}
     ]
 
 
@@ -85,10 +83,11 @@ def test_editor_pure_scalar_op(mapi):
         {
             k: v for k, v in info.items() if k != 'ts'
         }
-        for info in presenter.buildinfo()
+        for info in presenter.infos
     ]
     assert info == [
-        {'coef': '+ 9.0', 'keywords': '-', 'name': 'pure-scalar-ops', 'type': 'primary'}
+        {'name': 'formula-pure-scalar-ops'},
+        {'name': 'pure-scalar-ops'}
     ]
 
 
@@ -135,10 +134,11 @@ def test_editor_new_operator(mapi):
         {
             k: v for k, v in info.items() if k != 'ts'
         }
-        for info in presenter.buildinfo()
+        for info in presenter.infos
     ]
     assert info == [
-        {'coef': 'x 1', 'name': 'random', 'type': 'formula: genrandomseries'}
+        {'name': 'random'},
+        {'name': 'genrandomseries'}
     ]
 
     mapi.update(
@@ -160,13 +160,11 @@ def test_editor_new_operator(mapi):
         {
             k: v for k, v in info.items() if k != 'ts'
         }
-        for info in presenter.buildinfo()
+        for info in presenter.infos
     ]
     assert info == [
-        {'coef': 'x 1', 'keywords': '-', 'name': 'random',
-         'type': 'formula: genrandomseries'},
-        {'coef': 'x 1', 'name': '(frobulated "new-op" "new-op")'},
-        {'coef': 'x 2.0', 'name': 'frobulating', 'type': 'formula: x'}
+        {'name': 'frobulating'},
+        {'name': 'random'}
     ]
 
     # cleanup
@@ -197,17 +195,10 @@ def test_complicated_thing(mapi):
         {
             k: v for k, v in info.items() if k != 'ts'
         }
-        for info in presenter.buildinfo()
+        for info in presenter.infos
     ]
     assert info == [
-        {'coef': 'x 3.1416',
-         'keywords': 'fill:bfill, prune:1',
-         'name': 'groundzero-b',
-         'type': 'primary'},
-        {'coef': 'x 1',
-         'name': '(* 2 (min (+ 1 (series "groundzero-b")) (series "one-b")))'
-        },
-        {'coef': 'x 1',
-         'name': 'complicated', 'type': 'formula: add'
-        }
+        {'name': 'complicated'},
+        {'name': 'groundzero-b'},
+        {'name': 'one-b'}
     ]
