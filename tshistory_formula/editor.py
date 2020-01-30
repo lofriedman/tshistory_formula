@@ -26,13 +26,15 @@ class fancypresenter:
         self.infos = [
             {
                 'name': name,
-                'ts': tsa.get(name, **getargs)
+                'ts': tsa.get(name, **getargs),
+                'type': tsa.type(name)
             }
             for name in tsa.tsh.find_series(tsa.engine, tree)
         ]
         self.infos.insert(0, {
             'name': seriesname,
-            'ts': tsa.get(seriesname, **getargs)
+            'ts': tsa.get(seriesname, **getargs),
+            'type': 'formula'
         })
 
 
@@ -63,6 +65,13 @@ def short_div(content):
 
 
 def build_div_header(engine, info, href, more_info=None):
+    add = [
+        html.Div(
+            info.get(key, '-'),
+            style={'font-size':'small'}
+        )
+        for key in ['type']
+    ]
     name = [
         html.A(
             href=href,
@@ -71,7 +80,7 @@ def build_div_header(engine, info, href, more_info=None):
             style={'font-size':'small', 'word-wrap': 'break-word'}
         )
     ]
-    header = name
+    header = name + add
     if more_info is not None:
         info_metadata = more_info(engine, info['name'])
         if info_metadata:

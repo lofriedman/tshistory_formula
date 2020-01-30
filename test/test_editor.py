@@ -41,9 +41,9 @@ def test_editor_table_callback(mapi):
         for info in presenter.infos
     ]
     assert info == [
-        {'name': 'editor-1'},
-        {'name': 'groundzero-a'},
-        {'name': 'one-a'}
+        {'name': 'editor-1', 'type': 'formula'},
+        {'name': 'groundzero-a', 'type': 'primary'},
+        {'name': 'one-a', 'type': 'primary'}
     ]
 
     # trigger an empty series
@@ -56,9 +56,9 @@ def test_editor_table_callback(mapi):
         for info in presenter.infos
     ]
     assert info == [
-        {'name': 'editor-1'},
-        {'name': 'groundzero-a'},
-        {'name': 'one-a'}
+        {'name': 'editor-1', 'type': 'formula'},
+        {'name': 'groundzero-a', 'type': 'primary'},
+        {'name': 'one-a', 'type': 'primary'}
     ]
 
 
@@ -86,8 +86,8 @@ def test_editor_pure_scalar_op(mapi):
         for info in presenter.infos
     ]
     assert info == [
-        {'name': 'formula-pure-scalar-ops'},
-        {'name': 'pure-scalar-ops'}
+        {'name': 'formula-pure-scalar-ops', 'type': 'formula'},
+        {'name': 'pure-scalar-ops', 'type': 'primary'}
     ]
 
 
@@ -137,8 +137,8 @@ def test_editor_new_operator(mapi):
         for info in presenter.infos
     ]
     assert info == [
-        {'name': 'random'},
-        {'name': 'genrandomseries'}
+        {'name': 'random', 'type': 'formula'},
+        {'name': 'genrandomseries', 'type': 'primary'}
     ]
 
     mapi.update(
@@ -163,8 +163,8 @@ def test_editor_new_operator(mapi):
         for info in presenter.infos
     ]
     assert info == [
-        {'name': 'frobulating'},
-        {'name': 'random'}
+        {'name': 'frobulating', 'type': 'formula'},
+        {'name': 'random', 'type': 'formula'}
     ]
 
     # cleanup
@@ -198,7 +198,7 @@ def test_complicated_thing(mapi):
         for info in presenter.infos
     ]
     assert info == [
-        {'name': 'complicated'},
-        {'name': 'groundzero-b'},
-        {'name': 'one-b'}
+        {'name': 'complicated', 'type': 'formula'},
+        {'name': 'groundzero-b', 'type': 'primary'},
+        {'name': 'one-b', 'type': 'primary'}
     ]
