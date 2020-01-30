@@ -172,3 +172,42 @@ def test_editor_new_operator(mapi):
     # cleanup
     FUNCS.pop('genrandomseries')
     FUNCS.pop('frobulated')
+
+
+def test_complicated_thing(mapi):
+    groundzero = pd.Series(
+        [0, 0, 0],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+    )
+    one = pd.Series(
+        [1, 1, 1],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+    )
+    mapi.update('groundzero-b', groundzero, 'Babar')
+    mapi.update('one-b', one, 'Celeste')
+
+    mapi.register_formula(
+        'complicated',
+        '(add (* 3.1416 (series "groundzero-b" #:fill "bfill" #:prune 1))'
+        '     (* 2 (min (+ 1 (series "groundzero-b")) (series "one-b"))))',
+    )
+
+    presenter = fancypresenter(mapi, 'complicated', {})
+    info = [
+        {
+            k: v for k, v in info.items() if k != 'ts'
+        }
+        for info in presenter.buildinfo()
+    ]
+    assert info == [
+        {'coef': 'x 3.1416',
+         'keywords': 'fill:bfill, prune:1',
+         'name': 'groundzero-b',
+         'type': 'primary'},
+        {'coef': 'x 1',
+         'name': '(* 2 (min (+ 1 (series "groundzero-b")) (series "one-b")))'
+        },
+        {'coef': 'x 1',
+         'name': 'complicated', 'type': 'formula: add'
+        }
+    ]
