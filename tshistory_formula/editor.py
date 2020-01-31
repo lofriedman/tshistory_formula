@@ -23,17 +23,24 @@ class fancypresenter:
         assert tsa.exists(seriesname)
         formula = tsa.formula(seriesname)
         tree = parse(formula)
+
+        def get(name):
+            ts = tsa.get(name, **getargs)
+            if ts is None:
+                return pd.Series(name=name)
+            return ts
+
         self.infos = [
             {
                 'name': name,
-                'ts': tsa.get(name, **getargs),
+                'ts':  get(name),
                 'type': tsa.type(name)
             }
             for name in tsa.tsh.find_series(tsa.engine, tree)
         ]
         self.infos.insert(0, {
             'name': seriesname,
-            'ts': tsa.get(seriesname, **getargs),
+            'ts': get(seriesname),
             'type': 'formula'
         })
 
