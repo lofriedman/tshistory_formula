@@ -86,7 +86,7 @@ def update_metadata(dburi, reset=False, namespace='tsh'):
 def ingest_formulas(dburi, formula_file, strict=False, namespace='tsh'):
     """ingest a csv file of formulas
 
-    Must be a two-columns file with a header "name,formula"
+    Must be a two-columns file with a header "name,text"
     """
     engine = create_engine(find_dburi(dburi))
     df = pd.read_csv(formula_file)
