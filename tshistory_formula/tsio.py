@@ -84,6 +84,10 @@ class timeseries(basets):
                          reject_unknown=True, update=False):
         if not update:
             assert not self.formula(cn, name), f'`{name}` already exists'
+        if self.exists(cn, name) and self.type(cn, name) == 'primary':
+            raise TypeError(
+                f'primary series `{name}` cannot be overriden by a formula'
+            )
         # basic syntax check
         tree = parse(formula)
         formula = serialize(tree)

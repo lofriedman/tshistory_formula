@@ -125,6 +125,25 @@ def test_series_options(engine, tsh):
     assert ts.options == {}
 
 
+def test_override_primary(engine, tsh):
+    test = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, test, 'a-primary', 'Babar')
+
+    with pytest.raises(TypeError) as err:
+        tsh.register_formula(
+            engine,
+            'a-primary',
+            '(+ 3 (series "a-primary"))'
+        )
+
+    assert err.value.args[0] == (
+        'primary series `a-primary` cannot be overriden by a formula'
+    )
+
+
 def test_normalization(engine, tsh):
     test = pd.Series(
         [1, 2, 3],
