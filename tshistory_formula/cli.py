@@ -9,6 +9,7 @@ from sqlhelp import sqlfile
 from psyl.lisp import parse, serialize, Symbol, Keyword
 from tshistory.util import find_dburi
 
+from tshistory_formula.schema import formula_schema
 from tshistory_formula.tsio import timeseries
 from tshistory_formula.helper import (
     rewrite_slice,
@@ -253,6 +254,15 @@ def fix_slice(db_uri, really=False, namespace='tsh'):
 
     if not really:
         print('UNCHANGED. To apply changes, pass --really')
+
+
+@click.command(name='formula-init-db')
+@click.argument('db-uri')
+@click.option('--namespace', default='tsh')
+def init_db(db_uri, namespace):
+    "initialize the formula part of a timeseries history schema"
+    engine = create_engine(find_dburi(db_uri))
+    formula_schema(namespace).create(engine)
 
 
 @click.command(name='shell')
