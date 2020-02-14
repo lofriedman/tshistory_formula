@@ -35,7 +35,8 @@ def test_types(tsh):
     # we want to only show the ones provided by the current package
     opnames = set(
         ('*', '+', '/', 'add', 'div', 'max', 'min', 'mul',
-         'clip', 'priority', 'row-mean', 'series', 'slice', 'std')
+         'clip', 'priority', 'row-mean', 'series', 'slice', 'std',
+         'timedelta', 'today')
     )
     types = {
         name: ftype
@@ -72,7 +73,18 @@ def test_types(tsh):
                   'return': 'Series',
                   'series': 'Series',
                   'todate': 'Optional[Timestamp]'},
-        'std': {'return': 'Series', 'serieslist': 'Series'}
+        'std': {'return': 'Series', 'serieslist': 'Series'},
+        'timedelta': {'date': 'Timestamp',
+                      'days': 'int',
+                      'hours': 'int',
+                      'minutes': 'int',
+                      'months': 'int',
+                      'return': 'Timestamp',
+                      'weeks': 'int',
+                      'years': 'int'},
+        'today': {'naive': 'bool',
+                  'return': 'Timestamp',
+                  'tz': 'Optional[str]'}
     } == types
 
 
