@@ -2,7 +2,6 @@ import json
 import re
 import typing
 import inspect
-from typing import Optional
 from functools import partial
 
 import pandas as pd
@@ -17,7 +16,7 @@ from psyl.lisp import (
 from tshistory_formula import registry
 
 
-CLS_NAME_PTN = re.compile("<class '([\w\.]+)'>")
+CLS_NAME_PTN = re.compile(r"<class '([\w\.]+)'>")
 
 
 def extract_type_name(cls):
@@ -172,7 +171,6 @@ def has_compatible_operators(cn, tsh, tree, good_operators):
            for op in operators):
         return False
 
-    op = operators[0]
     names = tsh.find_series(cn, tree)
     for name in names:
         formula = tsh.formula(cn, name)
