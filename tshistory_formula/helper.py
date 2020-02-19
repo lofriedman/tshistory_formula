@@ -207,32 +207,3 @@ def typecheck(tree, env=FUNCS):
             )
 
     return returntype
-
-
-# migration
-
-def rewrite_slice(tree):
-    """
-    help migrate from `(slice (series ...) #:fromdate "2020-1-1")`
-    to `(slice (series ...) #:fromdate (date "2020-1-1"))`
-    """
-    if tree[0] != 'slice':
-        newtree = []
-        for item in tree:
-            if isinstance(item, list):
-                newtree.append(rewrite_slice(item))
-            else:
-                newtree.append(item)
-        return newtree
-
-    newtree = [tree[0]]
-    for item in tree[1:]:
-        if isinstance(item, list):
-            newtree.append(rewrite_slice(item))
-        elif isinstance(item, Keyword):
-            newtree.append(item)
-        elif isinstance(item, str):
-            newtree.append([Symbol('date'), item])  # <- patch
-        else:
-            raise Exception('wat ?')
-    return newtree
