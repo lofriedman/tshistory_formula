@@ -4,11 +4,9 @@ from decorator import decorate
 import pandas as pd
 
 
-
 FUNCS = {}
 HISTORY = {}
 FINDERS = {}
-EDITORINFOS = {}
 
 
 def func(name):
@@ -69,14 +67,5 @@ def finder(name):
         dec = decorate(func, _ensure_finder_keys)
         FINDERS[name] = dec
         return dec
-
-    return decorator
-
-
-def editor_info(name):
-
-    def decorator(func):
-        EDITORINFOS[name] = func
-        return func
 
     return decorator
