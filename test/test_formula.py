@@ -1603,3 +1603,30 @@ def test_resample(engine, tsh):
     with pytest.raises(ValueError) as err:
         tsh.get(engine, 'badmethod')
     assert err.value.args[0] == 'bad resampling method `NO-SUCH-METHOD`'
+
+
+def test_cumsum(engine, tsh):
+    series = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
+    )
+
+    tsh.update(
+        engine,
+        series,
+        'sum-me',
+        'Babar'
+    )
+
+    tsh.register_formula(
+        engine,
+        'test-cumsum',
+        '(cumsum (series "sum-me"))'
+    )
+
+    s1 = tsh.get(engine, 'test-cumsum')
+    assert_df("""
+2020-01-01 00:00:00+00:00    1.0
+2020-01-02 00:00:00+00:00    3.0
+2020-01-03 00:00:00+00:00    6.0
+""", s1)

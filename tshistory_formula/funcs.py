@@ -480,3 +480,15 @@ def resample(series: pd.Series,
         raise ValueError(f'bad resampling method `{method}`')
 
     return resampled.apply(method)
+
+
+@func('cumsum')
+def cumsum(series: pd.Series) -> pd.Series:
+    """
+    Return cumulative sum over a series.
+
+    Example: `(cumsum (series "sum-me"))`
+
+    """
+
+    return series.cumsum()
