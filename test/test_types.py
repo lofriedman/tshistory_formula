@@ -82,7 +82,7 @@ def test_types(tsh):
                       'return': 'Timestamp',
                       'weeks': 'int',
                       'years': 'int'},
-        'today': {'naive': 'bool',
+        'today': {'naive': 'Optional[bool]',
                   'return': 'Timestamp',
                   'tz': 'Optional[str]'}
     } == types

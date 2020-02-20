@@ -139,8 +139,8 @@ def timedelta_eval(date: pd.Timestamp,
 
 
 @func('today')
-def today(naive: bool=False,
-          tz:Optional[str]=None) -> pd.Timestamp:
+def today(naive: Optional[bool]=False,
+          tz: Optional[str]=None) -> pd.Timestamp:
     """
     Produces a timezone-aware timestamp as of today
 
