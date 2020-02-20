@@ -464,7 +464,8 @@ def row_std(*serieslist: pd.Series) -> pd.Series:
 def resample(series: pd.Series,
              freq: str,
              method: str='mean') -> pd.Series:
-    """Resamples its input series using `freq` and the aggregation method
+    """
+    Resamples its input series using `freq` and the aggregation method
     `method` (as described in the pandas documentation).
 
     Example: `(resample (series "hourly") "D")`
