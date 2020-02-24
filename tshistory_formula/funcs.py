@@ -7,7 +7,7 @@ import pandas as pd
 import pytz
 from dateutil.relativedelta import relativedelta
 
-from tshistory.util import SeriesServices
+from tshistory.util import patch
 from tshistory_formula.registry import func, finder
 
 
@@ -331,12 +331,11 @@ def series_priority(*serieslist: pd.Series) -> pd.Series:
     Here `realized` values show up first, and any missing values come
     from `nominated` first and then only from `forecasted`.
     """
-    patcher = SeriesServices()
     final = pd.Series()
 
     for ts in reversed(serieslist):
         assert ts.dtype != 'O'
-        final = patcher.patch(final, ts)
+        final = patch(final, ts)
 
     return final
 
