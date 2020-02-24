@@ -658,31 +658,21 @@ def test_row_mean(engine, tsh):
 
 def test_date(engine, tsh):
     e1 = '(date "2018-1-1")'
-    e2 = '(date "2018-1-1" #:naive #t)'
-    e3 = '(date "2018-1-1 12:00:00" #:naive #t #:tz "Europe/Moscow")'
-    e4 = '(date "2018-1-1" #:naive #f)'
-    e5 = '(date "2018-1-1 12:00:00" #:naive #f #:tz "Europe/Moscow")'
-    e6 = '(date "2020-1-1 06:42:30")'
-    e7 = '(date "2020-1-1" #:tz "Gondwana/Chandrapore")'
+    e2 = '(date "2018-1-1 12:00:00" #:tz "Europe/Moscow")'
+    e3 = '(date "2020-1-1 06:42:30")'
+    e4 = '(date "2020-1-1" #:tz "Gondwana/Chandrapore")'
 
     i = Interpreter(engine, tsh, {})
     a = lisp.evaluate(e1, i.env)
     b = lisp.evaluate(e2, i.env)
-    with pytest.raises(AssertionError) as err:
-        lisp.evaluate(e3, i.env)
-    assert err.value.args[0] == 'date cannot be naive and have a tz'
-    d = lisp.evaluate(e4, i.env)
-    e = lisp.evaluate(e5, i.env)
-    f = lisp.evaluate(e6, i.env)
+    c = lisp.evaluate(e3, i.env)
     with pytest.raises(pytz.UnknownTimeZoneError) as err:
-        lisp.evaluate(e7, i.env)
+        lisp.evaluate(e4, i.env)
     assert err.value.args[0] == 'Gondwana/Chandrapore'
 
     assert a == pd.Timestamp('2018-01-01 00:00:00+0000', tz='UTC')
-    assert b == pd.Timestamp('2018-01-01 00:00:00')
-    assert d == pd.Timestamp('2018-01-01 00:00:00+0000', tz='UTC')
-    assert e == pd.Timestamp('2018-01-01 12:00:00+0300', tz='Europe/Moscow')
-    assert f == pd.Timestamp('2020-01-01 06:42:30+0000', tz='UTC')
+    assert b == pd.Timestamp('2018-01-01 12:00:00+0300', tz='Europe/Moscow')
+    assert c == pd.Timestamp('2020-01-01 06:42:30+0000', tz='UTC')
 
 
 def test_timedelta(engine, tsh):

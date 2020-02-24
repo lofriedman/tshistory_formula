@@ -86,8 +86,7 @@ def naive(series: pd.Series, tzone: str) -> pd.Series:
 
 @func('date')
 def timestamp(strdate: str,
-              naive: bool=False,
-              tz: Optional[str]=None) -> pd.Timestamp:
+              tz: Optional[str]='UTC') -> pd.Timestamp:
     """
     Produces an utc timestamp from its input string date in iso format.
 
@@ -96,11 +95,10 @@ def timestamp(strdate: str,
     Both `tz` and `naive` keywords are mutually exlcusive.
     """
     if tz:
-        assert not naive, f'date cannot be naive and have a tz'
         pytz.timezone(tz)
-    if naive:
+    if tz is None:
         return pd.Timestamp(strdate)
-    return pd.Timestamp(strdate, tz=tz or 'utc')
+    return pd.Timestamp(strdate, tz=tz)
 
 
 @func('timedelta')
