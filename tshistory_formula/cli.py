@@ -231,7 +231,6 @@ def init_db(db_uri, namespace):
 @click.argument('db-uri')
 @click.option('--namespace', default='tsh')
 def shell(db_uri, namespace='tsh'):
-    e = create_engine(find_dburi(db_uri))
-
-    tsh = timeseries(namespace)
+    from tshistory.api import timeseries as tsapi
+    tsa = tsapi(find_dburi(db_uri), namespace, timeseries)
     import pdb; pdb.set_trace()
