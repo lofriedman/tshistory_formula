@@ -64,7 +64,7 @@ def test_editor_table_callback(mapi):
 
 def test_editor_no_such_series(mapi):
     with pytest.raises(AssertionError):
-        presenter = fancypresenter(mapi, 'no-such-series', {})
+        fancypresenter(mapi, 'no-such-series', {})
 
 
 def test_editor_pure_scalar_op(mapi):
@@ -100,7 +100,7 @@ def test_editor_new_operator(mapi):
     )
 
     @finder('genrandomseries')
-    def genrandomseries(cn, tsh, tree):
+    def genrandomseries(_cn, _tsh, tree):
         return {
             tree[0]: {
                 'index_dtype': '<M8[ns]',

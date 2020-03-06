@@ -652,7 +652,7 @@ def test_newop_expansion(engine, tsh):
         args = __interpreter__.getargs.copy()
         return (
             __interpreter__.get(name1, args) +
-            __interpreter__.get(name1, args)
+            __interpreter__.get(name2, args)
         )
 
     @finder('combine')
@@ -788,7 +788,7 @@ def test_custom_metadata(engine, tsh):
         )
 
     @finder('customseries')
-    def find(cn, tsh, tree):
+    def find(_cn, _tsh, tree):
         return {
             tree[0]: {
                 'index_type': 'datetime64[ns]',
@@ -828,7 +828,7 @@ def test_custom_history(engine, tsh):
         )
 
     @finder('made-up-series')
-    def find(cn, tsh, tree):
+    def find(_cn, _tsh, tree):
         return {
             tree[0]: {
                 'index_type': 'datetime64[ns]',
@@ -885,7 +885,7 @@ def test_expanded(engine, tsh):
         )
 
     @finder('customseries')
-    def find(cn, tsh, tree):
+    def find(_cn, _tsh, tree):
         return {
             tree[0]: {
                 'tzaware': True,

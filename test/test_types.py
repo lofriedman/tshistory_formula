@@ -1,9 +1,8 @@
 import json
-import pytest
-from psyl import lisp
-import pandas as pd
 
-from tshistory.testutil import utcdt
+import pytest
+import pandas as pd
+from psyl import lisp
 
 from tshistory_formula.interpreter import (
     Interpreter,
@@ -30,7 +29,7 @@ def test_dtypes():
     assert index2.dtype.str == '|M8[ns]'
 
 
-def test_types(tsh):
+def test_types():
     # prune the types registered from other modules/plugins
     # we want to only show the ones provided by the current package
     opnames = set(
