@@ -61,13 +61,10 @@ def test_sametype():
     assert sametype(pd.Series, typing.Union[NONETYPE, int, pd.Series])
     assert sametype(NONETYPE, typing.Union[NONETYPE, int, pd.Series])
 
-    # Here we start having issues
-    # concrete numbers vs Number looks broken
-    # and we have some semantic fuzzyness
     assert sametype(int, Number)
-    assert not sametype(Number, int)
+    assert sametype(Number, int)
     assert sametype(int, typing.Union[Number, pd.Series])
-    assert not sametype(Number, typing.Union[int, pd.Series])
+    assert sametype(Number, typing.Union[int, pd.Series])
 
 
 def test_isoftype():

@@ -2,6 +2,7 @@ import abc
 import typing
 import inspect
 import itertools
+from numbers import Number
 
 from psyl.lisp import (
     Env,
@@ -109,32 +110,43 @@ def assert_typed(func):
 
 
 def isoftype(typespec, val):
-    return sametype(type(val), typespec)
+    return sametype(typespec, type(val))
 
 
-def sametype(basetype, atype):
-    if isinstance(basetype, type):
+def sametype(supertype, atype):
+    # base case, because issubclass of Number vs concrete number types
+    # does not work :/
+    if supertype is Number:
         if isinstance(atype, (type, abc.ABCMeta)):
-            # basetype = atype (standard python types or abc.Meta)
-            if issubclass(basetype, atype):
+            return atype in (int, float, Number)
+        return any(sametype(supertype, subt)
+                   for subt in atype.__args__)
+
+    # supertype is type/abcmeta
+    if isinstance(supertype, type):
+        if isinstance(atype, (type, abc.ABCMeta)):
+            # supertype = atype (standard python types or abc.Meta)
+            if issubclass(supertype, atype):
                 return True
         elif atype.__origin__ is typing.Union:
-            # basetype ∈ atype (type vs typing)
-            if any(issubclass(basetype, sometype)
-                   for sometype in atype.__args__):
+            # supertype ∈ atype (type vs typing)
+            if any(sametype(supertype, subt)
+                   for subt in atype.__args__):
                 return True
     else:
+        # supertype is typing crap
         if isinstance(atype, type):
-            # atype ∈ basetype (type vs typing)
-            if basetype.__origin__ is typing.Union:
-                if atype in basetype.__args__:
+            # atype ∈ supertype (type vs typing)
+            if supertype.__origin__ is typing.Union:
+                if any(sametype(supert, atype)
+                       for supert in supertype.__args__):
                     return True
         elif atype.__origin__ is typing.Union:
             # typing vs typing
-            # basetype ∩ atype
-            for subtype, supertype in itertools.product(basetype.__args__,
-                                                        atype.__args__):
-                if issubclass(subtype, supertype):
+            # supertype ∩ atype
+            for supert, subt in itertools.product(supertype.__args__,
+                                                  atype.__args__):
+                if sametype(supert, subt):
                     return True
     return False
 
