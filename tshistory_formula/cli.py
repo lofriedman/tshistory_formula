@@ -160,64 +160,6 @@ def rewrite(tree, clipinfo):
     return rewritten
 
 
-@click.command(name='drop-alias-tables')
-@click.argument('db-uri')
-@click.option('--drop', is_flag=True, default=False)
-@click.option('--namespace', default='tsh')
-def drop_alias_tables(db_uri, drop=False, namespace='tsh'):
-    engine = create_engine(find_dburi(db_uri))
-
-    # convert outliers to clip operator
-
-    elts = {
-        k: (min, max)
-        for k, min, max in engine.execute(
-                'select serie, min, max from tsh.outliers'
-        ).fetchall()
-    }
-    tsh = timeseries(namespace)
-    rewriteme = []
-    for name, kind in tsh.list_series(engine).items():
-        if kind != 'formula':
-            continue
-        tree = parse(tsh.formula(engine, name))
-        smap = tsh.find_series(engine, tree)
-        for sname in smap:
-            if sname in elts:
-                rewriteme.append((name, tree))
-                break
-
-    for name, tree in rewriteme:
-        tree2 = rewrite(tree, elts)
-        print(name)
-        print(serialize(tree))
-        print('->')
-        print(serialize(tree2))
-        print()
-        tsh.register_formula(
-            engine,
-            name,
-            serialize(tree2),
-            update=True
-        )
-
-    if not drop:
-        print('DID NOT DROP the tables')
-        print('pass --drop to really drop them')
-        return
-
-    with engine.begin() as cn:
-        cn.execute(
-            f'drop table if exists "{namespace}".arithmetic'
-        )
-        cn.execute(
-            f'drop table if exists "{namespace}".priority'
-        )
-        cn.execute(
-            f'drop table if exists "{namespace}".outliers'
-        )
-
-
 @click.command(name='formula-init-db')
 @click.argument('db-uri')
 @click.option('--namespace', default='tsh')
