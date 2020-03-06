@@ -205,3 +205,13 @@ def test_kw_subexpr(engine, tsh):
     expr = '(+ 1 (series "types-a" #:prune (+ 1 2)))'
     i = Interpreter(engine, tsh, {})
     typecheck(lisp.parse(expr), i.env)
+
+
+def test_narrowing(engine, tsh):
+    i = Interpreter(engine, tsh, {})
+    for expr in (
+        '(+ 2 (series "foo"))',
+        '(* 2 (series "foo"))',
+        '(/ (series "foo") 2)'):
+        rtype = typecheck(lisp.parse(expr), i.env)
+        assert rtype == pd.Series

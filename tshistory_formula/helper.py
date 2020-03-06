@@ -4,6 +4,7 @@ import inspect
 import itertools
 from numbers import Number
 
+import pandas as pd
 from psyl.lisp import (
     Env,
     evaluate,
@@ -163,6 +164,45 @@ def findtype(typeinfo, argidx=None, argname=None):
     return typeinfo.annotations[argname]
 
 
+def narrow_arg(typespec, arg):
+    """try to replace typespec by the most specific type info using arg
+    itself
+
+    """
+    if not isinstance(arg, list):
+        return type(arg)
+    folded = constant_fold(arg)
+    if not isinstance(folded, list):
+        return type(folded)
+    return typespec
+
+
+def most_specific_num_type(t1, t2):
+    if float in (t1, t2):
+        return float
+    elif int in (t1, t2):
+        return int
+    return Number
+
+
+def narrow_types(op, typespec, argstypes):
+    """try to suppress an union using more specific args
+    we currently hard-code some operators
+
+    """
+    strop = str(op)
+    if strop in ('*', '+'):
+        if argstypes[1] != pd.Series:
+            return most_specific_num_type(*argstypes[:2])
+        return pd.Series
+    elif strop == '/':
+        if argstypes[0] != pd.Series:
+            return most_specific_num_type(*argstypes[:2])
+        return pd.Series
+
+    return typespec  # no narrowing was possible
+
+
 def typecheck(tree, env=FUNCS):
     op = tree[0]
     try:
@@ -200,6 +240,7 @@ def typecheck(tree, env=FUNCS):
             findtype(optypes, argidx=idx)
         )
 
+    narrowed_argstypes = []
     for idx, (arg, expecttype) in enumerate(zip(tree[1:], treeargstypes)):
         if isinstance(arg, list):
             exprtype = typecheck(arg, env)
@@ -207,9 +248,15 @@ def typecheck(tree, env=FUNCS):
                 raise TypeError(
                     f'item {idx}: expect {expecttype}, got {exprtype}'
                 )
+            narrowed_argstypes.append(
+                narrow_arg(exprtype, arg)
+            )
         else:
             if not isoftype(expecttype, arg):
                 raise TypeError(f'{repr(arg)} not of {expecttype}')
+            narrowed_argstypes.append(
+                narrow_arg(expecttype, arg)
+            )
 
     for name, val in kwargs.items():
         expecttype = kwargstypes[name]
@@ -224,4 +271,7 @@ def typecheck(tree, env=FUNCS):
                 f'keyword `{name}` = {repr(val)} not of {expecttype}'
             )
 
+    returntype = narrow_types(
+        op, returntype, narrowed_argstypes
+    )
     return returntype

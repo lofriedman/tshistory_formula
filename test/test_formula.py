@@ -45,11 +45,21 @@ def test_evaluator():
 
 
 def test_bad_toplevel_type(engine, tsh):
-    tsh.register_formula(
-        engine,
-        'test_bad_toplevel_type',
-        '(+ 2 3)',
-    )
+    msg = 'formula `test_bad_toplevel_type` must return a `Series`, not `int`'
+    with pytest.raises(TypeError, match=msg):
+        tsh.register_formula(
+            engine,
+            'test_bad_toplevel_type',
+            '(+ 2 (* 3 4))',
+        )
+
+    msg = 'formula `test_bad_toplevel_type` must return a `Series`, not `float`'
+    with pytest.raises(TypeError, match=msg):
+        tsh.register_formula(
+            engine,
+            'test_bad_toplevel_type',
+            '(+ 2 (* 3 (/ 8 4)))',
+        )
 
 
 def test_metadata(engine, tsh):

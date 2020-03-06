@@ -121,7 +121,7 @@ class timeseries(basets):
         rtype = helper.typecheck(tree, env=i.env)
         if not helper.sametype(rtype, pd.Series):
             raise TypeError(
-                f'formula `{name}` must return a `Series`, not `{rtype}`'
+                f'formula `{name}` must return a `Series`, not `{rtype.__name__}`'
             )
 
         # build metadata & check compat
