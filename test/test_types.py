@@ -13,6 +13,7 @@ from tshistory_formula.interpreter import (
 )
 from tshistory_formula.registry import func
 from tshistory_formula.helper import (
+    isoftype,
     sametype,
     typecheck
 )
@@ -67,6 +68,14 @@ def test_sametype():
     assert not sametype(Number, int)
     assert sametype(int, typing.Union[Number, pd.Series])
     assert not sametype(Number, typing.Union[int, pd.Series])
+
+
+def test_isoftype():
+    assert isoftype(1, int)
+    assert isoftype(1, Number)
+    assert not isoftype(1, str)
+    assert isoftype(1, typing.Union[NONETYPE, int])
+    assert isoftype(1, typing.Union[NONETYPE, Number])
 
 
 def test_func_types():
