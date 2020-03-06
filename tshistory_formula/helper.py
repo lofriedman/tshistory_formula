@@ -108,7 +108,7 @@ def assert_typed(func):
     )
 
 
-def isoftype(val, typespec):
+def isoftype(typespec, val):
     return sametype(type(val), typespec)
 
 
@@ -196,7 +196,7 @@ def typecheck(tree, env=FUNCS):
                     f'item {idx}: expect {expecttype}, got {exprtype}'
                 )
         else:
-            if not isoftype(arg, expecttype):
+            if not isoftype(expecttype, arg):
                 raise TypeError(f'{repr(arg)} not of {expecttype}')
 
     for name, val in kwargs.items():
@@ -207,7 +207,7 @@ def typecheck(tree, env=FUNCS):
                 raise TypeError(
                     f'item {idx}: expect {expecttype}, got {exprtype}'
                 )
-        elif not isoftype(val, expecttype):
+        elif not isoftype(expecttype, val):
             raise TypeError(
                 f'keyword `{name}` = {repr(val)} not of {expecttype}'
             )

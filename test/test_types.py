@@ -71,11 +71,11 @@ def test_sametype():
 
 
 def test_isoftype():
-    assert isoftype(1, int)
-    assert isoftype(1, Number)
-    assert not isoftype(1, str)
-    assert isoftype(1, typing.Union[NONETYPE, int])
-    assert isoftype(1, typing.Union[NONETYPE, Number])
+    assert isoftype(int, 1)
+    assert isoftype(Number, 1)
+    assert not isoftype(str, 1)
+    assert isoftype(typing.Union[NONETYPE, int], 1)
+    assert isoftype(typing.Union[NONETYPE, Number], 1)
 
 
 def test_func_types():
