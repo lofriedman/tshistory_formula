@@ -1,4 +1,7 @@
 import json
+import itertools
+import typing
+from numbers import Number
 
 import pytest
 import pandas as pd
@@ -10,8 +13,12 @@ from tshistory_formula.interpreter import (
 )
 from tshistory_formula.registry import func
 from tshistory_formula.helper import (
+    sametype,
     typecheck
 )
+
+
+NONETYPE = type(None)
 
 
 def test_dtypes():
@@ -29,7 +36,40 @@ def test_dtypes():
     assert index2.dtype.str == '|M8[ns]'
 
 
-def test_types():
+def test_sametype():
+    types = (str, int, float, pd.Series)
+    for t1, t2 in itertools.product(types, types):
+        if t1 == t2:
+            continue
+        assert not sametype(t1, t2)
+
+    for t in types:
+        assert sametype(t, t)
+        assert sametype(typing.Union[NONETYPE, t], t)
+        assert sametype(t, typing.Union[NONETYPE, t])
+        assert sametype(
+            typing.Union[NONETYPE, t],
+            typing.Union[NONETYPE, t]
+        )
+
+    assert sametype(typing.Union[NONETYPE, int, pd.Series], int)
+    assert sametype(typing.Union[NONETYPE, int, pd.Series], pd.Series)
+    assert sametype(typing.Union[NONETYPE, int, pd.Series], NONETYPE)
+
+    assert sametype(int, typing.Union[NONETYPE, int, pd.Series])
+    assert sametype(pd.Series, typing.Union[NONETYPE, int, pd.Series])
+    assert sametype(NONETYPE, typing.Union[NONETYPE, int, pd.Series])
+
+    # Here we start having issues
+    # concrete numbers vs Number looks broken
+    # and we have some semantic fuzzyness
+    assert sametype(int, Number)
+    assert not sametype(Number, int)
+    assert sametype(int, typing.Union[Number, pd.Series])
+    assert not sametype(Number, typing.Union[int, pd.Series])
+
+
+def test_func_types():
     # prune the types registered from other modules/plugins
     # we want to only show the ones provided by the current package
     opnames = set(
