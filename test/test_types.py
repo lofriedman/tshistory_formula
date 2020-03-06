@@ -129,7 +129,8 @@ def test_complex_typecheck(engine, tsh):
     )
 
     i = Interpreter(engine, tsh, {})
-    typecheck(lisp.parse(expr), i.env)
+    rtype = typecheck(lisp.parse(expr), i.env)
+    assert rtype.__name__ == 'Series'
 
 
 def test_failing_arg(engine, tsh):

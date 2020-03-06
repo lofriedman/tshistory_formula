@@ -1,6 +1,7 @@
 from collections import defaultdict
 import json
 
+import pandas as pd
 from psyl.lisp import parse, serialize
 from tshistory.tsio import timeseries as basets
 from tshistory.util import tx
@@ -101,14 +102,7 @@ class timeseries(basets):
         # basic syntax check
         tree = parse(formula)
         formula = serialize(tree)
-        # build metadata & check compat
-        seriesmeta = self.find_series(cn, tree)
-        if not all(seriesmeta.values()) and reject_unknown:
-            badseries = [k for k, v in seriesmeta.items() if not v]
-            raise ValueError(
-                f'Formula `{name}` refers to unknown series '
-                f'{", ".join("`%s`" % s for s in badseries)}'
-            )
+
         # bad operators
         operators = self.find_operators(cn, tree)
         badoperators = [
@@ -121,9 +115,23 @@ class timeseries(basets):
                 f'Formula `{name}` refers to unknown operators '
                 f'{", ".join("`%s`" % o for o in badoperators)}'
             )
+
         # type checking
         i = interpreter.Interpreter(cn, self, {})
-        helper.typecheck(tree, env=i.env)
+        rtype = helper.typecheck(tree, env=i.env)
+        if not helper.sametype(rtype, pd.Series):
+            raise TypeError(
+                f'formula `{name}` must return a `Series`, not `{rtype}`'
+            )
+
+        # build metadata & check compat
+        seriesmeta = self.find_series(cn, tree)
+        if not all(seriesmeta.values()) and reject_unknown:
+            badseries = [k for k, v in seriesmeta.items() if not v]
+            raise ValueError(
+                f'Formula `{name}` refers to unknown series '
+                f'{", ".join("`%s`" % s for s in badseries)}'
+            )
 
         tzaware = self.check_tz_compatibility(cn, tree)
         sql = (f'insert into "{self.namespace}".formula '

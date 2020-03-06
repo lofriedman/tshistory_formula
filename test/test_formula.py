@@ -44,6 +44,14 @@ def test_evaluator():
     assert tree == ['+', 20.0, ['series', 'foo']]
 
 
+def test_bad_toplevel_type(engine, tsh):
+    tsh.register_formula(
+        engine,
+        'test_bad_toplevel_type',
+        '(+ 2 3)',
+    )
+
+
 def test_metadata(engine, tsh):
     naive = pd.Series(
         [1, 2, 3],

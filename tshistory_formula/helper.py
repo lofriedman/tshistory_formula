@@ -153,7 +153,13 @@ def findtype(typeinfo, argidx=None, argname=None):
 
 def typecheck(tree, env=FUNCS):
     op = tree[0]
-    func = env[op]
+    try:
+        func = env[op]
+    except KeyError:
+        expr = serialize(tree)
+        raise TypeError(
+            f'expression `{expr}` refers to unknown operator `{op}`'
+        )
     optypes = inspect.getfullargspec(func)
     if 'return' not in optypes.annotations:
         raise TypeError(
