@@ -11,9 +11,10 @@ from tshistory_formula.interpreter import (
     Interpreter,
     jsontypes
 )
-from tshistory_formula.registry import func
+from tshistory_formula.registry import func, FUNCS
 from tshistory_formula.helper import (
     isoftype,
+    function_types,
     sametype,
     typecheck
 )
@@ -35,6 +36,31 @@ def test_dtypes():
         freq='H'
     )
     assert index2.dtype.str == '|M8[ns]'
+
+
+def test_function_types():
+    f = FUNCS['timedelta']
+    types = function_types(f)
+    assert types == {
+        'date': 'Timestamp',
+        'days': 'Default[int=0]',
+        'hours': 'Default[int=0]',
+        'minutes': 'Default[int=0]',
+        'months': 'Default[int=0]',
+        'return': 'Timestamp',
+        'weeks': 'Default[int=0]',
+        'years': 'Default[int=0]'
+    }
+
+    f = FUNCS['series']
+    types = function_types(f)
+    assert types == {
+        'fill': 'Default[Union[str, Number]=None]',
+        'name': 'seriesname',
+        'prune': 'Default[int=None]',
+        'return': 'Series',
+        'weight': 'Default[Number=None]'
+    }
 
 
 def test_sametype():
@@ -75,7 +101,7 @@ def test_isoftype():
     assert isoftype(typing.Union[NONETYPE, Number], 1)
 
 
-def test_func_types():
+def test_operators_types():
     # prune the types registered from other modules/plugins
     # we want to only show the ones provided by the current package
     opnames = set(
@@ -99,10 +125,10 @@ def test_func_types():
               'b': 'Number',
               'return': 'Union[Number, Series]'},
         'add': {'return': 'Series', 'serieslist': 'Series'},
-        'clip': {'max': 'Optional[Number]',
-                 'min': 'Optional[Number]',
-                 'replacemax': 'Optional[bool]',
-                 'replacemin': 'Optional[bool]',
+        'clip': {'max': 'Default[Number=None]',
+                 'min': 'Default[Number=None]',
+                 'replacemax': 'Default[bool=False]',
+                 'replacemin': 'Default[bool=False]',
                  'return': 'Series',
                  'series': 'Series'},
         'div': {'return': 'Series', 's1': 'Series', 's2': 'Series'},
@@ -111,27 +137,27 @@ def test_func_types():
         'mul': {'return': 'Series', 'serieslist': 'Series'},
         'priority': {'return': 'Series', 'serieslist': 'Series'},
         'row-mean': {'return': 'Series', 'serieslist': 'Series'},
-        'series': {'fill': 'Optional[Union[str, Number]]',
-                   'name': 'str',
-                   'prune': 'Optional[int]',
+        'series': {'fill': 'Default[Union[str, Number]=None]',
+                   'name': 'seriesname',
+                   'prune': 'Default[int=None]',
                    'return': 'Series',
-                   'weight': 'Optional[Number]'},
-        'slice': {'fromdate': 'Optional[Timestamp]',
+                   'weight': 'Default[Number=None]'},
+        'slice': {'fromdate': 'Default[Timestamp=None]',
                   'return': 'Series',
                   'series': 'Series',
-                  'todate': 'Optional[Timestamp]'},
+                  'todate': 'Default[Timestamp=None]'},
         'std': {'return': 'Series', 'serieslist': 'Series'},
         'timedelta': {'date': 'Timestamp',
-                      'days': 'int',
-                      'hours': 'int',
-                      'minutes': 'int',
-                      'months': 'int',
+                      'days': 'Default[int=0]',
+                      'hours': 'Default[int=0]',
+                      'minutes': 'Default[int=0]',
+                      'months': 'Default[int=0]',
                       'return': 'Timestamp',
-                      'weeks': 'int',
-                      'years': 'int'},
-        'today': {'naive': 'Optional[bool]',
+                      'weeks': 'Default[int=0]',
+                      'years': 'Default[int=0]'},
+        'today': {'naive': 'Default[bool=False]',
                   'return': 'Timestamp',
-                  'tz': 'Optional[str]'}
+                  'tz': 'Default[str=None]'}
     } == types
 
 

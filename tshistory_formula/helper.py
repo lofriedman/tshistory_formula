@@ -2,6 +2,7 @@ import abc
 import typing
 import inspect
 import itertools
+import re
 from numbers import Number
 
 import pandas as pd
@@ -18,6 +19,9 @@ from tshistory_formula.registry import (
     FINDERS,
     FUNCS
 )
+
+
+NONETYPE = type(None)
 
 
 def expanded(tsh, cn, tree):
@@ -162,6 +166,65 @@ def findtype(typeinfo, argidx=None, argname=None):
 
     assert argname is not None
     return typeinfo.annotations[argname]
+
+
+CLS_NAME_PTN = re.compile(r"<class '([\w\.]+)'>")
+
+def extract_type_name(cls):
+    """Search type name inside Python class"""
+    str_cls = str(cls)
+    mobj = CLS_NAME_PTN.search(str_cls)
+    if mobj:
+        str_cls = mobj.group(1).split('.')[-1]
+    return str_cls
+
+
+def normalize_union_types(obj):
+    types = list(obj.__args__)
+    unionwrapper = '{}'
+    if len(types) > 1:
+        unionwrapper = 'Union[{}]'
+    return unionwrapper.format(
+            ", ".join(
+                map(extract_type_name, types)
+            )
+        )
+
+
+def typename(typespec):
+    if isinstance(typespec, type):
+        return extract_type_name(typespec.__name__)
+    # if a Union over NoneType, remove the later
+    typespec = typespec.copy_with(
+        tuple(
+            tspec
+            for tspec in typespec.__args__
+            if tspec is not NONETYPE
+        )
+    )
+    if len(typespec.__args__) == 1:
+        return typename(typespec.__args__[0])
+    strtype = str(typespec)
+    if 'Union' in strtype:
+        return normalize_union_types(typespec)
+    if strtype.startswith('typing.'):
+        strtype = strtype[7:]
+    return strtype
+
+
+def function_types(func):
+    sig = inspect.signature(func)
+    types = {
+        'return': typename(sig.return_annotation)
+    }
+    for par in sig.parameters.values():
+        if par.name == '__interpreter__':
+            continue
+        atype = typename(par.annotation)
+        if par.default is not inspect._empty:
+            atype = f'Default[{atype}={par.default}]'
+        types[par.name] = atype
+    return types
 
 
 def narrow_arg(typespec, arg):

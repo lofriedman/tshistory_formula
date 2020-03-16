@@ -13,40 +13,10 @@ from psyl.lisp import (
     quasiexpreval
 )
 
-from tshistory_formula import registry
-
-
-CLS_NAME_PTN = re.compile(r"<class '([\w\.]+)'>")
-
-
-def extract_type_name(cls):
-    """Search type name inside Python class"""
-    str_cls = str(cls)
-    mobj = CLS_NAME_PTN.search(str_cls)
-    if mobj:
-        str_cls = mobj.group(1).split('.')[-1]
-    return str_cls
-
-
-NONETYPE = type(None)
-
-def normalize_union_types(obj):
-    types = list(obj.__args__)
-    optwrapper = '{}'
-    unionwrapper = '{}'
-    if NONETYPE in types:
-        optwrapper = 'Optional[{}]'
-        types = [
-            t for t in types
-            if t is not NONETYPE
-        ]
-    if len(types) > 1:
-        unionwrapper = 'Union[{}]'
-    return optwrapper.format(
-        unionwrapper.format(
-            ", ".join(map(extract_type_name, types))
-        )
-    )
+from tshistory_formula import (
+    helper,
+    registry
+)
 
 
 class fjson(json.JSONEncoder):
@@ -63,13 +33,13 @@ class fjson(json.JSONEncoder):
 
 def functypes():
     return {
-        name: typing.get_type_hints(func)
+        name: helper.function_types(func)
         for name, func in registry.FUNCS.items()
     }
 
 
 def jsontypes():
-    return json.dumps(functypes(), cls=fjson)
+    return json.dumps(functypes())
 
 
 class Interpreter:

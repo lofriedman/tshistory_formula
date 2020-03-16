@@ -13,11 +13,13 @@ from tshistory_formula.registry import func, finder
 
 NONETYPE = type(None)
 
+class seriesname(str):
+    pass
 
 
 @func('series')
 def series(__interpreter__,
-           name: str,
+           name: seriesname,
            fill: Union[str, Number, NONETYPE]=None,
            prune: Optional[int]=None,
            weight: Optional[Number]=None) -> pd.Series:
