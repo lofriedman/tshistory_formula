@@ -84,28 +84,23 @@ def constant_fold(tree):
 # typing
 
 def assert_typed(func):
-    types = inspect.getfullargspec(func)
+    signature = inspect.signature(func)
     badargs = []
-    badvararg = None
     badreturn = False
-    for arg in types.args:
-        if arg == '__interpreter__':
+    for param in signature.parameters.values():
+        if param.name == '__interpreter__':
             continue
-        if arg not in types.annotations:
-            badargs.append(arg)
-    if types.varargs and types.varargs not in types.annotations:
-        badvararg = types.varargs
-    if 'return' not in types.annotations:
+        if param.annotation is inspect._empty:
+            badargs.append(param.name)
+    if signature.return_annotation is inspect._empty:
         badreturn = True
 
-    if not (badargs or badvararg or badreturn):
+    if not (badargs or badreturn):
         return
 
     msg = []
     if badargs:
         msg.append(f'arguments {", ".join(badargs)} are untyped')
-    if badvararg:
-        msg.append(f'vararg {badvararg} is untyped')
     if badreturn:
         msg.append(f'return type is not provided')
 

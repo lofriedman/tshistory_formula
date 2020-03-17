@@ -168,8 +168,8 @@ def test_operators_is_typed():
     with pytest.raises(TypeError) as err:
         func('foo')(foo)
     assert err.value.args[0] == (
-        'operator `foo` has type issues: arguments x are untyped, '
-        'vararg y is untyped, return type is not provided'
+        'operator `foo` has type issues: arguments x, y, z are untyped, '
+        'return type is not provided'
     )
 
 
