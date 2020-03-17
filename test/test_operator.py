@@ -707,3 +707,30 @@ def test_cumsum(engine, tsh):
 2020-01-02 00:00:00+00:00    3.0
 2020-01-03 00:00:00+00:00    6.0
 """, s1)
+
+
+def test_shift(engine, tsh):
+    series = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
+    )
+
+    tsh.update(
+        engine,
+        series,
+        'shifted',
+        'Babar'
+    )
+
+    tsh.register_formula(
+        engine,
+        'test-shift',
+        '(shift (series "shifted") #:days 2 #:hours 7)'
+    )
+
+    s1 = tsh.get(engine, 'test-shift')
+    assert_df("""
+2020-01-03 07:00:00+00:00    1.0
+2020-01-04 07:00:00+00:00    2.0
+2020-01-05 07:00:00+00:00    3.0
+""", s1)

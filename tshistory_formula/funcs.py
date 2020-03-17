@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Union, Optional
 from numbers import Number
 
@@ -492,3 +492,28 @@ def cumsum(series: pd.Series) -> pd.Series:
     """
 
     return series.cumsum()
+
+
+@func('shift')
+def shift(series: pd.Series,
+          weeks: int=0,
+          days: int=0,
+          hours: int=0,
+          minutes: int=0) -> pd.Series:
+    """
+    Shift the dates of a series.
+
+    Takes the following keywords: `weeks`, `days`, `hours`, with
+    positive or negative values.
+
+    Example `(shift (series "shifted") #:days 2 #:hours 7)`
+
+    """
+    series.index = series.index + timedelta(
+        weeks=weeks,
+        days=days,
+        hours=hours,
+        minutes=minutes
+    )
+
+    return series
