@@ -156,16 +156,21 @@ def sametype(supertype, atype):
     return False
 
 
-def findtype(typeinfo, argidx=None, argname=None):
+def findtype(signature, argidx=None, argname=None):
     if argidx is not None:
-        if typeinfo.args and argidx < len(typeinfo.args):
-            name = typeinfo.args[argidx]
-            return typeinfo.annotations[name]
+        params = list(signature.parameters.values())
+        if argidx < len(params):
+            return params[argidx].annotation
+        # lookup for the vararg
+        for param in params:
+            if param.kind == inspect.Parameter.VAR_POSITIONAL:
+                break
         else:
-            return typeinfo.annotations[typeinfo.varargs]
+            raise TypeError(f'could not find arg {argidx} in {signature}')
+        return param.annotation
 
     assert argname is not None
-    return typeinfo.annotations[argname]
+    return signature.parameters[argname].annotation
 
 
 CLS_NAME_PTN = re.compile(r"<class '([\w\.]+)'>")
@@ -275,12 +280,12 @@ def typecheck(tree, env=FUNCS):
         raise TypeError(
             f'expression `{expr}` refers to unknown operator `{op}`'
         )
-    optypes = inspect.getfullargspec(func)
-    if 'return' not in optypes.annotations:
+    signature = inspect.signature(func)
+    if signature.return_annotation is inspect._empty:
         raise TypeError(
             f'operator `{op}` does not specify its return type'
         )
-    returntype = optypes.annotations['return']
+    returntype = signature.return_annotation
     # build args list and kwargs dict
     # unfortunately args vs kwargs separation is only
     # clean in python 3.8 -- see PEP 570
@@ -295,12 +300,12 @@ def typecheck(tree, env=FUNCS):
             continue
         if kw:
             kwargs[kw] = arg
-            kwargstypes[kw] = findtype(optypes, argname=kw)
+            kwargstypes[kw] = findtype(signature, argname=kw)
             kw = None
             continue
         treeargs.append(arg)
         treeargstypes.append(
-            findtype(optypes, argidx=idx)
+            findtype(signature, argidx=idx)
         )
 
     narrowed_argstypes = []
