@@ -20,7 +20,7 @@ Because of this the `staircase` operator is available on formulae.
 Some `staircase` operations can have a very fast implementation if the
 formula obeys commutativity rules.
 
-[tshistory]: https://bitbucket.org/pythonian/tshistory
+[tshistory]: https://hg.sr.ht/~pythonian/tshistory
 
 
 # Formula
@@ -403,7 +403,7 @@ Example of such a function:
 
 The exact ways to use the builder will be provided soon.
 
-[tshistory_editor]: https://bitbucket.org/pythonian/tshistory_editor
+[tshistory_editor]: https://hg.sr.ht/~pythonian/tshistory_editor
 
 
 # Series API
