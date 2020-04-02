@@ -681,6 +681,14 @@ def test_resample(engine, tsh):
         tsh.get(engine, 'badmethod')
     assert err.value.args[0] == 'bad resampling method `NO-SUCH-METHOD`'
 
+    gasday['2020-1-2'] = np.nan
+    tsh.update(engine, gasday, 'gasday', 'Celeste')
+    assert_df("""
+2020-01-01 00:00:00+00:00    1.0
+2020-01-02 00:00:00+00:00    NaN
+2020-01-03 00:00:00+00:00    3.0
+""", tsh.get(engine, 'gasdaytoday'))
+
 
 def test_cumsum(engine, tsh):
     series = pd.Series(
