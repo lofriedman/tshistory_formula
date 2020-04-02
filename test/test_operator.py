@@ -685,7 +685,6 @@ def test_resample(engine, tsh):
     tsh.update(engine, gasday, 'gasday', 'Celeste')
     assert_df("""
 2020-01-01 00:00:00+00:00    1.0
-2020-01-02 00:00:00+00:00    NaN
 2020-01-03 00:00:00+00:00    3.0
 """, tsh.get(engine, 'gasdaytoday'))
 

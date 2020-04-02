@@ -479,7 +479,7 @@ def resample(series: pd.Series,
     if meth is None:
         raise ValueError(f'bad resampling method `{method}`')
 
-    return resampled.apply(method)
+    return resampled.apply(method).dropna()
 
 
 @func('cumsum')
