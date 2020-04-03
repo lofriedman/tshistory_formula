@@ -222,7 +222,10 @@ def function_types(func):
             continue
         atype = typename(par.annotation)
         if par.default is not inspect._empty:
-            atype = f'Default[{atype}={par.default}]'
+            default = par.default
+            if isinstance(default, str):
+                default = f'"{default}"'
+            atype = f'Default[{atype}={default}]'
         types[par.name] = atype
     return types
 

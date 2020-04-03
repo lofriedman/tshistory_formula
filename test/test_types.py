@@ -62,6 +62,14 @@ def test_function_types():
         'weight': 'Default[Number=None]'
     }
 
+    f = FUNCS['date']
+    types = function_types(f)
+    assert types == {
+        'return': 'Timestamp',
+        'strdate': 'str',
+        'tz': 'Default[str="UTC"]'
+    }
+
 
 def test_sametype():
     types = (str, int, float, pd.Series)
