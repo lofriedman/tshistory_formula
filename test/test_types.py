@@ -56,6 +56,8 @@ def test_types(tsh):
         'add': {'return': 'Series', 'serieslist': 'Series'},
         'clip': {'max': 'Optional[Number]',
                  'min': 'Optional[Number]',
+                 'replacemax': 'Optional[bool]',
+                 'replacemin': 'Optional[bool]',
                  'return': 'Series',
                  'series': 'Series'},
         'div': {'return': 'Series', 's1': 'Series', 's2': 'Series'},

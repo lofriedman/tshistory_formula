@@ -289,6 +289,21 @@ def test_clip(engine, tsh):
 2019-01-03    3.0
 """, restricted)
 
+    tsh.register_formula(
+        engine,
+        'test_clip_replaced',
+        '(clip (series "a") #:min 2 #:max 4 #:replacemin #t #:replacemax #t)'
+    )
+
+    replaced = tsh.get(engine, 'test_clip_replaced')
+    assert_df("""
+2019-01-01    2.0
+2019-01-02    2.0
+2019-01-03    3.0
+2019-01-04    4.0
+2019-01-05    4.0
+""", replaced)
+
 
 def test_slice(engine, tsh):
     base = pd.Series(

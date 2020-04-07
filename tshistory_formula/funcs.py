@@ -355,18 +355,31 @@ def series_priority(*serieslist: pd.Series) -> pd.Series:
 @func('clip')
 def series_clip(series: pd.Series,
                 min: Optional[Number]=None,
-                max: Optional[Number]=None) -> pd.Series:
+                max: Optional[Number]=None,
+                replacemin: Optional[bool]=False,
+                replacemax: Optional[bool]=False) -> pd.Series:
     """
-    Set an upper/lower threashold for a series. Takes a series as
-    positional parameter and accepts two optional keywords `min` and
-    `max` which must be numbers (integers or floats).
+    Set an upper/lower threshold for a series. Takes a series as
+    positional parameter and accepts four optional keywords `min` and
+    `max` which must be numbers, `replacemin` and
+    `replacemax` to control filling out of bounds data with min and
+    max respectively.
 
     Example: `(clip (series "must-be-positive") #:min 0)`
+
     """
     if max is not None:
-        series = series[series <= max]
+        mask = series <= max
+        if replacemax:
+            series[~mask] = max
+        else:
+            series = series[mask]
     if min is not None:
-        series = series[series >= min]
+        mask = series >= min
+        if replacemin:
+            series[~mask] = min
+        else:
+            series = series[mask]
     return series
 
 
