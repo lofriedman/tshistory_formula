@@ -60,3 +60,22 @@ insertion_date             value_date
 2020-01-01 01:00:00    4.0
 2020-01-01 02:00:00    5.0
 """, mapi.get('remote-formula-remote-series'))
+
+
+    rtsh.register_formula(
+        mapi.engine,
+        'remote-formula-local-formula',
+        '(+ 3 (series "remote-formula-remote-series"))'
+    )
+    f = mapi.formula('remote-formula-local-formula')
+    assert f == '(+ 3 (series "remote-formula-remote-series"))'
+
+    ts = mapi.get('remote-formula-local-formula')
+    assert_df("""
+2020-01-01 00:00:00    6.0
+2020-01-01 01:00:00    7.0
+2020-01-01 02:00:00    8.0
+""", ts)
+
+    expanded = mapi.formula('remote-formula-local-formula', expanded=True)
+    assert expanded == '(+ 3 (+ 2 (series "remote-series")))'

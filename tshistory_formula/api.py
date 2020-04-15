@@ -19,17 +19,19 @@ def register_formula(self, name, formula,
 
 
 @extend(dbtimeseries)
-def formula(self, name):
+def formula(self, name, expanded=False):
     form = self.tsh.formula(self.engine, name)
+    if form and expanded:
+        form = self.tsh.expanded_formula(self.engine, name)
     if form is None:
-        form = self.othersources.formula(name)
+        form = self.othersources.formula(name, expanded=expanded)
     return form
 
 
 @extend(altsources)
-def formula(self, name):
+def formula(self, name, expanded=False):
     source = self._findsourcefor(name)
     if source is None:
         return
-    return source.tsa.formula(name)
+    return source.tsa.formula(name, expanded=expanded)
 
