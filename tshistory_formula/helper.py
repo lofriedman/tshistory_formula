@@ -16,7 +16,7 @@ from psyl.lisp import (
 )
 
 from tshistory_formula.registry import (
-    FINDERS,
+    METAS,
     FUNCS
 )
 
@@ -27,8 +27,8 @@ NONETYPE = type(None)
 def expanded(tsh, cn, tree):
     # base case: check the current operation
     op = tree[0]
-    finder = FINDERS.get(op)
-    seriesmeta = finder(cn, tsh, tree) if finder else None
+    metas = METAS.get(op)
+    seriesmeta = metas(cn, tsh, tree) if metas else None
     if seriesmeta:
         # hidden assumption: true series operators
         # operate one series at a time (e.g.  `series`)

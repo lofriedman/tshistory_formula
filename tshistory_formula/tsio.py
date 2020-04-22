@@ -15,7 +15,8 @@ from tshistory_formula import (
 from tshistory_formula.registry import (
     FINDERS,
     FUNCS,
-    HISTORY
+    HISTORY,
+    METAS
 )
 
 
@@ -26,11 +27,22 @@ class timeseries(basets):
     def find_series(self, cn, tree):
         op = tree[0]
         finder = FINDERS.get(op)
-        seriesmeta = finder(cn, self, tree) if finder else {}
+        seriestree = finder(cn, self, tree) if finder else {}
+        for item in tree:
+            if isinstance(item, list):
+                seriestree.update(
+                    self.find_series(cn, item)
+                )
+        return seriestree
+
+    def find_metas(self, cn, tree):
+        op = tree[0]
+        metas = METAS.get(op)
+        seriesmeta = metas(cn, self, tree) if metas else {}
         for item in tree:
             if isinstance(item, list):
                 seriesmeta.update(
-                    self.find_series(cn, item)
+                    self.find_metas(cn, item)
                 )
         return seriesmeta
 
@@ -63,9 +75,9 @@ class timeseries(basets):
         def find_meta(tree, tzstatus, path=()):
             op = tree[0]
             path = path + (op,)
-            finder = FINDERS.get(op)
-            if finder:
-                for name, metadata in finder(cn, self, tree).items():
+            metas = METAS.get(op)
+            if metas:
+                for name, metadata in metas(cn, self, tree).items():
                     tzaware = metadata['tzaware'] if metadata else None
                     if 'naive' in path:
                         tzaware = False
@@ -125,7 +137,7 @@ class timeseries(basets):
             )
 
         # build metadata & check compat
-        seriesmeta = self.find_series(cn, tree)
+        seriesmeta = self.find_metas(cn, tree)
         if not all(seriesmeta.values()) and reject_unknown:
             badseries = [k for k, v in seriesmeta.items() if not v]
             raise ValueError(
@@ -343,7 +355,6 @@ class timeseries(basets):
             for hist in histmap.values()
             for idate in hist
         }
-
         return {
             idate: i.evaluate(formula, idate, name)
             for idate in sorted(idates)
@@ -454,13 +465,13 @@ class timeseries(basets):
 
         for fname, text in formulas:
             tree = parse(text)
-            seriesmeta = self.find_series(
+            series = self.find_series(
                 cn,
                 tree
             )
-            if newname in seriesmeta:
+            if newname in series:
                 errors.append(fname)
-            if oldname not in seriesmeta or errors:
+            if oldname not in series or errors:
                 continue
 
             newtree = edit(tree, oldname, newname)

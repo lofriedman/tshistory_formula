@@ -13,7 +13,8 @@ from tshistory.testutil import (
 )
 from tshistory_formula.registry import (
     finder,
-    func
+    func,
+    metadata
 )
 from tshistory_formula.interpreter import Interpreter
 
@@ -69,7 +70,7 @@ def test_naive_registration(engine, tsh):
             index=pd.date_range(utcdt(2020, 10, 25), periods=5, freq='H')
         )
 
-    @finder('tzaware-autotrophic')
+    @metadata('tzaware-autotrophic')
     def tzauto(cn, tsh, tree):
         return {
             'tzaware-autotrophic' : {
@@ -80,6 +81,10 @@ def test_naive_registration(engine, tsh):
                 'value_dtype': '<f8'
             }
         }
+
+    @finder('tzaware-autotrophic')
+    def tzauto(cn, tsh, tree):
+        return {tree[0]: tree}
 
     tsh.update(
         engine,

@@ -8,7 +8,11 @@ import pytz
 from dateutil.relativedelta import relativedelta
 
 from tshistory.util import patchmany
-from tshistory_formula.registry import func, finder
+from tshistory_formula.registry import (
+    finder,
+    func,
+    metadata
+)
 
 
 NONETYPE = type(None)
@@ -56,8 +60,8 @@ def series(__interpreter__,
     return ts
 
 
-@finder('series')
-def find_series(cn, tsh, stree):
+@metadata('series')
+def series_metas(cn, tsh, stree):
     name = stree[1]
     meta = tsh.metadata(cn, name)
     # alt sources lookup
@@ -66,6 +70,12 @@ def find_series(cn, tsh, stree):
     if meta:
         meta['expandable'] = True
     return {name: meta}
+
+
+@finder('series')
+def series_finder(cn, tsh, stree):
+    name = stree[1]
+    return {name: stree}
 
 
 @func('naive')

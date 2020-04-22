@@ -11,7 +11,8 @@ from tshistory.testutil import (
 from tshistory_formula.registry import (
     finder,
     func,
-    FUNCS
+    FUNCS,
+    metadata
 )
 from tshistory_formula.editor import fancypresenter
 
@@ -102,6 +103,12 @@ def test_editor_new_operator(mapi):
     @finder('genrandomseries')
     def genrandomseries(_cn, _tsh, tree):
         return {
+            tree[0]: tree
+        }
+
+    @metadata('genrandomseries')
+    def genrandomseries(_cn, _tsh, tree):
+        return {
             tree[0]: {
                 'index_dtype': '<M8[ns]',
                 'index_type': 'datetime64[ns]',
@@ -110,6 +117,7 @@ def test_editor_new_operator(mapi):
                 'value_type': 'float64'
             }
         }
+
 
     @func('frobulated')
     def frobulate(a: str, b: str) -> pd.Series:

@@ -15,7 +15,8 @@ from tshistory_formula.registry import (
     func,
     FUNCS,
     finder,
-    history
+    history,
+    metadata
 )
 from tshistory_formula.helper import (
     constant_fold
@@ -84,14 +85,7 @@ def test_finder(engine, tsh):
     )
     found = tsh.find_series(engine, parsed)
     assert found == {
-        'finder': {
-            'expandable': True,
-            'index_dtype': '<M8[ns]',
-            'index_type': 'datetime64[ns]',
-            'tzaware': False,
-            'value_dtype': '<f8',
-            'value_type': 'float64'
-        }
+        'finder': parsed[2]
     }
 
     tsh.register_formula(
@@ -106,20 +100,8 @@ def test_finder(engine, tsh):
     )
     found = tsh.find_series(engine, parsed)
     assert found == {
-        'finder': {'expandable': True,
-                   'index_dtype': '<M8[ns]',
-                   'index_type': 'datetime64[ns]',
-                   'tzaware': False,
-                   'value_dtype': '<f8',
-                   'value_type': 'float64'
-        },
-        'test_finder': {'expandable': True,
-                        'index_dtype': '<M8[ns]',
-                        'index_type': 'datetime64[ns]',
-                        'tzaware': False,
-                        'value_dtype': '<f8',
-                        'value_type': 'float64'
-        }
+        'finder': parsed[2],
+        'test_finder': parsed[1]
     }
 
 
@@ -638,10 +620,16 @@ def test_ifunc(engine, tsh):
 
         return __interpreter__.get(name, args)
 
-    @finder('shifted')
-    def find_series(cn, tsh, stree):
+    @metadata('shifted')
+    def shifted_metadata(cn, tsh, stree):
         return {
             stree[1]: tsh.metadata(cn, stree[1])
+        }
+
+    @finder('shifted')
+    def shifted_finder(cn, tsh, stree):
+        return {
+            stree[1]: stree
         }
 
     tsh.register_formula(
@@ -734,8 +722,8 @@ def test_newop_expansion(engine, tsh):
             __interpreter__.get(name2, args)
         )
 
-    @finder('combine')
-    def find_series(cn, tsh, stree):
+    @metadata('combine')
+    def combine_metadata(cn, tsh, stree):
         return {
             stree[1]: tsh.metadata(cn, stree[1])
         }
@@ -866,8 +854,8 @@ def test_custom_metadata(engine, tsh):
             index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
         )
 
-    @finder('customseries')
-    def find(_cn, _tsh, tree):
+    @metadata('customseries')
+    def customseries_metadata(_cn, _tsh, tree):
         return {
             tree[0]: {
                 'index_type': 'datetime64[ns]',
@@ -906,8 +894,8 @@ def test_custom_history(engine, tsh):
             index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
         )
 
-    @finder('made-up-series')
-    def find(_cn, _tsh, tree):
+    @metadata('made-up-series')
+    def madeup_metadata(_cn, _tsh, tree):
         return {
             tree[0]: {
                 'index_type': 'datetime64[ns]',
@@ -963,8 +951,8 @@ def test_expanded(engine, tsh):
             index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
         )
 
-    @finder('customseries')
-    def find(_cn, _tsh, tree):
+    @metadata('customseries')
+    def customseries_metadata(_cn, _tsh, tree):
         return {
             tree[0]: {
                 'tzaware': True,

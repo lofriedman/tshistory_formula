@@ -6,6 +6,7 @@ import pandas as pd
 
 FUNCS = {}
 HISTORY = {}
+METAS = {}
 FINDERS = {}
 
 
@@ -47,10 +48,11 @@ _KEYS = set([
     'value_type'
 ])
 
-def finder(name):
+
+def metadata(name):
 
     def decorator(func):
-        def _ensure_finder_keys(func, *a, **kw):
+        def _ensure_meta_keys(func, *a, **kw):
             res = func(*a, **kw)
             for name, meta in res.items():
                 if meta is None:
@@ -64,8 +66,17 @@ def finder(name):
                     )
             return res
 
-        dec = decorate(func, _ensure_finder_keys)
-        FINDERS[name] = dec
+        dec = decorate(func, _ensure_meta_keys)
+        METAS[name] = dec
         return dec
+
+    return decorator
+
+
+def finder(name):
+
+    def decorator(func):
+        FINDERS[name] = func
+        return func
 
     return decorator
