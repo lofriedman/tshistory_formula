@@ -62,6 +62,67 @@ def test_bad_toplevel_type(engine, tsh):
         )
 
 
+def test_finder(engine, tsh):
+    naive = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+
+    tsh.update(engine, naive, 'finder', 'Babar',
+               insertion_date=utcdt(2019, 1, 1))
+
+    tsh.register_formula(
+        engine,
+        'test_finder',
+        '(+ 2 (series "finder"))',
+    )
+
+    parsed = lisp.parse(
+        tsh.formula(
+            engine, 'test_finder'
+        )
+    )
+    found = tsh.find_series(engine, parsed)
+    assert found == {
+        'finder': {
+            'expandable': True,
+            'index_dtype': '<M8[ns]',
+            'index_type': 'datetime64[ns]',
+            'tzaware': False,
+            'value_dtype': '<f8',
+            'value_type': 'float64'
+        }
+    }
+
+    tsh.register_formula(
+        engine,
+        'test_finder_primary_plus_formula',
+        '(add (series "test_finder") (series "finder"))',
+    )
+    parsed = lisp.parse(
+        tsh.formula(
+            engine, 'test_finder_primary_plus_formula'
+        )
+    )
+    found = tsh.find_series(engine, parsed)
+    assert found == {
+        'finder': {'expandable': True,
+                   'index_dtype': '<M8[ns]',
+                   'index_type': 'datetime64[ns]',
+                   'tzaware': False,
+                   'value_dtype': '<f8',
+                   'value_type': 'float64'
+        },
+        'test_finder': {'expandable': True,
+                        'index_dtype': '<M8[ns]',
+                        'index_type': 'datetime64[ns]',
+                        'tzaware': False,
+                        'value_dtype': '<f8',
+                        'value_type': 'float64'
+        }
+    }
+
+
 def test_metadata(engine, tsh):
     naive = pd.Series(
         [1, 2, 3],
