@@ -110,10 +110,9 @@ def test_formula_components(mapi):
     assert components['component-a'] == parsed[1]
     assert components['component-b'] == parsed[2]
 
-    form = '(add (* 2 (series "show-components")) (series "component-b"))'
     mapi.register_formula(
         'show-components-squared',
-        form
+        '(add (* 2 (series "show-components")) (series "component-b"))'
     )
     components = mapi.formula_components(
         'show-components-squared',
@@ -121,3 +120,39 @@ def test_formula_components(mapi):
     )
     assert 'component-a' in components
     assert 'component-b' in components
+
+    # formula referencing a remote formula
+    rtsh = timeseries('test-mapi-2')
+    rtsh.update(
+        mapi.engine,
+        series,
+        'remote-series-compo',
+        'Babar',
+        insertion_date=pd.Timestamp('2020-1-1', tz='UTC')
+    )
+    rtsh.register_formula(
+        mapi.engine,
+        'remote-formula',
+        '(+ 1 (series "remote-series-compo"))'
+    )
+
+    mapi.register_formula(
+        'compo-with-remoteseries',
+        '(add (series "show-components-squared") (series "remote-formula"))'
+    )
+    components = mapi.formula_components(
+        'compo-with-remoteseries',
+        expanded=True
+    )
+    assert 'component-a' in components
+    assert 'component-b' in components
+    assert 'remote-series-compo' in components
+
+    # pure remote formula
+    components = mapi.formula_components(
+        'remote-formula',
+        expanded=True
+    )
+    assert 'remote-series-compo' in components
+    assert len(components) == 1
+

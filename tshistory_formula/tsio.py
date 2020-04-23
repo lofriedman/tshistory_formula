@@ -236,6 +236,9 @@ class timeseries(basets):
 
     def expanded_formula(self, cn, name):
         formula = self.formula(cn, name)
+        if formula is None:
+            return
+
         tree = parse(formula)
 
         return serialize(
