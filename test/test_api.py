@@ -1,4 +1,6 @@
 import pandas as pd
+
+from psyl import lisp
 from tshistory.testutil import (
     assert_df,
     assert_hist
@@ -79,3 +81,31 @@ insertion_date             value_date
 
     expanded = mapi.formula('remote-formula-local-formula', expanded=True)
     assert expanded == '(+ 3 (+ 2 (series "remote-series")))'
+
+
+def test_formula_components(mapi):
+    series = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(pd.Timestamp('2020-6-1'), freq='D', periods=3)
+    )
+    mapi.update(
+        'component-a',
+        series,
+        'Babar'
+    )
+    mapi.update(
+        'component-b',
+        series,
+        'Celeste'
+    )
+
+    form = '(add (series "component-a") (series "component-b"))'
+    mapi.register_formula(
+        'show-components',
+        form
+    )
+
+    components = mapi.formula_components('show-components')
+    parsed = lisp.parse(form)
+    assert components['component-a'] == parsed[1]
+    assert components['component-b'] == parsed[2]
