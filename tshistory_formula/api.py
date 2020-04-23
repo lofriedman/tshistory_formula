@@ -39,8 +39,8 @@ def formula(self, name, expanded=False):
 
 
 @extend(dbtimeseries)
-def formula_components(self, name):
-    form = self.formula(name)
+def formula_components(self, name, expanded=False):
+    form = self.formula(name, expanded=expanded)
     if form is None:
         return {}
     parsed = parse(form)

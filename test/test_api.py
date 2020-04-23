@@ -109,3 +109,15 @@ def test_formula_components(mapi):
     parsed = lisp.parse(form)
     assert components['component-a'] == parsed[1]
     assert components['component-b'] == parsed[2]
+
+    form = '(add (* 2 (series "show-components")) (series "component-b"))'
+    mapi.register_formula(
+        'show-components-squared',
+        form
+    )
+    components = mapi.formula_components(
+        'show-components-squared',
+        expanded=True
+    )
+    assert 'component-a' in components
+    assert 'component-b' in components
