@@ -156,3 +156,8 @@ def test_formula_components(mapi):
     assert 'remote-series-compo' in components
     assert len(components) == 1
 
+    idates = mapi.insertion_dates('remote-formula')
+    assert len(idates) == 1
+    assert idates[0] == pd.Timestamp('2020-01-01 00:00:00+0000', tz='UTC')
+    idates = mapi.insertion_dates('compo-with-remoteseries')
+    assert len(idates) == 3

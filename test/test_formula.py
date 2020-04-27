@@ -453,9 +453,9 @@ insertion_date             value_date
 
     dates = tsh.insertion_dates(engine, 'h-addition')
     assert dates == [
-        (1, pd.Timestamp('2019-01-01 00:00:00+0000', tz='UTC')),
-        (2, pd.Timestamp('2019-01-02 00:00:00+0000', tz='UTC')),
-        (3, pd.Timestamp('2019-01-03 00:00:00+0000', tz='UTC'))
+        pd.Timestamp('2019-01-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2019-01-02 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2019-01-03 00:00:00+0000', tz='UTC')
     ]
 
     h = tsh.history(

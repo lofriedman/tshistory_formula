@@ -210,7 +210,7 @@ class timeseries(basets):
         return super().type(cn, name)
 
     def exists(self, cn, name):
-        return super().exists(cn, name) or self.formula(cn, name)
+        return super().exists(cn, name) or bool(self.formula(cn, name))
 
     @tx
     def get(self, cn, name, **kw):
@@ -377,11 +377,28 @@ class timeseries(basets):
         series = self.find_series(cn, parse(formula))
         allrevs = []
         for name in series:
-            allrevs += self._revisions(
-                cn, name,
-                from_insertion_date=fromdate,
-                to_insertion_date=todate
-            )
+            if not self.exists(cn, name):
+                if self.othersources:
+                    allrevs += self.othersources.insertion_dates(
+                        name,
+                        fromdate,
+                        todate
+                    )
+                continue
+            if self.formula(cn, name):
+                allrevs += self.insertion_dates(
+                    cn, name,
+                    fromdate,
+                    todate
+                )
+            else:
+                allrevs += [
+                    idate
+                    for _id, idate in self._revisions(
+                            cn, name,
+                            from_insertion_date=fromdate,
+                            to_insertion_date=todate
+                    )]
         return sorted(set(allrevs))
 
     @tx
