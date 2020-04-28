@@ -269,9 +269,9 @@ def test_priority(engine, tsh):
         index=pd.date_range(dt(2019, 1, 3), periods=3, freq='D')
     )
 
-    tsh.update(engine, a, 'a', 'Babar')
-    tsh.update(engine, b, 'b', 'Celeste')
-    tsh.update(engine, c, 'c', 'Arthur')
+    tsh.update(engine, a, 'a', 'Babar', insertion_date=utcdt(2020, 1, 1))
+    tsh.update(engine, b, 'b', 'Celeste', insertion_date=utcdt(2019, 12, 1))
+    tsh.update(engine, c, 'c', 'Arthur', insertion_date=utcdt(2020, 2, 1))
 
     prio = tsh.get(engine, 'test_prio')
 
@@ -281,6 +281,16 @@ def test_priority(engine, tsh):
 2019-01-03    100.0
 2019-01-04    200.0
 """, prio)
+
+    prio = tsh.get(engine, 'test_prio', revision_date=utcdt(2019, 12, 1))
+    assert_df("""
+2019-01-02    10.0
+2019-01-03    20.0
+2019-01-04    30.0
+""", prio)
+
+    prio = tsh.get(engine, 'test_prio', revision_date=utcdt(2019, 11, 1))
+    assert len(prio) == 0
 
     limited = tsh.get(
         engine,
