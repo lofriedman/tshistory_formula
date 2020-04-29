@@ -448,13 +448,18 @@ class timeseries(basets):
 
         assert isinstance(metadata, dict)
         meta = self.metadata(cn, name) or {}
-        meta.update(metadata)
+        newmeta = {
+            key: meta[key]
+            for key in self.metakeys
+            if meta.get(key) is not None
+        }
+        newmeta.update(metadata)
         sql = (f'update "{self.namespace}".formula '
                'set metadata = %(metadata)s '
                'where name = %(name)s')
         cn.execute(
             sql,
-            metadata=json.dumps(meta),
+            metadata=json.dumps(newmeta),
             name=name
         )
 

@@ -311,6 +311,21 @@ def test_base_api(engine, tsh):
         'value_type': 'float64'
     }
 
+    tsh.update_metadata(
+        engine, 'test_product_a', {
+            'unit': '€'
+        }
+    )
+    m = tsh.metadata(engine, 'test_product_a')
+    assert m == {
+        'index_dtype': '<M8[ns]',
+        'index_type': 'datetime64[ns]',
+        'tzaware': False,
+        'unit': '€',
+        'value_dtype': '<f8',
+        'value_type': 'float64'
+    }
+
     tsh.delete(engine, 'test_plus_two')
     assert not tsh.exists(engine, 'test_plus_two')
 
