@@ -24,17 +24,38 @@ def test_naive_tzone(engine, tsh):
     tsh.register_formula(
         engine,
         'to-naive',
-        '(naive (series "non-naive") "Europe/Moscow")',
+        '(naive (series "non-naive") "Europe/Paris")',
     )
     ts = tsh.get(engine, 'to-naive')
     assert_df("""
-2020-01-01 03:00:00    1.0
-2020-01-02 03:00:00    2.0
-2020-01-03 03:00:00    3.0
+2020-01-01 01:00:00    1.0
+2020-01-02 01:00:00    2.0
+2020-01-03 01:00:00    3.0
 """, ts)
 
     meta = tsh.metadata(engine, 'to-naive')
     assert meta['tzaware'] == False
+
+    tsh.update(
+        engine,
+        pd.Series(
+            range(5),
+            pd.date_range(utcdt(2020, 10, 25), periods=5, freq='H')
+        ),
+        'non-naive',
+        'Celeste'
+    )
+    ts = tsh.get(engine, 'to-naive')
+    assert_df("""
+2020-01-01 01:00:00    1.0
+2020-01-02 01:00:00    2.0
+2020-01-03 01:00:00    3.0
+2020-10-25 02:00:00    0.0
+2020-10-25 02:00:00    1.0
+2020-10-25 03:00:00    2.0
+2020-10-25 04:00:00    3.0
+2020-10-25 05:00:00    4.0
+""", ts)
 
 
 def test_add(engine, tsh):
