@@ -78,7 +78,7 @@ def naive(series: pd.Series, tzone: str) -> pd.Series:
     """
     series.index = series.index.tz_convert(tzone).tz_localize(None)
     if series.index.duplicated().any():
-        series = series[~series.index.duplicated()]
+        series = series.groupby(series.index).mean()
     return series
 
 
