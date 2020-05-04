@@ -11,6 +11,10 @@ from tshistory.testutil import (
     assert_df,
     utcdt
 )
+from tshistory_formula.registry import (
+    finder,
+    func
+)
 from tshistory_formula.interpreter import Interpreter
 
 
@@ -55,6 +59,43 @@ def test_naive_tzone(engine, tsh):
 2020-10-25 04:00:00    3.0
 2020-10-25 05:00:00    4.0
 """, ts)
+
+    @func('tzaware-autotrophic')
+    def tzauto() -> pd.Series:
+        return pd.Series(
+            [1., 2., 3., 4., 5.],
+            index=pd.date_range(utcdt(2020, 10, 25), periods=5, freq='H')
+        )
+
+    @finder('tzaware-autotrophic')
+    def tzauto(cn, tsh, tree):
+        return {
+            'tzaware-autotrophic' : {
+                'tzaware': True,
+                'index_type': 'datetime64[ns, UTC]',
+                'value_type': 'float64',
+                'index_dtype': '|M8[ns]',
+                'value_dtype': '<f8'
+            }
+        }
+
+    tsh.update(
+        engine,
+        pd.Series(
+            [1., 2., 3., 4., 5],
+            index=pd.date_range(dt(2020, 10, 25), periods=5, freq='H')
+        ),
+        'really-naive',
+        'Celeste'
+    )
+
+    with pytest.raises(ValueError):
+        tsh.register_formula(
+            engine,
+            'combine-naive-non-naive',
+            '(add (series "really-naive")'
+            '     (naive (tzaware-autotrophic) "Europe/Paris"))'
+        )
 
 
 def test_add(engine, tsh):
