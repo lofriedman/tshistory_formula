@@ -82,12 +82,9 @@ def test_metadata(engine, tsh):
             '(add (series "test_meta") (series "metadata_tzaware"))',
         )
     assert err.value.args[0] == (
-        "Formula `metadata_tzaware`: mismatching metadata:"
-        "`test_meta:{'tzaware': False, 'index_type': 'datetime64[ns]', "
-        "'value_type': 'float64', 'index_dtype': '<M8[ns]', "
-        "'value_dtype': '<f8'}`, "
-        "`metadata_tzaware:{'tzaware': True, 'index_type': 'datetime64[ns, UTC]', "
-        "'value_type': 'float64', 'index_dtype': '|M8[ns]', 'value_dtype': '<f8'}`"
+        "Formula `metadata_tzaware` has tzaware vs tznaive series:`"
+        "('test_meta', ('add, 'series)):tznaive`,"
+        "`('metadata_tzaware', ('add, 'series)):tzaware`"
     )
 
     tsh.register_formula(

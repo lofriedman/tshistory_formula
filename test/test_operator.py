@@ -60,6 +60,8 @@ def test_naive_tzone(engine, tsh):
 2020-10-25 05:00:00    4.0
 """, ts)
 
+
+def test_naive_registration(engine, tsh):
     @func('tzaware-autotrophic')
     def tzauto() -> pd.Series:
         return pd.Series(
@@ -89,13 +91,47 @@ def test_naive_tzone(engine, tsh):
         'Celeste'
     )
 
-    with pytest.raises(ValueError):
+    tsh.register_formula(
+        engine,
+        'combine-naive-non-naive-1',
+        '(add (series "really-naive")'
+        '     (naive (tzaware-autotrophic) "Europe/Paris"))'
+    )
+
+    tsh.register_formula(
+        engine,
+        'combine-naive-non-naive-2',
+        '(add (naive (tzaware-autotrophic) "Europe/Paris")'
+        '     (series "really-naive"))'
+    )
+
+    # embed a bit deaper
+    tsh.register_formula(
+        engine,
+        'combine-naive-non-naive-3',
+        '(add (naive (add '
+        '                 (tzaware-autotrophic)'
+        '                 (+ 3 (tzaware-autotrophic)))'
+        '      "Europe/Paris")'
+        '     (series "really-naive"))'
+    )
+
+    with pytest.raises(ValueError) as err:
         tsh.register_formula(
             engine,
-            'combine-naive-non-naive',
-            '(add (series "really-naive")'
-            '     (naive (tzaware-autotrophic) "Europe/Paris"))'
+            'combine-naive-non-naive-4',
+            '(add (naive (add '
+            '                 (tzaware-autotrophic)'
+            '                 (+ 3 (tzaware-autotrophic)))'
+            '      "Europe/Paris")'
+            '     (tzaware-autotrophic))'
         )
+    assert err.value.args[0] == (
+        "Formula `tzaware-autotrophic` has tzaware vs tznaive series:"
+        "`('tzaware-autotrophic', ('add, 'naive, 'add, 'tzaware-autotrophic)):tznaive`,"
+        "`('tzaware-autotrophic', ('add, 'naive, 'add, '+, 'tzaware-autotrophic)):tznaive`,"
+        "`('tzaware-autotrophic', ('add, 'tzaware-autotrophic)):tzaware`"
+    )
 
 
 def test_add(engine, tsh):

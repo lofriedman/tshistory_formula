@@ -55,29 +55,39 @@ class timeseries(basets):
                 ops.update(newops)
         return ops
 
-    def filter_metadata(self, seriesmeta):
-        " collect series metadata and make sure they are compatible "
+    def check_tz_compatibility(self, cn, tree):
+        """check that series are timezone-compatible
+        """
+
+        def find_meta(tree, tzstatus, path=()):
+            op = tree[0]
+            path = path + (op,)
+            finder = FINDERS.get(op)
+            if finder:
+                for name, metadata in finder(cn, self, tree).items():
+                    tzaware = metadata['tzaware'] if metadata else None
+                    if 'naive' in path:
+                        tzaware = False
+                    tzstatus[(name, path)] = tzaware
+            for item in tree:
+                if isinstance(item, list):
+                    find_meta(item, tzstatus, path)
+
         metamap = {}
-        for name, meta in seriesmeta.items():
-            if not meta:
-                continue
-            metamap[name] = {
-                k: v
-                for k, v in meta.items()
-                if k in self.metakeys
-                and k not in self.metadata_compat_excluded
-            }
+        find_meta(tree, metamap)
         if not metamap:
             return {}
-        first = next(iter(metamap.items()))
-        for m in metamap.items():
-            if not m[1] == first[1]:
-                if first[0] != 'naive':  # a very special operator !
-                    raise ValueError(
-                        f'Formula `{name}`: mismatching metadata:'
-                        f'{", ".join("`%s:%s`" % (k, v) for k, v in metamap.items())}'
-                    )
-        return first[1]
+
+        def tzlabel(status):
+            return 'tzaware' if status else 'tznaive'
+        first_tzaware = next(iter(metamap.values()))
+        for (name, path), tzaware in metamap.items():
+            if first_tzaware != tzaware:
+                raise ValueError(
+                    f'Formula `{name}` has tzaware vs tznaive series:'
+                    f'{",".join("`%s:%s`" % (k, tzlabel(v)) for k, v in metamap.items())}'
+                )
+        return first_tzaware
 
     @tx
     def register_formula(self, cn, name, formula,
@@ -115,7 +125,7 @@ class timeseries(basets):
         i = interpreter.Interpreter(cn, self, {})
         helper.typecheck(tree, env=i.env)
 
-        meta = self.filter_metadata(seriesmeta)
+        tzaware = self.check_tz_compatibility(cn, tree)
         sql = (f'insert into "{self.namespace}".formula '
                '(name, text) '
                'values (%(name)s, %(text)s) '
@@ -126,8 +136,36 @@ class timeseries(basets):
             name=name,
             text=formula
         )
-        if meta:
+
+        # save metadata
+        if tzaware is None:
+            # bad situation ...
+            return
+        for meta in seriesmeta.values():
+            # crappy heuristics
+            meta.pop('expandable', None)
+            if meta['tzaware'] != tzaware:
+                # we were flipped
+                meta = self.default_meta(tzaware)
             self.update_metadata(cn, name, meta, internal=True)
+            break
+
+    def default_meta(self, tzaware):
+        if tzaware:
+            return {
+                'tzaware': True,
+                'index_type': 'datetime64[ns, UTC]',
+                'value_type': 'float64',
+                'index_dtype': '|M8[ns]',
+                'value_dtype': '<f8'
+            }
+        return {
+            'index_dtype': '<M8[ns]',
+            'index_type': 'datetime64[ns]',
+            'tzaware': False,
+            'value_dtype': '<f8',
+            'value_type': 'float64'
+        }
 
     def formula(self, cn, name):
         formula = cn.execute(
