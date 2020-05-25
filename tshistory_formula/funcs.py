@@ -475,6 +475,8 @@ def resample(series: pd.Series,
     Example: `(resample (series "hourly") "D")`
 
     """
+    if not len(series):
+        return series
 
     resampled = series.resample(freq)
 
