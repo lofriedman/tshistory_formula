@@ -76,6 +76,8 @@ def naive(series: pd.Series, tzone: str) -> pd.Series:
     Example: `(naive (series "tz-aware-series-from-poland") "Europe/Warsaw")`
 
     """
+    if not len(series):
+        return series
     series.index = series.index.tz_convert(tzone).tz_localize(None)
     if series.index.duplicated().any():
         series = series.groupby(series.index).mean()
