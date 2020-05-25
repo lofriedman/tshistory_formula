@@ -566,17 +566,21 @@ def _prepare_row_ops(engine, tsh):
     dates = pd.date_range(
         start=utcdt(2015, 1, 1),
         freq='D',
-        periods=7
+        periods=8
     )
 
-    station0 = pd.Series([0] * 7, index=dates)
-    station1 = pd.Series([1] * 7, index=dates)
-    station2 = pd.Series([2] * 7, index=dates)
+    station0 = pd.Series([0] * 8, index=dates)
+    station1 = pd.Series([1] * 8, index=dates)
+    station2 = pd.Series([2] * 8, index=dates)
 
     # we add some perturbations:
-    station1 = station1.drop(station0.index[2])
     station0 = station0.drop(station0.index[4])
+    station1 = station1.drop(station1.index[2])
     station2 = station2.drop(station2.index[4])
+    # line full of nans
+    station0 = station0.drop(station0.index[5])
+    station1 = station1.drop(station1.index[5])
+    station2 = station2.drop(station2.index[5])
 
     summary = pd.concat(
         [station0, station1, station2],
@@ -591,7 +595,7 @@ def _prepare_row_ops(engine, tsh):
 2015-01-04 00:00:00+00:00  0.0  1.0  2.0
 2015-01-05 00:00:00+00:00  NaN  1.0  NaN
 2015-01-06 00:00:00+00:00  0.0  1.0  2.0
-2015-01-07 00:00:00+00:00  0.0  1.0  2.0
+2015-01-08 00:00:00+00:00  0.0  1.0  2.0
 """, summary)
 
     tsh.update(engine, station0, 'station0', 'Babar')
@@ -623,8 +627,34 @@ def test_row_mean(engine, tsh):
 2015-01-04 00:00:00+00:00    1.250000
 2015-01-05 00:00:00+00:00    1.000000
 2015-01-06 00:00:00+00:00    1.250000
-2015-01-07 00:00:00+00:00    1.250000
+2015-01-08 00:00:00+00:00    1.250000
 """, avg_index)
+
+    formula = (
+        '(row-mean '
+        '  (series "station0") '
+        '  (series "station1") '
+        '  (series "station2" #:weight 2)'
+        '  #:skipna #f)'
+    )
+
+    tsh.register_formula(
+        engine,
+        'weather_index_skipna',
+        formula
+    )
+    ts = tsh.get(
+        engine, 'weather_index_skipna',
+    )
+    assert_df("""
+2015-01-01 00:00:00+00:00    1.25
+2015-01-02 00:00:00+00:00    1.25
+2015-01-03 00:00:00+00:00     NaN
+2015-01-04 00:00:00+00:00    1.25
+2015-01-05 00:00:00+00:00     NaN
+2015-01-06 00:00:00+00:00    1.25
+2015-01-08 00:00:00+00:00    1.25
+""", ts)
 
 
 def test_min(engine, tsh):
@@ -644,8 +674,27 @@ def test_min(engine, tsh):
 2015-01-04 00:00:00+00:00    0.0
 2015-01-05 00:00:00+00:00    1.0
 2015-01-06 00:00:00+00:00    0.0
-2015-01-07 00:00:00+00:00    0.0
+2015-01-08 00:00:00+00:00    0.0
 """, tsh.get(engine, 'weather_min'))
+
+    formula = '(min (series "station0") (series "station1") (series "station2") #:skipna #f)'
+    tsh.register_formula(
+        engine,
+        'weather_min_skipna',
+        formula
+    )
+    ts = tsh.get(
+        engine, 'weather_min_skipna',
+    )
+    assert_df("""
+2015-01-01 00:00:00+00:00    0.0
+2015-01-02 00:00:00+00:00    0.0
+2015-01-03 00:00:00+00:00    NaN
+2015-01-04 00:00:00+00:00    0.0
+2015-01-05 00:00:00+00:00    NaN
+2015-01-06 00:00:00+00:00    0.0
+2015-01-08 00:00:00+00:00    0.0
+""", ts)
 
 
 def test_max(engine, tsh):
@@ -665,8 +714,27 @@ def test_max(engine, tsh):
 2015-01-04 00:00:00+00:00    2.0
 2015-01-05 00:00:00+00:00    1.0
 2015-01-06 00:00:00+00:00    2.0
-2015-01-07 00:00:00+00:00    2.0
+2015-01-08 00:00:00+00:00    2.0
 """, tsh.get(engine, 'weather_max'))
+
+    formula = '(max (series "station0") (series "station1") (series "station2") #:skipna #f)'
+    tsh.register_formula(
+        engine,
+        'weather_max_skipna',
+        formula
+    )
+    ts = tsh.get(
+        engine, 'weather_max_skipna',
+    )
+    assert_df("""
+2015-01-01 00:00:00+00:00    2.0
+2015-01-02 00:00:00+00:00    2.0
+2015-01-03 00:00:00+00:00    NaN
+2015-01-04 00:00:00+00:00    2.0
+2015-01-05 00:00:00+00:00    NaN
+2015-01-06 00:00:00+00:00    2.0
+2015-01-08 00:00:00+00:00    2.0
+""", ts)
 
 
 def test_std(engine, tsh):
@@ -685,8 +753,25 @@ def test_std(engine, tsh):
 2015-01-03 00:00:00+00:00    1.414214
 2015-01-04 00:00:00+00:00    1.000000
 2015-01-06 00:00:00+00:00    1.000000
-2015-01-07 00:00:00+00:00    1.000000
+2015-01-08 00:00:00+00:00    1.000000
 """, tsh.get(engine, 'weather_std'))
+
+    formula = '(std (series "station0") (series "station1") (series "station2") #:skipna #f)'
+    tsh.register_formula(
+        engine,
+        'weather_std_skipna',
+        formula
+    )
+    ts = tsh.get(
+        engine, 'weather_std_skipna',
+    )
+    assert_df("""
+2015-01-01 00:00:00+00:00    1.0
+2015-01-02 00:00:00+00:00    1.0
+2015-01-04 00:00:00+00:00    1.0
+2015-01-06 00:00:00+00:00    1.0
+2015-01-08 00:00:00+00:00    1.0
+""", ts)
 
 
 def test_date(engine, tsh):

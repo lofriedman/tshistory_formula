@@ -403,7 +403,7 @@ def slice(series: pd.Series,
 
 
 @func('row-mean')
-def row_mean(*serieslist: pd.Series) -> pd.Series:
+def row_mean(*serieslist: pd.Series, skipna: Optional[bool]=True) -> pd.Series:
     """
     This operator computes the row-wise mean of its input series using
     the series `weight` option if present. The missing points are
@@ -423,9 +423,14 @@ def row_mean(*serieslist: pd.Series) -> pd.Series:
     weights_in_vertical_matrix = np.array(
         [[w] for w in weights]
     )
-    weighted_sum = allseries.fillna(0).values.dot(
-        weights_in_vertical_matrix
-    )
+    if skipna:
+        weighted_sum = allseries.fillna(0).values.dot(
+            weights_in_vertical_matrix
+        )
+    else:
+        weighted_sum = allseries.values.dot(
+            weights_in_vertical_matrix
+        )
     denominator = (~allseries.isnull()).values.dot(
         weights_in_vertical_matrix
     )
@@ -437,36 +442,36 @@ def row_mean(*serieslist: pd.Series) -> pd.Series:
 
 
 @func('min')
-def row_min(*serieslist: pd.Series) -> pd.Series:
+def row_min(*serieslist: pd.Series, skipna: Optional[bool]=True) -> pd.Series:
     """
     Computes the row-wise minimum of its input series.
 
     Example: `(min (series "station0") (series "station1") (series "station2"))`
     """
     allseries = pd.concat(serieslist, axis=1)
-    return allseries.min(axis=1)
+    return allseries.min(axis=1, skipna=skipna)
 
 
 @func('max')
-def row_max(*serieslist: pd.Series) -> pd.Series:
+def row_max(*serieslist: pd.Series, skipna: Optional[bool]=True) -> pd.Series:
     """
     Computes the row-wise maximum of its input series.
 
     Example: `(max (series "station0") (series "station1") (series "station2"))`
     """
     allseries = pd.concat(serieslist, axis=1)
-    return allseries.max(axis=1)
+    return allseries.max(axis=1, skipna=skipna)
 
 
 @func('std')
-def row_std(*serieslist: pd.Series) -> pd.Series:
+def row_std(*serieslist: pd.Series, skipna: Optional[bool]=True) -> pd.Series:
     """
     Computes the standard deviation over its input series.
 
     Example: `(std (series "station0") (series "station1") (series "station2"))`
     """
     allseries = pd.concat(serieslist, axis=1)
-    return allseries.std(axis=1).dropna()
+    return allseries.std(axis=1, skipna=skipna).dropna()
 
 
 @func('resample')

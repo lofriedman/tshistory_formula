@@ -153,16 +153,25 @@ def sametype(supertype, atype):
 
 def findtype(signature, argidx=None, argname=None):
     if argidx is not None:
+        # in general we can have [<p1>, <p2>, ... <vararg>, <kw1W, ... ]
+        # difficulty is catching the varag situation correctly
+        # first, lookup the possible vararg
+        varargidx = None
         params = list(signature.parameters.values())
-        if argidx < len(params):
-            return params[argidx].annotation
-        # lookup for the vararg
-        for param in params:
+        for idx, param in enumerate(params):
             if param.kind == inspect.Parameter.VAR_POSITIONAL:
+                varargidx = idx
                 break
-        else:
+        if varargidx is not None:
+            if argidx >= varargidx:
+                argidx = varargidx  # it is being absorbed
+            return params[argidx].annotation
+        # let's catch vararg vs kwarg vs plain bogus idx
+        param = params[argidx]
+        if param.kind in (inspect.Parameter.KEYWORD_ONLY,
+                          inspect.Parameter.VAR_KEYWORD):
             raise TypeError(f'could not find arg {argidx} in {signature}')
-        return param.annotation
+        return params[argidx].annotation
 
     assert argname is not None
     return signature.parameters[argname].annotation
@@ -287,12 +296,13 @@ def typecheck(tree, env=FUNCS):
     # build args list and kwargs dict
     # unfortunately args vs kwargs separation is only
     # clean in python 3.8 -- see PEP 570
-    treeargs = []
+    posargs = []
+    posargstypes = []
     kwargs = {}
-    treeargstypes = []
     kwargstypes = {}
     kw = None
     for idx, arg in enumerate(tree[1:]):
+        # keywords
         if isinstance(arg, Keyword):
             kw = arg
             continue
@@ -301,13 +311,14 @@ def typecheck(tree, env=FUNCS):
             kwargstypes[kw] = findtype(signature, argname=kw)
             kw = None
             continue
-        treeargs.append(arg)
-        treeargstypes.append(
+        # positional
+        posargs.append(arg)
+        posargstypes.append(
             findtype(signature, argidx=idx)
         )
 
     narrowed_argstypes = []
-    for idx, (arg, expecttype) in enumerate(zip(tree[1:], treeargstypes)):
+    for idx, (arg, expecttype) in enumerate(zip(tree[1:], posargstypes)):
         if isinstance(arg, list):
             exprtype = typecheck(arg, env)
             if not sametype(expecttype, exprtype):
