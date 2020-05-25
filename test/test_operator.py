@@ -559,7 +559,10 @@ def test_div(engine, tsh):
 """, ts)
 
 
-def test_row_mean(engine, tsh):
+def _prepare_row_ops(engine, tsh):
+    if tsh.exists(engine, 'station0'):
+        return
+
     dates = pd.date_range(
         start=utcdt(2015, 1, 1),
         freq='D',
@@ -595,6 +598,10 @@ def test_row_mean(engine, tsh):
     tsh.update(engine, station1, 'station1', 'Celeste')
     tsh.update(engine, station2, 'station2', 'Arthur')
 
+
+def test_row_mean(engine, tsh):
+    _prepare_row_ops(engine, tsh)
+
     formula = (
         '(row-mean '
         '  (series "station0") '
@@ -619,6 +626,10 @@ def test_row_mean(engine, tsh):
 2015-01-07 00:00:00+00:00    1.250000
 """, avg_index)
 
+
+def test_min(engine, tsh):
+    _prepare_row_ops(engine, tsh)
+
     formula = '(min (series "station0") (series "station1") (series "station2"))'
     tsh.register_formula(
         engine,
@@ -637,6 +648,9 @@ def test_row_mean(engine, tsh):
 """, tsh.get(engine, 'weather_min'))
 
 
+def test_max(engine, tsh):
+    _prepare_row_ops(engine, tsh)
+
     formula = '(max (series "station0") (series "station1") (series "station2"))'
     tsh.register_formula(
         engine,
@@ -653,6 +667,10 @@ def test_row_mean(engine, tsh):
 2015-01-06 00:00:00+00:00    2.0
 2015-01-07 00:00:00+00:00    2.0
 """, tsh.get(engine, 'weather_max'))
+
+
+def test_std(engine, tsh):
+    _prepare_row_ops(engine, tsh)
 
     formula = '(std (series "station0") (series "station1") (series "station2"))'
     tsh.register_formula(
