@@ -110,7 +110,7 @@ def test_naive_registration(engine, tsh):
         '     (series "really-naive"))'
     )
 
-    # embed a bit deaper
+    # embed a bit deeper
     tsh.register_formula(
         engine,
         'combine-naive-non-naive-3',
