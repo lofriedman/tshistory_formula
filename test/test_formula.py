@@ -903,7 +903,12 @@ def test_custom_metadata(engine, tsh):
 
 def test_custom_history(engine, tsh):
     @func('made-up-series')
-    def madeup(base: int, coeff: float=1.) -> pd.Series:
+    def madeup(__interpreter__, base: int, coeff: float=1.) -> pd.Series:
+        if __interpreter__.histories:
+            idate = __interpreter__.env.get('__idate__')
+            name = __interpreter__.env.get('__name__')
+            assert idate and name
+            return __interpreter__.histories[name][idate]
         return pd.Series(
             np.array([base, base + 1, base + 2]) * coeff,
             index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
@@ -945,15 +950,15 @@ def test_custom_history(engine, tsh):
 
     assert_hist("""
 insertion_date             value_date
-2020-01-01 00:00:00+00:00  2019-01-01    0.0
-                           2019-01-02    1.0
-                           2019-01-03    2.0
-2020-01-02 00:00:00+00:00  2019-01-01    0.0
-                           2019-01-02    1.0
-                           2019-01-03    2.0
-2020-01-03 00:00:00+00:00  2019-01-01    0.0
-                           2019-01-02    1.0
-                           2019-01-03    2.0
+2020-01-01 00:00:00+00:00  2019-01-01    1.0
+                           2019-01-02    2.0
+                           2019-01-03    3.0
+2020-01-02 00:00:00+00:00  2019-01-02    2.0
+                           2019-01-03    3.0
+                           2019-01-04    4.0
+2020-01-03 00:00:00+00:00  2019-01-03    3.0
+                           2019-01-04    4.0
+                           2019-01-05    5.0
 """, tsh.history(engine, 'made-up-history'))
 
     tsh.register_formula(
@@ -972,14 +977,14 @@ insertion_date             value_date
     assert_hist("""
 insertion_date             value_date
 2020-01-01 00:00:00+00:00  2019-01-01     6.0
-                           2019-01-02     8.5
-                           2019-01-03    11.0
-2020-01-02 00:00:00+00:00  2019-01-01     6.0
-                           2019-01-02     8.5
-                           2019-01-03    11.0
-2020-01-03 00:00:00+00:00  2019-01-01     6.0
-                           2019-01-02     8.5
-                           2019-01-03    11.0
+                           2019-01-02     7.0
+                           2019-01-03     8.0
+2020-01-02 00:00:00+00:00  2019-01-02     7.0
+                           2019-01-03     8.0
+                           2019-01-04     9.0
+2020-01-03 00:00:00+00:00  2019-01-03     8.0
+                           2019-01-04     9.0
+                           2019-01-05    10.0
 """, hist)
 
 

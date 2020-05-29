@@ -43,7 +43,7 @@ def jsontypes():
 
 
 class Interpreter:
-    __slots__ = ('env', 'cn', 'tsh', 'getargs')
+    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'histories')
     FUNCS = None
 
     @property
@@ -65,6 +65,7 @@ class Interpreter:
         funcs['#t'] = True
         funcs['#f'] = False
         self.env = Env(funcs)
+        self.histories = {}
 
     def get(self, name, getargs):
         # `getarg` likey comes from self.getargs
@@ -124,6 +125,7 @@ class HistoryInterpreter(Interpreter):
 
     def evaluate(self, text, idate, name):
         self.env['__idate__'] = idate
+        self.env['__name__'] = name
         ts = pevaluate(text, self.env)
         ts.name = name
         return ts
