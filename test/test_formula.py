@@ -922,7 +922,7 @@ def test_custom_history(engine, tsh):
         }
 
     @history('made-up-series')
-    def madeup_history(__interpreter__, base, coeff):
+    def madeup_history(__interpreter__, base, coeff=1.):
         hist = {}
         for i in (1, 2, 3):
             hist[pd.Timestamp(f'2020-1-{i}', tz='utc')] = pd.Series(
@@ -933,7 +933,32 @@ def test_custom_history(engine, tsh):
 
     tsh.register_formula(
         engine,
-        'made-up',
+        'made-up-history',
+        '(made-up-series 0)'
+    )
+
+    assert_df("""
+2019-01-01    0.0
+2019-01-02    1.0
+2019-01-03    2.0
+""", tsh.get(engine, 'made-up-history'))
+
+    assert_hist("""
+insertion_date             value_date
+2020-01-01 00:00:00+00:00  2019-01-01    0.0
+                           2019-01-02    1.0
+                           2019-01-03    2.0
+2020-01-02 00:00:00+00:00  2019-01-01    0.0
+                           2019-01-02    1.0
+                           2019-01-03    2.0
+2020-01-03 00:00:00+00:00  2019-01-01    0.0
+                           2019-01-02    1.0
+                           2019-01-03    2.0
+""", tsh.history(engine, 'made-up-history'))
+
+    tsh.register_formula(
+        engine,
+        'made-up-composite',
         '(+ 3 (add (made-up-series 1 #:coeff 2.) (made-up-series 2 #:coeff .5)))',
         False
     )
@@ -941,9 +966,9 @@ def test_custom_history(engine, tsh):
 2019-01-01     6.0
 2019-01-02     8.5
 2019-01-03    11.0
-""", tsh.get(engine, 'made-up'))
+""", tsh.get(engine, 'made-up-composite'))
 
-    hist = tsh.history(engine, 'made-up')
+    hist = tsh.history(engine, 'made-up-composite')
     assert_hist("""
 insertion_date             value_date
 2020-01-01 00:00:00+00:00  2019-01-01     6.0
