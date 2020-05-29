@@ -926,7 +926,7 @@ def test_custom_history(engine, tsh):
         hist = {}
         for i in (1, 2, 3):
             hist[pd.Timestamp(f'2020-1-{i}', tz='utc')] = pd.Series(
-                np.array([base, base + 1, base + 2]) * coeff,
+                np.array([base + i, base + i + 1, base + i + 2]) * coeff,
                 index=pd.date_range(dt(2019, 1, i), periods=3, freq='D')
             )
         return hist
