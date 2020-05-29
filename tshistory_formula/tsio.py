@@ -331,20 +331,21 @@ class timeseries(basets):
             for call in self.find_callsites(cn, sname, tree):
                 callsites.append(call)
 
-        # autotrophic history
-        histmap.update({
-            name: self.history(
-                cn,
-                None, # just mark that we won't work "by name" there
-                from_insertion_date,
-                to_insertion_date,
-                from_value_date,
-                to_value_date,
-                diffmode,
-                _tree=callsite
-            ) or {}
-            for callsite in callsites
-        })
+        if callsites:
+            # autotrophic history
+            histmap.update({
+                name: self.history(
+                    cn,
+                    None, # just mark that we won't work "by name" there
+                    from_insertion_date,
+                    to_insertion_date,
+                    from_value_date,
+                    to_value_date,
+                    diffmode,
+                    _tree=callsite
+                ) or {}
+                for callsite in callsites
+            })
 
         i = interpreter.HistoryInterpreter(
             cn, self, {
