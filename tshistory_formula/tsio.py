@@ -256,6 +256,13 @@ class timeseries(basets):
             name=name
         )
 
+    def _custom_history_sites(self, cn, tree):
+        return [
+            call
+            for sname in HISTORY
+            for call in self.find_callsites(cn, sname, tree)
+        ]
+
     @tx
     def history(self, cn, name,
                 from_insertion_date=None,
@@ -326,10 +333,7 @@ class timeseries(basets):
         }
 
         # prepare work for autotrophic operator history
-        callsites = []
-        for sname in HISTORY:
-            for call in self.find_callsites(cn, sname, tree):
-                callsites.append(call)
+        callsites = self._custom_history_sites(cn, tree)
 
         if callsites:
             # autotrophic history
@@ -400,6 +404,20 @@ class timeseries(basets):
                             from_insertion_date=fromdate,
                             to_insertion_date=todate
                     )]
+
+        # autotrophic operators
+        tree = parse(formula)
+        for site in self._custom_history_sites(cn, tree):
+            hist = self.history(
+                cn,
+                None, # just mark that we won't work "by name" there
+                fromdate,
+                todate,
+                _tree=site
+            )
+            if hist:
+                allrevs += list(hist.keys())
+
         return sorted(set(allrevs))
 
     @tx

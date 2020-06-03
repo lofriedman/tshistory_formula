@@ -962,7 +962,11 @@ insertion_date             value_date
 """, tsh.history(engine, 'made-up-history'))
 
     idates = tsh.insertion_dates(engine, 'made-up-history')
-    assert idates == []
+    assert idates == [
+        pd.Timestamp('2020-01-01 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2020-01-02 00:00:00+0000', tz='UTC'),
+        pd.Timestamp('2020-01-03 00:00:00+0000', tz='UTC')
+    ]
 
     tsh.register_formula(
         engine,
