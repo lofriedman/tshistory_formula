@@ -361,7 +361,7 @@ def series_clip(series: pd.Series,
     `replacemax` to control filling out of bounds data with min and
     max respectively.
 
-    Example: `(clip (series "must-be-positive") #:min 0)`
+    Example: `(clip (series "must-be-positive") #:min 0 #:replacemin #t)`
 
     """
     if max is not None:
