@@ -961,6 +961,9 @@ insertion_date             value_date
                            2019-01-05    5.0
 """, tsh.history(engine, 'made-up-history'))
 
+    idates = tsh.insertion_dates(engine, 'made-up-history')
+    assert idates == []
+
     tsh.register_formula(
         engine,
         'made-up-composite',
