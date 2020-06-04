@@ -905,10 +905,8 @@ def test_custom_history(engine, tsh):
     @func('made-up-series')
     def madeup(__interpreter__, base: int, coeff: float=1.) -> pd.Series:
         if __interpreter__.histories:
-            idate = __interpreter__.env.get('__idate__')
-            name = __interpreter__.env.get('__name__')
-            assert idate and name
-            return __interpreter__.histories[name][idate]
+            return __interpreter__.history_item
+
         return pd.Series(
             np.array([base, base + 1, base + 2]) * coeff,
             index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')

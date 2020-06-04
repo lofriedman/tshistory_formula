@@ -123,6 +123,18 @@ class HistoryInterpreter(Interpreter):
         ts = pd.Series(name=name)
         return ts
 
+
+    @property
+    def history_item(self):
+        """ helper for autotrophic series that have pre built their
+        history and are asked for one element
+        (necessary since they bypass the above .get)
+        """
+        idate = self.env.get('__idate__')
+        name = self.env.get('__name__')
+        assert idate and name
+        return self.histories[name][idate]
+
     def evaluate(self, text, idate, name):
         self.env['__idate__'] = idate
         self.env['__name__'] = name
