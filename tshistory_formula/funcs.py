@@ -49,7 +49,7 @@ def series(__interpreter__,
     if ts is None:
         if not i.tsh.exists(i.cn, name):
             raise ValueError(f'No such series `{name}`')
-        ts = pd.Series(name=name)
+        ts = pd.Series(name=name, dtype='float64')
     if prune:
         ts = ts[:-prune]
     ts.options = {

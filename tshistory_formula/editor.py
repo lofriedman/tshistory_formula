@@ -20,7 +20,7 @@ class fancypresenter:
         def get(name):
             ts = tsa.get(name, **getargs)
             if ts is None:
-                return pd.Series(name=name)
+                return pd.Series(name=name, dtype='float64')
             return ts
 
         self.infos = [
