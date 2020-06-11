@@ -379,12 +379,6 @@ def series_clip(series: pd.Series,
     return series
 
 
-class iso_utc_datetime(str):
-
-    def to_datetime(self):
-        return pd.Timestamp(self, tz='UTC')
-
-
 @func('slice')
 def slice(series: pd.Series,
           fromdate: Optional[pd.Timestamp]=None,
