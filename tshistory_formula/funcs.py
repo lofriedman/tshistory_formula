@@ -343,6 +343,9 @@ def series_priority(*serieslist: pd.Series) -> pd.Series:
     Here `realized` values show up first, and any missing values come
     from `nominated` first and then only from `forecasted`.
     """
+    if len(serieslist) == 1:
+        return serieslist[0]
+
     series = list(serieslist)
     series.reverse()
     return patchmany(series)

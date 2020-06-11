@@ -364,8 +364,12 @@ def test_priority_one_series(engine, tsh):
     )
     tsh.update(engine, a, 'just-a', 'Babar')
 
-    with pytest.raises(AssertionError):
-        tsh.get(engine, 'test_prio_one')
+    a = tsh.get(engine, 'test_prio_one')
+    assert_df("""
+2019-01-01    1.0
+2019-01-02    2.0
+2019-01-03    3.0
+""", a)
 
 
 def test_clip(engine, tsh):
