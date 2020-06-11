@@ -469,6 +469,25 @@ def test_slice(engine, tsh):
     assert len(tsh.get(engine, 'slicing-empty')) == 0
 
 
+def test_slice_naiveseries(engine, tsh):
+    base = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2020, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, base, 'test-slice-naive', 'Babar')
+    tsh.register_formula(
+        engine,
+        'slicing-naive',
+        '(slice (series "test-slice-naive") '
+        '       #:fromdate (date "2020-1-2")'
+        '       #:todate (date "2020-1-2")'
+        ')',
+    )
+    with pytest.raises(TypeError):
+        tsh.get(engine, 'slicing-naive',
+                from_value_date=dt(2021, 1, 1))
+
+
 def test_slice_options(engine, tsh):
     base = pd.Series(
         [1, 2, 3],
