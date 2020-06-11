@@ -490,8 +490,8 @@ def test_slice_naiveseries(engine, tsh):
                 from_value_date=dt(2021, 1, 1))
         ) == 0
 
-    with pytest.raises(TypeError):
-        tsh.get(engine, 'slicing-naive')
+    tsh.get(engine, 'slicing-naive')
+    # pandas didn't crash us \o/
 
 
 def test_slice_options(engine, tsh):

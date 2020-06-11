@@ -7,7 +7,10 @@ import pandas as pd
 import pytz
 from dateutil.relativedelta import relativedelta
 
-from tshistory.util import patchmany
+from tshistory.util import (
+    compatible_date,
+    patchmany
+)
 from tshistory_formula.registry import (
     finder,
     func,
@@ -396,6 +399,15 @@ def slice(series: pd.Series,
     """
     if not len(series):
         return series
+
+    if fromdate is None and todate is None:
+        return series
+
+    tzaware = series.index.dtype.name == 'datetime64[ns, UTC]'
+    if fromdate:
+        fromdate = compatible_date(tzaware, fromdate)
+    if todate:
+        todate = compatible_date(tzaware, todate)
 
     sliced = series.loc[fromdate:todate]
     sliced.options = series.options
