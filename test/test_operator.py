@@ -483,9 +483,11 @@ def test_slice_naiveseries(engine, tsh):
         '       #:todate (date "2020-1-2")'
         ')',
     )
-    with pytest.raises(TypeError):
+
+    assert len(
         tsh.get(engine, 'slicing-naive',
                 from_value_date=dt(2021, 1, 1))
+        ) == 0
 
 
 def test_slice_options(engine, tsh):

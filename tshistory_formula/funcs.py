@@ -394,6 +394,9 @@ def slice(series: pd.Series,
 
     Example: `(slice (series "cut-me") #:fromdate (date "2018-01-01"))`
     """
+    if not len(series):
+        return series
+
     sliced = series.loc[fromdate:todate]
     sliced.options = series.options
     return sliced
