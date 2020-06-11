@@ -350,6 +350,24 @@ def test_priority2(engine, tsh):
 """, prio)
 
 
+def test_priority_one_series(engine, tsh):
+    tsh.register_formula(
+        engine,
+        'test_prio_one',
+        '(priority (series "just-a"))',
+        False
+    )
+
+    a = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, a, 'just-a', 'Babar')
+
+    with pytest.raises(AssertionError):
+        tsh.get(engine, 'test_prio_one')
+
+
 def test_clip(engine, tsh):
     tsh.register_formula(
         engine,
