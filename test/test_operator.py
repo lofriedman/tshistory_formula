@@ -475,11 +475,12 @@ def test_slice_naiveseries(engine, tsh):
         index=pd.date_range(dt(2020, 1, 1), periods=3, freq='D')
     )
     tsh.update(engine, base, 'test-slice-naive', 'Babar')
+
     tsh.register_formula(
         engine,
         'slicing-naive',
         '(slice (series "test-slice-naive") '
-        '       #:fromdate (date "2020-1-2")'
+        '       #:fromdate (date "2012-1-2")'
         '       #:todate (date "2020-1-2")'
         ')',
     )
@@ -488,6 +489,9 @@ def test_slice_naiveseries(engine, tsh):
         tsh.get(engine, 'slicing-naive',
                 from_value_date=dt(2021, 1, 1))
         ) == 0
+
+    with pytest.raises(TypeError):
+        tsh.get(engine, 'slicing-naive')
 
 
 def test_slice_options(engine, tsh):
