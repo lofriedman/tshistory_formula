@@ -73,6 +73,8 @@ def formula_components(self, name, expanded=False):
                 self.othersources.formula_components(remote, expanded)
             )
 
+    # NOTE: we want to run formula_components against those again
+    # because some series formula components > what shows the formula expansion
     return components
 
 
