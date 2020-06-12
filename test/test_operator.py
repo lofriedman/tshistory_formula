@@ -62,6 +62,22 @@ def test_naive_tzone(engine, tsh):
 """, ts)
 
 
+def test_naive_over_naive(engine, tsh):
+    x = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2020, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, x, 'naive-series', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'naive-over-naive',
+        '(naive (series "naive-series") "Europe/Paris")',
+    )
+    with pytest.raises(TypeError):
+        ts = tsh.get(engine, 'naive-over-naive')
+
+
 def test_naive_registration(engine, tsh):
     @func('tzaware-autotrophic')
     def tzauto() -> pd.Series:
