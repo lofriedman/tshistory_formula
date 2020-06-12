@@ -74,8 +74,16 @@ def test_naive_over_naive(engine, tsh):
         'naive-over-naive',
         '(naive (series "naive-series") "Europe/Paris")',
     )
-    with pytest.raises(TypeError):
-        ts = tsh.get(engine, 'naive-over-naive')
+    ts = tsh.get(engine, 'naive-over-naive')
+    assert_df("""
+2020-01-01    1.0
+2020-01-02    2.0
+2020-01-03    3.0
+Name: naive-series, dtype: float64
+""", ts)
+
+    meta = tsh.metadata(engine, 'naive-over-naive')
+    assert meta['tzaware'] == False
 
 
 def test_naive_registration(engine, tsh):

@@ -9,7 +9,8 @@ from dateutil.relativedelta import relativedelta
 
 from tshistory.util import (
     compatible_date,
-    patchmany
+    patchmany,
+    tzaware_serie
 )
 from tshistory_formula.registry import (
     finder,
@@ -93,6 +94,9 @@ def naive(series: pd.Series, tzone: str) -> pd.Series:
     """
     if not len(series):
         return series
+    if not tzaware_serie(series):
+        return series
+
     series.index = series.index.tz_convert(tzone).tz_localize(None)
     if series.index.duplicated().any():
         series = series.groupby(series.index).mean()
