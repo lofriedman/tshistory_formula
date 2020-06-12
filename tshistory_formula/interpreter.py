@@ -104,13 +104,7 @@ class HistoryInterpreter(Interpreter):
         super().__init__(*args)
         self.histories = histories
 
-    def get(self, name, _getargs):
-        # getargs is moot there because histories
-        # have been precomputed
-        idate = self.env.get('__idate__')
-        # get the nearest inferior or equal for the given
-        # insertion date
-        assert self.histories
+    def _find_by_nearest_idate(self, name, idate):
         hist = self.histories[name]
         tzaware = idate.tzinfo is not None
         for date in reversed(list(hist.keys())):
@@ -123,6 +117,14 @@ class HistoryInterpreter(Interpreter):
         ts = pd.Series(name=name)
         return ts
 
+    def get(self, name, _getargs):
+        # getargs is moot there because histories
+        # have been precomputed
+        idate = self.env.get('__idate__')
+        # get the nearest inferior or equal for the given
+        # insertion date
+        assert self.histories
+        return self._find_by_nearest_idate(name, idate)
 
     @property
     def history_item(self):
@@ -133,7 +135,7 @@ class HistoryInterpreter(Interpreter):
         idate = self.env.get('__idate__')
         name = self.env.get('__name__')
         assert idate and name
-        return self.histories[name][idate]
+        return self._find_by_nearest_idate(name, idate)
 
     def evaluate(self, text, idate, name):
         self.env['__idate__'] = idate
