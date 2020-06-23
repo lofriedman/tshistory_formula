@@ -30,6 +30,7 @@ setup(name='tshistory_formula',
           'typecheck-formula=tshistory_formula.cli:typecheck_formula',
           'test-formula=tshistory_formula.cli:test_formula',
           'formula-init-db=tshistory_formula.cli:init_db',
+          'migrate-0.6-to-0.7=tshistory_formula.cli:migrate',
           'shell=tshistory_formula.cli:shell'
       ]},
       classifiers=[
