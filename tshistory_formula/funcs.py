@@ -319,6 +319,8 @@ def series_multiply(*serieslist: pd.Series) -> pd.Series:
     ]
 
     df = _group_series(*serieslist)
+    if not len(df):
+        return pd.Series(dtype='float64')
 
     res = None
     for col in df.columns:
@@ -338,6 +340,8 @@ def series_div(s1: pd.Series, s2: pd.Series) -> pd.Series:
     Example: `(div (series "$-to-€") (series "€-to-£"))`
     """
     df = _group_series(*(s1, s2))
+    if not len(df) or len(df.columns) < 2:
+        return pd.Series(dtype='float64')
 
     c1, c2 = df.columns
     return (df[c1] / df[c2]).dropna()
