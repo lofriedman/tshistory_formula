@@ -459,7 +459,7 @@ def row_mean(*serieslist: pd.Series, skipna: Optional[bool]=True) -> pd.Series:
     return pd.Series(
         (weighted_sum / denominator).flatten(),
         index=allseries.index
-    )
+    ).dropna()
 
 
 @func('min')
@@ -470,7 +470,7 @@ def row_min(*serieslist: pd.Series, skipna: Optional[bool]=True) -> pd.Series:
     Example: `(min (series "station0") (series "station1") (series "station2"))`
     """
     allseries = pd.concat(serieslist, axis=1)
-    return allseries.min(axis=1, skipna=skipna)
+    return allseries.min(axis=1, skipna=skipna).dropna()
 
 
 @func('max')
@@ -481,7 +481,7 @@ def row_max(*serieslist: pd.Series, skipna: Optional[bool]=True) -> pd.Series:
     Example: `(max (series "station0") (series "station1") (series "station2"))`
     """
     allseries = pd.concat(serieslist, axis=1)
-    return allseries.max(axis=1, skipna=skipna)
+    return allseries.max(axis=1, skipna=skipna).dropna()
 
 
 @func('std')
