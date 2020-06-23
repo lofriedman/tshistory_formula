@@ -253,6 +253,8 @@ def _group_series(*serieslist):
 
     # join everything
     for ts in serieslist:
+        if not len(ts):
+            continue
         while ts.name in opts:
             ts.name = f'{id(ts)}'  # do something unique
         fillopt = (
@@ -262,6 +264,9 @@ def _group_series(*serieslist):
         )
         opts[ts.name] = fillopt
         dfs.append(ts)
+
+    if not dfs:
+        return pd.DataFrame(dtype='float64')
 
     df = pd.concat(dfs, axis=1, join='outer')
 
