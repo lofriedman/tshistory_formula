@@ -471,6 +471,7 @@ class timeseries(basets):
             key: meta[key]
             for key in self.metakeys
             if meta.get(key) is not None
+            and key not in self.metadata_compat_excluded
         }
         newmeta.update(metadata)
         sql = (f'update "{self.namespace}".formula '
