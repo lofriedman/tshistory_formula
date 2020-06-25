@@ -93,7 +93,7 @@ def naive(series: pd.Series, tzone: str) -> pd.Series:
 
     """
     if not len(series):
-        return series
+        return pd.Series(dtype='float64')
     if not tzaware_serie(series):
         return series
 
