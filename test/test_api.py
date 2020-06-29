@@ -194,7 +194,7 @@ def test_formula_components_wall(mapi):
         '(add (series "comp-b") (series "comp-c"))'
     )
 
-    @func('custom')
+    @func('opaque-components')
     def custom(__interpreter__, s1name: str, s2name: str) -> pd.Series:
         i = __interpreter__
         s1 = i.get(i.cn, s1name)
@@ -202,7 +202,7 @@ def test_formula_components_wall(mapi):
         return s1 + s2
 
 
-    @finder('custom')
+    @finder('opaque-components')
     def custom(cn, tsh, tree):
         return {
             tree[1]: tree,
@@ -211,18 +211,18 @@ def test_formula_components_wall(mapi):
 
     mapi.register_formula(
         'wall',
-        '(custom "comp-a" "b-plus-c")'
+        '(opaque-components "comp-a" "b-plus-c")'
     )
 
     comp = mapi.formula_components('wall')
     assert comp == {
-        'comp-a': ['custom', 'comp-a', 'b-plus-c'],
-        'b-plus-c': ['custom', 'comp-a', 'b-plus-c']
+        'comp-a': ['opaque-components', 'comp-a', 'b-plus-c'],
+        'b-plus-c': ['opaque-components', 'comp-a', 'b-plus-c']
     }
     comp = mapi.formula_components('wall', expanded=True)
     assert comp == {
-        'b-plus-c': ['custom', 'comp-a', 'b-plus-c'],
-        'comp-a': ['custom', 'comp-a', 'b-plus-c'],
+        'b-plus-c': ['opaque-components', 'comp-a', 'b-plus-c'],
+        'comp-a': ['opaque-components', 'comp-a', 'b-plus-c'],
         'comp-b': ['series', 'comp-b'],
         'comp-c': ['series', 'comp-c']
     }
