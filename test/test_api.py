@@ -221,7 +221,8 @@ def test_formula_components_wall(mapi):
     }
     comp = mapi.formula_components('wall', expanded=True)
     assert comp == {
+        'b-plus-c': ['custom', 'comp-a', 'b-plus-c'],
         'comp-a': ['custom', 'comp-a', 'b-plus-c'],
-        'b-plus-c': ['custom', 'comp-a', 'b-plus-c']
+        'comp-b': ['series', 'comp-b'],
+        'comp-c': ['series', 'comp-c']
     }
-

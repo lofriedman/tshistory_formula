@@ -73,8 +73,18 @@ def formula_components(self, name, expanded=False):
                 self.othersources.formula_components(remote, expanded)
             )
 
-    # NOTE: we want to run formula_components against those again
-    # because some series formula components > what shows the formula expansion
+    if expanded:
+        # pass through some formula walls
+        # where expansion > formula expansion
+        subcomps = [
+            self.formula_components(cname, expanded)
+            for cname in components
+        ]
+        for comp in subcomps:
+            if not comp:
+                continue
+            for sid in comp:
+                components[sid] = comp[sid]
     return components
 
 
