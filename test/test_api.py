@@ -7,6 +7,11 @@ from tshistory.testutil import (
 )
 
 from tshistory_formula.tsio import timeseries
+from tshistory_formula.registry import (
+    func,
+    finder,
+    metadata
+)
 
 
 def test_local_formula_remote_series(mapi):
@@ -161,3 +166,62 @@ def test_formula_components(mapi):
     assert idates[0] == pd.Timestamp('2020-01-01 00:00:00+0000', tz='UTC')
     idates = mapi.insertion_dates('compo-with-remoteseries')
     assert len(idates) == 3
+
+
+def test_formula_components_wall(mapi):
+    series = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(pd.Timestamp('2020-6-1'), freq='D', periods=3)
+    )
+    mapi.update(
+        'comp-a',
+        series,
+        'Babar'
+    )
+    mapi.update(
+        'comp-b',
+        series,
+        'Celeste'
+    )
+    mapi.update(
+        'comp-c',
+        series,
+        'Arthur'
+    )
+
+    mapi.register_formula(
+        'b-plus-c',
+        '(add (series "comp-b") (series "comp-c"))'
+    )
+
+    @func('custom')
+    def custom(__interpreter__, s1name: str, s2name: str) -> pd.Series:
+        i = __interpreter__
+        s1 = i.get(i.cn, s1name)
+        s2 = i.get(i.cn, s2name)
+        return s1 + s2
+
+
+    @finder('custom')
+    def custom(cn, tsh, tree):
+        return {
+            tree[1]: tree,
+            tree[2]: tree
+        }
+
+    mapi.register_formula(
+        'wall',
+        '(custom "comp-a" "b-plus-c")'
+    )
+
+    comp = mapi.formula_components('wall')
+    assert comp == {
+        'comp-a': ['custom', 'comp-a', 'b-plus-c'],
+        'b-plus-c': ['custom', 'comp-a', 'b-plus-c']
+    }
+    comp = mapi.formula_components('wall', expanded=True)
+    assert comp == {
+        'comp-a': ['custom', 'comp-a', 'b-plus-c'],
+        'b-plus-c': ['custom', 'comp-a', 'b-plus-c']
+    }
+
