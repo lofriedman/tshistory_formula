@@ -104,6 +104,8 @@ def test_formula_components(mapi):
         'Celeste'
     )
 
+    assert mapi.formula_components('component-a') is None
+
     form = '(add (series "component-a") (series "component-b"))'
     mapi.register_formula(
         'show-components',
@@ -112,8 +114,9 @@ def test_formula_components(mapi):
 
     components = mapi.formula_components('show-components')
     parsed = lisp.parse(form)
-    assert components['component-a'] == parsed[1]
-    assert components['component-b'] == parsed[2]
+    assert components == {
+        'show-components': ['component-a', 'component-b']
+    }
 
     mapi.register_formula(
         'show-components-squared',
@@ -123,8 +126,17 @@ def test_formula_components(mapi):
         'show-components-squared',
         expanded=True
     )
-    assert 'component-a' in components
-    assert 'component-b' in components
+    assert components == {
+        'show-components-squared': [
+            {'show-components':
+             [
+                 'component-a',
+                 'component-b'
+             ]
+            },
+            'component-b'
+        ]
+    }
 
     # formula referencing a remote formula
     rtsh = timeseries('test-mapi-2')
@@ -149,17 +161,28 @@ def test_formula_components(mapi):
         'compo-with-remoteseries',
         expanded=True
     )
-    assert 'component-a' in components
-    assert 'component-b' in components
-    assert 'remote-series-compo' in components
+    assert components == {
+        'compo-with-remoteseries': [
+            {'show-components-squared': [
+                {'show-components': ['component-a',
+                                     'component-b']
+                },
+                'component-b'
+            ]},
+            {'remote-formula': ['remote-series-compo']}
+        ]
+    }
 
     # pure remote formula
     components = mapi.formula_components(
         'remote-formula',
         expanded=True
     )
-    assert 'remote-series-compo' in components
-    assert len(components) == 1
+    assert components == {
+        'remote-formula': [
+            'remote-series-compo'
+        ]
+    }
 
     idates = mapi.insertion_dates('remote-formula')
     assert len(idates) == 1
@@ -216,13 +239,16 @@ def test_formula_components_wall(mapi):
 
     comp = mapi.formula_components('wall')
     assert comp == {
-        'comp-a': ['opaque-components', 'comp-a', 'b-plus-c'],
-        'b-plus-c': ['opaque-components', 'comp-a', 'b-plus-c']
+        'wall': ['comp-a', 'b-plus-c']
     }
+
     comp = mapi.formula_components('wall', expanded=True)
     assert comp == {
-        'b-plus-c': ['opaque-components', 'comp-a', 'b-plus-c'],
-        'comp-a': ['opaque-components', 'comp-a', 'b-plus-c'],
-        'comp-b': ['series', 'comp-b'],
-        'comp-c': ['series', 'comp-c']
+        'wall': [
+            'comp-a',
+            {'b-plus-c': [
+                'comp-b',
+                'comp-c'
+            ]}
+        ]
     }

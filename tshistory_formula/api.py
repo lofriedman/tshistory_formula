@@ -39,53 +39,53 @@ def formula(self, name, expanded=False):
 
 @extend(dbtimeseries)
 def formula_components(self, name, expanded=False):
-    if expanded:
-        form = self.tsh.expanded_formula(
-            self.engine,
-            name
-        )
-    else:
-        form = self.tsh.formula(
-            self.engine,
-            name
-        )
+    form = self.formula(name)
 
     if form is None:
-        return self.othersources.formula_components(
-            name,
-            expanded=expanded
-        )
+        if not self.tsh.exists(self.engine, name):
+            return self.othersources.formula_components(
+                name,
+                expanded=expanded
+            )
+        return
 
     parsed = parse(form)
-    components = self.tsh.find_series(self.engine, parsed)
+    names = list(
+        self.tsh.find_series(self.engine, parsed)
+    )
 
     # compute expansion of the remotely defined formula
     remotes = [
-        name for name in components
+        name for name in names
         if not self.tsh.exists(self.engine, name)
+        and self.formula(name)
     ]
     if remotes:
         # remote names will be replaced with their expansion
-        for remote in remotes:
-            components.pop(remote)
-        for remote in remotes:
-            components.update(
-                self.othersources.formula_components(remote, expanded)
-            )
+        rnames = []
+        for rname in names:
+            if rname in remotes:
+                rnames.append(
+                    self.othersources.formula_components(rname, expanded)
+                )
+            else:
+                rnames.append(rname)
+        names = rnames
 
     if expanded:
         # pass through some formula walls
         # where expansion > formula expansion
-        subcomps = [
-            self.formula_components(cname, expanded)
-            for cname in components
-        ]
-        for comp in subcomps:
-            if not comp:
+        subnames = []
+        for cname in names:
+            if not isinstance(cname, str) or not self.formula(cname):
+                subnames.append(cname)
                 continue
-            for sid in comp:
-                components[sid] = comp[sid]
-    return components
+            subnames.append(
+                self.formula_components(cname, expanded)
+            )
+        names = subnames
+
+    return {name: names}
 
 
 @extend(altsources)
