@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from psyl import lisp
 from tshistory.testutil import (
@@ -252,3 +253,26 @@ def test_formula_components_wall(mapi):
             ]}
         ]
     }
+
+
+def test_autotrophic_idates(mapi):
+    @func('autotrophic')
+    def custom() -> pd.Series:
+        return pd.Series(
+            [1, 2, 3],
+            pd.date_range(utcdt(2020, 1, 1), periods=1, freq='D')
+        )
+
+    @finder('autotrophic')
+    def custom(cn, tsh, tree):
+        return {
+            'I HAVE A NAME FOR DISPLAY PURPOSES': tree
+        }
+
+    mapi.register_formula(
+        'autotrophic-idates',
+        '(autotrophic)'
+    )
+
+    with pytest.raises(TypeError):
+        idates = mapi.insertion_dates('autotrophic-idates')
