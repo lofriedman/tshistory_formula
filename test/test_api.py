@@ -274,5 +274,5 @@ def test_autotrophic_idates(mapi):
         '(autotrophic)'
     )
 
-    with pytest.raises(TypeError):
-        idates = mapi.insertion_dates('autotrophic-idates')
+    idates = mapi.insertion_dates('autotrophic-idates')
+    assert idates == []
