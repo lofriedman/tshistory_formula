@@ -243,5 +243,4 @@ def test_autotrophic_operator(mapi):
         {'name': 'my-little-constant-series', 'type': 'primary'}
     ]
 
-    # empty series
-    assert len(presenter.infos[1]['ts']) == 0
+    assert len(presenter.infos[1]['ts']) == 3

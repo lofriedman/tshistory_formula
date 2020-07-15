@@ -3,7 +3,9 @@ from math import log10
 import pandas as pd
 import dash_html_components as html
 
-from psyl.lisp import parse
+from psyl.lisp import parse, serialize
+
+from tshistory_formula.interpreter import Interpreter
 
 
 MAX_LENGTH = 15
@@ -17,23 +19,29 @@ class fancypresenter:
         formula = tsa.formula(seriesname)
         tree = parse(formula)
 
-        def get(name):
+        def get(name, expr):
             ts = tsa.get(name, **getargs)
             if ts is None:
-                return pd.Series(name=name, dtype='float64')
+                # attempt immediate expression interpretation
+                # (autotrophic operator)
+                i = Interpreter(tsa.engine, tsa.tsh, getargs)
+                ts = i.evaluate(serialize(expr))
+                if ts is None:
+                    return pd.Series(name=name, dtype='float64')
+                return ts
             return ts
 
         self.infos = [
             {
                 'name': name,
-                'ts':  get(name),
+                'ts':  get(name, expr),
                 'type': tsa.type(name)
             }
-            for name in tsa.tsh.find_series(tsa.engine, tree)
+            for name, expr in tsa.tsh.find_series(tsa.engine, tree).items()
         ]
         self.infos.insert(0, {
             'name': seriesname,
-            'ts': get(seriesname),
+            'ts': get(seriesname, tree),
             'type': 'formula'
         })
 
