@@ -164,6 +164,7 @@ class timeseries(basets):
         for meta in seriesmeta.values():
             # crappy heuristics
             meta.pop('expandable', None)
+            meta.pop('supervision_status', None)
             if meta['tzaware'] != tzaware:
                 # we were flipped
                 meta = self.default_meta(tzaware)
