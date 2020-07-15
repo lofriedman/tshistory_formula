@@ -210,3 +210,38 @@ def test_complicated_thing(mapi):
         {'name': 'groundzero-b', 'type': 'primary'},
         {'name': 'one-b', 'type': 'primary'}
     ]
+
+
+def test_autotrophic_operator(mapi):
+    @func('auto')
+    def auto() -> pd.Series:
+        return pd.Series(
+            [1, 2, 3],
+            index=pd.date_range(utcdt(2020, 1, 1), utcdt(2020, 1, 3), freq='D')
+        )
+
+    @finder('auto')
+    def auto(cn, tsh, tree):
+        return {
+            'my-little-constant-series': tree
+        }
+
+    mapi.register_formula(
+        'present-auto',
+        '(auto)'
+    )
+
+    presenter = fancypresenter(mapi, 'present-auto', {})
+    info = [
+        {
+            k: v for k, v in info.items() if k != 'ts'
+        }
+        for info in presenter.infos
+    ]
+    assert info == [
+        {'name': 'present-auto', 'type': 'formula'},
+        {'name': 'my-little-constant-series', 'type': 'primary'}
+    ]
+
+    # empty series
+    assert len(presenter.infos[1]['ts']) == 0
