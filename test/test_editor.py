@@ -14,8 +14,10 @@ from tshistory_formula.registry import (
     FUNCS,
     metadata
 )
-from tshistory_formula.editor import fancypresenter
-
+from tshistory_formula.editor import (
+    components_table,
+    fancypresenter
+)
 
 def test_editor_table_callback(mapi):
     groundzero = pd.Series(
@@ -217,7 +219,8 @@ def test_autotrophic_operator(mapi):
     def auto() -> pd.Series:
         return pd.Series(
             [1, 2, 3],
-            index=pd.date_range(utcdt(2020, 1, 1), utcdt(2020, 1, 3), freq='D')
+            index=pd.date_range(utcdt(2020, 1, 1), utcdt(2020, 1, 3), freq='D'),
+            name='my-little-constant-series'
         )
 
     @finder('auto')
@@ -244,3 +247,20 @@ def test_autotrophic_operator(mapi):
     ]
 
     assert len(presenter.infos[1]['ts']) == 3
+
+    mapi.update(
+        'too-naive',
+        pd.Series(
+            [1, 2, 3],
+            index=pd.date_range(dt(2020, 1, 1), dt(2020, 1, 3), freq='D')
+        ),
+        'Babar'
+    )
+
+    mapi.register_formula(
+        'mixed-naive-tzaware',
+        '(add (series "too-naive") (naive (auto) "CET"))'
+    )
+
+    with pytest.raises(TypeError):
+        components_table(mapi, 'mixed-naive-tzaware')
