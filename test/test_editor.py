@@ -262,5 +262,5 @@ def test_autotrophic_operator(mapi):
         '(add (series "too-naive") (naive (auto) "CET"))'
     )
 
-    with pytest.raises(TypeError):
-        components_table(mapi, 'mixed-naive-tzaware')
+    # not crashy any more
+    components_table(mapi, 'mixed-naive-tzaware')

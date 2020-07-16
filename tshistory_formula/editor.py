@@ -119,8 +119,12 @@ def components_table(tsa, id_serie,
 
     # collect base series
     df = infos[0]['ts'].to_frame()
+    tz = df.index.tz
     for info in infos[1:]:
-        df = df.join(info['ts'], how='outer')
+        ts = info['ts']
+        if ts.index.tz != tz:
+            ts.index = ts.index.tz_localize(tz)
+        df = df.join(ts, how='outer')
 
     header_css = {
         'max-width': f'{MAX_LENGTH + 3}em',
