@@ -71,7 +71,9 @@ def update_metadata(dburi, reset=False, namespace='tsh'):
     justdoit()
 
     print('TODO', todo)
-    print('FAIL', errors)
+    print('FAIL', len(errors))
+    from pprint import pprint
+    pprint(dict(errors))
 
 
 @click.command(name='migrate-0.6-to-0.7')
