@@ -56,9 +56,9 @@ def update_metadata(dburi, reset=False, namespace='tsh'):
             print(name)
 
             tree = parse(tsh.formula(engine, name))
-            smap = tsh.find_series(engine, tree)
             try:
-                meta = tsh.filter_metadata(smap)
+                tz = tsh.check_tz_compatibility(engine, tree)
+                meta = tsh.default_meta(tz)
             except ValueError as err:
                 errors.append((name, err))
                 continue
