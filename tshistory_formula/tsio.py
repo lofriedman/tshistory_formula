@@ -92,7 +92,9 @@ class timeseries(basets):
             return {}
 
         def tzlabel(status):
+            if status is None: return 'unknown'
             return 'tzaware' if status else 'tznaive'
+
         first_tzaware = next(iter(metamap.values()))
         for (name, path), tzaware in metamap.items():
             if first_tzaware != tzaware:
