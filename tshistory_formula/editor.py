@@ -122,8 +122,9 @@ def components_table(tsa, id_serie,
     tz = df.index.tz
     for info in infos[1:]:
         ts = info['ts']
-        if ts.index.tz != tz:
-            ts.index = ts.index.tz_localize(tz)
+        if len(ts):
+            if ts.index.tz != tz:
+                ts.index = ts.index.tz_localize(tz)
         df = df.join(ts, how='outer')
 
     header_css = {
