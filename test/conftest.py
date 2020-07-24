@@ -7,6 +7,7 @@ from pytest_sa_pg import db
 from click.testing import CliRunner
 
 from tshistory import cli as command, api
+from tshistory.schema import tsschema
 from tshistory_formula.schema import formula_schema
 from tshistory_formula.tsio import timeseries
 
@@ -20,6 +21,8 @@ def engine(request):
     db.setup_local_pg_cluster(request, DATADIR, port)
     uri = 'postgresql://localhost:{}/postgres'.format(port)
     e = create_engine(uri)
+    tsch = tsschema()
+    tsch.create(e)
     sch = formula_schema()
     sch.create(e)
     return e
@@ -32,7 +35,9 @@ def tsh(request, engine):
 
 @pytest.fixture(scope='session')
 def mapi(engine):
+    tsschema('test-mapi').create(engine)
     formula_schema('test-mapi').create(engine)
+    tsschema('test-mapi-2').create(engine)
     formula_schema('test-mapi-2').create(engine)
 
     return api.timeseries(
