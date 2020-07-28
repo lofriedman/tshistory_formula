@@ -1,10 +1,13 @@
-from collections import defaultdict
+from datetime import timedelta
 import json
 
 import pandas as pd
 from psyl.lisp import parse, serialize
 from tshistory.tsio import timeseries as basets
-from tshistory.util import tx
+from tshistory.util import (
+    diff,
+    tx
+)
 
 from tshistory_formula import funcs  # trigger registration
 from tshistory_formula import (
@@ -310,8 +313,6 @@ class timeseries(basets):
                 )
             return hist
 
-        assert not diffmode
-
         formula = self.formula(cn, name)
         tree = parse(formula)
         series = self.find_series(cn, tree)
@@ -323,8 +324,7 @@ class timeseries(basets):
                 from_insertion_date,
                 to_insertion_date,
                 from_value_date,
-                to_value_date,
-                diffmode
+                to_value_date
             ) or {}
             for name in series
         }
@@ -342,7 +342,6 @@ class timeseries(basets):
                     to_insertion_date,
                     from_value_date,
                     to_value_date,
-                    diffmode,
                     _tree=callsite
                 ) or {}
                 for callsite in callsites
@@ -355,15 +354,35 @@ class timeseries(basets):
             },
             histories=histmap
         )
-        idates = {
+        idates = sorted({
             idate
             for hist in histmap.values()
             for idate in hist
-        }
-        return {
+        })
+        h = {
             idate: i.evaluate(formula, idate, name)
-            for idate in sorted(idates)
+            for idate in idates
         }
+
+        if diffmode and idates:
+            iteridates = iter(idates)
+            firstidate = next(iteridates)
+            basets = self.get(
+                cn,
+                name,
+                from_value_date=from_value_date,
+                to_value_date=to_value_date,
+                revision_date=firstidate - timedelta(seconds=1)
+            )
+            newh = {}
+            for idate in idates:
+                newts = diff(basets, h[idate])
+                newh[idate] = newts
+                basets = h[idate]
+
+            h = newh
+
+        return h
 
     @tx
     def insertion_dates(self, cn, name,

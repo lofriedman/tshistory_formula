@@ -521,9 +521,45 @@ insertion_date             value_date
                            2018-01-05    44.0
 """, h)
 
-    with pytest.raises(AssertionError):
-        tsh.history(engine, 'h-priority', diffmode=True)
+    h = tsh.history(engine, 'h-priority', diffmode=True)
+    assert_hist("""
+insertion_date             value_date
+2019-01-01 00:00:00+00:00  2018-01-01     2.0
+                           2018-01-02     2.0
+                           2018-01-03    42.0
+                           2018-01-04    42.0
+                           2018-01-05    42.0
+2019-01-02 00:00:00+00:00  2018-01-01     4.0
+                           2018-01-02     4.0
+                           2018-01-03    43.0
+                           2018-01-04    43.0
+                           2018-01-05    43.0
+2019-01-03 00:00:00+00:00  2018-01-01     6.0
+                           2018-01-02     6.0
+                           2018-01-03    44.0
+                           2018-01-04    44.0
+                           2018-01-05    44.0
+""", h)
 
+
+def test_history_diffmode(engine, tsh):
+    for i in range(1, 4):
+        ts = pd.Series([i], index=[utcdt(2020, 1, i)])
+        tsh.update(engine, ts, 'hdiff', 'Babar',
+                   insertion_date=utcdt(2020, 1, i))
+
+    tsh.register_formula(
+        engine,
+        'f-hdiff',
+        '(series "hdiff")'
+    )
+    h = tsh.history(engine, 'f-hdiff', diffmode=True)
+    assert_hist("""
+insertion_date             value_date               
+2020-01-01 00:00:00+00:00  2020-01-01 00:00:00+00:00    1.0
+2020-01-02 00:00:00+00:00  2020-01-02 00:00:00+00:00    2.0
+2020-01-03 00:00:00+00:00  2020-01-03 00:00:00+00:00    3.0
+""", h)
 
 
 def test_staircase(engine, tsh):
