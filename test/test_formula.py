@@ -521,6 +521,10 @@ insertion_date             value_date
                            2018-01-05    44.0
 """, h)
 
+    with pytest.raises(AssertionError):
+        tsh.history(engine, 'h-priority', diffmode=True)
+
+
 
 def test_staircase(engine, tsh):
     tsh.register_formula(
