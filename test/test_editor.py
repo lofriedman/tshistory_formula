@@ -219,8 +219,7 @@ def test_autotrophic_operator(mapi):
     def auto() -> pd.Series:
         return pd.Series(
             [1, 2, 3],
-            index=pd.date_range(utcdt(2020, 1, 1), utcdt(2020, 1, 3), freq='D'),
-            name='my-little-constant-series'
+            index=pd.date_range(utcdt(2020, 1, 1), utcdt(2020, 1, 3), freq='D')
         )
 
     @finder('auto')
@@ -247,6 +246,7 @@ def test_autotrophic_operator(mapi):
     ]
 
     assert len(presenter.infos[1]['ts']) == 3
+    assert presenter.infos[1]['ts'].name is None
 
     mapi.update(
         'too-naive',
@@ -262,5 +262,5 @@ def test_autotrophic_operator(mapi):
         '(add (series "too-naive") (naive (auto) "CET"))'
     )
 
-    # not crashy any more
-    components_table(mapi, 'mixed-naive-tzaware')
+    with pytest.raises(ValueError):
+        components_table(mapi, 'mixed-naive-tzaware')
