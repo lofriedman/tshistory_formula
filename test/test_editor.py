@@ -148,7 +148,7 @@ def test_editor_new_operator(mapi):
     ]
     assert info == [
         {'name': 'random', 'type': 'formula'},
-        {'name': 'genrandomseries', 'type': 'primary'}
+        {'name': 'genrandomseries', 'type': 'autotrophic'}
     ]
 
     mapi.update(
@@ -243,7 +243,7 @@ def test_autotrophic_operator(mapi):
     ]
     assert info == [
         {'name': 'present-auto', 'type': 'formula'},
-        {'name': 'my-little-constant-series', 'type': 'primary'}
+        {'name': 'my-little-constant-series', 'type': 'autotrophic'}
     ]
 
     assert len(presenter.infos[1]['ts']) == 3

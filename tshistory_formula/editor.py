@@ -35,7 +35,7 @@ class fancypresenter:
             {
                 'name': name,
                 'ts':  get(name, expr),
-                'type': tsa.type(name)
+                'type': tsa.type(name) or 'autotrophic'
             }
             for name, expr in tsa.tsh.find_series(tsa.engine, tree).items()
         ]
