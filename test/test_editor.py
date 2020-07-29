@@ -246,7 +246,7 @@ def test_autotrophic_operator(mapi):
     ]
 
     assert len(presenter.infos[1]['ts']) == 3
-    assert presenter.infos[1]['ts'].name is None
+    assert presenter.infos[1]['ts'].name == 'my-little-constant-series'
 
     mapi.update(
         'too-naive',
@@ -262,5 +262,5 @@ def test_autotrophic_operator(mapi):
         '(add (series "too-naive") (naive (auto) "CET"))'
     )
 
-    with pytest.raises(ValueError):
-        components_table(mapi, 'mixed-naive-tzaware')
+    # not crash any more :)
+    components_table(mapi, 'mixed-naive-tzaware')

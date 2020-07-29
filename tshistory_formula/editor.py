@@ -28,6 +28,7 @@ class fancypresenter:
                 ts = i.evaluate(serialize(expr))
                 if ts is None:
                     return pd.Series(name=name, dtype='float64')
+                ts.name = name
                 return ts
             return ts
 
