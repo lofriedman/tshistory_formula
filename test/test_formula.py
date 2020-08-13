@@ -1086,3 +1086,72 @@ def test_expanded(engine, tsh):
         '(series "exp-b") '
         '(priority (series "exp-a") (series "exp-b")))'
     )
+
+
+def test_history_nr(engine, tsh):
+    ts1 = pd.Series(
+        [1.0] * 24,
+        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
+    )
+
+    tsh.update(
+        engine,
+        ts1,
+        'hist-nr-1',
+        'Babar',
+        insertion_date=utcdt(2020, 1, 1)
+    )
+    tsh.update(
+        engine,
+        ts1 + 1,
+        'hist-nr-2',
+        'Babar',
+        insertion_date=utcdt(2020, 1, 1, 1)
+    )
+
+    ts2 = pd.Series(
+        [10] * 24,
+        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
+    )
+
+    tsh.update(
+        engine,
+        ts2,
+        'hist-nr-1',
+        'Babar',
+        insertion_date=utcdt(2020, 1, 2)
+    )
+    tsh.update(
+        engine,
+        ts2 + 1,
+        'hist-nr-2',
+        'Babar',
+        insertion_date=utcdt(2020, 1, 2, 1)
+    )
+
+    tsh.register_formula(
+        engine,
+        'hist-nr-form',
+        '(row-mean (resample (naive (series "hist-nr-1") "CET") "D") '
+        '          (resample (naive (series "hist-nr-2") "CET") "D")) '
+    )
+
+    top = tsh.get(engine, 'hist-nr-form')
+    assert_df("""
+2020-01-01    10.5
+2020-01-02    10.5
+""", top)
+
+
+    hist = tsh.history(engine, 'hist-nr-form')
+    assert_hist("""
+insertion_date             value_date
+2020-01-01 00:00:00+00:00  2020-01-01     1.0
+                           2020-01-02     1.0
+2020-01-01 01:00:00+00:00  2020-01-01     1.5
+                           2020-01-02     1.5
+2020-01-02 00:00:00+00:00  2020-01-01     6.0
+                           2020-01-02     6.0
+2020-01-02 01:00:00+00:00  2020-01-01    10.5
+                           2020-01-02    10.5
+""", hist)
