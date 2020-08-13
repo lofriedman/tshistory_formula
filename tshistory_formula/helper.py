@@ -81,6 +81,53 @@ def constant_fold(tree):
     return newtree
 
 
+# signature building
+
+def _name_from_signature_and_args(name, func, a, kw):
+    sig = inspect.signature(func)
+    out = [name]
+    for idx, (pname, param) in enumerate(sig.parameters.items()):
+        if pname == '__interpreter__':
+            continue
+        if param.default is inspect._empty:
+            # almost pure positional
+            out.append(f'{pname}={a[idx]}')
+            continue
+        try:
+            # let's check out if fed as positional
+            val = a[idx]
+            out.append(f'{pname}={val}')
+            continue
+        except:
+            # we're in keyword land
+            if pname in kw:
+                val = kw[pname]
+            else:
+                val = param.default
+            out.append(f'{pname}={val}')
+    return '-'.join(out)
+
+
+def _extract_from_expr(expr):
+    from tshistory_formula.interpreter import NullIntepreter
+
+    fname = str(expr[0])
+    func = FUNCS[fname]
+    args = [NullIntepreter()]
+    kwargs = {}
+    kw = None
+    for a in expr[1:]:
+        if isinstance(a, Keyword):
+            kw = a
+            continue
+        if kw:
+            kwargs[str(kw)] = a
+            kw = None
+            continue
+        args.append(a)
+    return fname, func, args, kwargs
+
+
 # typing
 
 def assert_typed(func):

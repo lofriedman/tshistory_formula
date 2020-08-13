@@ -184,3 +184,9 @@ class FastStaircaseInterpreter(Interpreter):
             self.cn, name, **getargs,
             __interpreter__=self
         )
+
+
+class NullIntepreter(Interpreter):
+
+    def __init__(self):
+        pass

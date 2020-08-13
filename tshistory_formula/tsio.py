@@ -344,7 +344,8 @@ class timeseries(basets):
                     to_value_date,
                     _tree=callsite
                 ) or {}
-                cname = f'{callsite[0]}'
+                fname, func, args, kwargs = helper._extract_from_expr(callsite)
+                cname = helper._name_from_signature_and_args(fname, func, args, kwargs)
                 histmap.update({
                     cname: chist
                 })

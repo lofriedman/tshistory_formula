@@ -1,4 +1,5 @@
 from warnings import warn
+import inspect
 
 from decorator import decorate
 import pandas as pd
@@ -10,18 +11,43 @@ METAS = {}
 FINDERS = {}
 
 
+def _ensure_options(obj):
+    if isinstance(obj, pd.Series):
+        if not getattr(obj, 'options', None):
+            obj.options = {}
+    return obj
+
+
 def func(name):
     # work around the circular import
-    from tshistory_formula.helper import assert_typed
+    from tshistory_formula.helper import (
+        assert_typed,
+        _name_from_signature_and_args
+    )
+    from tshistory_formula.interpreter import Interpreter
 
     def decorator(func):
         assert_typed(func)
+
         def _ensure_series_options(func, *a, **kw):
+            if name in HISTORY:
+                # Autotrophic operator with an history:
+                # we redirect from a get call without even evaluating the func
+                # because we already have the histories ...
+                # (the .histories predicate below indicates we got through
+                # the @history protocol just before)
+                # To return the right historical pieces we forge a name
+                # made from func signature and actual args.
+                if a and isinstance(a[0], Interpreter) and a[0].histories:
+                    hname = _name_from_signature_and_args(name, func, a, kw)
+                    return _ensure_options(
+                        a[0].history_item(hname)
+                    )
+
             res = func(*a, **kw)
-            if isinstance(res, pd.Series):
-                if not getattr(res, 'options', None):
-                    res.options = {}
-            return res
+            return _ensure_options(
+                res
+            )
 
         dec = decorate(func, _ensure_series_options)
 

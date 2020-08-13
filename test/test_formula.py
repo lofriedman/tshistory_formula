@@ -3,6 +3,7 @@ from datetime import datetime as dt, timedelta
 import pandas as pd
 import numpy as np
 import pytest
+from decorator import decorate
 
 from psyl import lisp
 from tshistory.testutil import (
@@ -20,7 +21,8 @@ from tshistory_formula.registry import (
     metadata
 )
 from tshistory_formula.helper import (
-    constant_fold
+    constant_fold,
+    _name_from_signature_and_args,
 )
 from tshistory_formula.interpreter import OperatorHistory
 
@@ -946,9 +948,6 @@ def test_custom_metadata(engine, tsh):
 def test_custom_history(engine, tsh):
     @func('made-up-series')
     def madeup(__interpreter__, base: int, coeff: float=1.) -> pd.Series:
-        if __interpreter__.histories:
-            return __interpreter__.history_item('made-up-series')
-
         return pd.Series(
             np.array([base, base + 1, base + 2]) * coeff,
             index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
@@ -1023,15 +1022,15 @@ insertion_date             value_date
     hist = tsh.history(engine, 'made-up-composite')
     assert_hist("""
 insertion_date             value_date
-2020-01-01 00:00:00+00:00  2019-01-01     6.0
-                           2019-01-02     7.0
-                           2019-01-03     8.0
-2020-01-02 00:00:00+00:00  2019-01-02     7.0
-                           2019-01-03     8.0
-                           2019-01-04     9.0
-2020-01-03 00:00:00+00:00  2019-01-03     8.0
-                           2019-01-04     9.0
-                           2019-01-05    10.0
+2020-01-01 00:00:00+00:00  2019-01-01     8.5
+                           2019-01-02    11.0
+                           2019-01-03    13.5
+2020-01-02 00:00:00+00:00  2019-01-02    11.0
+                           2019-01-03    13.5
+                           2019-01-04    16.0
+2020-01-03 00:00:00+00:00  2019-01-03    13.5
+                           2019-01-04    16.0
+                           2019-01-05    18.5
 """, hist)
 
 
@@ -1174,9 +1173,6 @@ def test_history_autotrophic_nr(engine, tsh):
 
     @func('hist-nr2-1')
     def histnr21(__interpreter__) -> pd.Series:
-        if __interpreter__.histories:
-            return __interpreter__.history_item('hist-nr2-1')
-
         return ts2
 
     @metadata('hist-nr2-1')
@@ -1200,9 +1196,6 @@ def test_history_autotrophic_nr(engine, tsh):
 
     @func('hist-nr2-2')
     def histnr22(__interpreter__) -> pd.Series:
-        if __interpreter__.histories:
-            return __interpreter__.history_item('hist-nr2-2')
-
         return ts2 + 1
 
     @metadata('hist-nr2-2')
@@ -1251,6 +1244,27 @@ insertion_date             value_date
 """, hist)
 
 
+def test_forged_names():
+
+    def func(name):
+        def decorator(func):
+            def wrapper(func, *a, **kw):
+                fname = _name_from_signature_and_args(name, func, a, kw)
+                return fname
+            dec = decorate(func, wrapper)
+            return dec
+        return decorator
+
+    @func('foo')
+    def foo(a, b=42):
+        return a + b
+
+    assert foo(1) == 'foo-a=1-b=42'
+    assert foo(1, 43) == 'foo-a=1-b=43'
+    assert foo(a=1) == 'foo-a=1-b=42'
+    assert foo(b=43, a=1) == 'foo-a=1-b=43'
+
+
 def test_history_auto_name_issue(engine, tsh):
     # reset this to be sure it contains our _very late_ new operators definitions
     OperatorHistory.FUNCS = None
@@ -1260,11 +1274,8 @@ def test_history_auto_name_issue(engine, tsh):
     )
 
     @func('hist-auto-name')
-    def histautoname(__interpreter__, a:int=0) -> pd.Series:
-        if __interpreter__.histories:
-            return __interpreter__.history_item('hist-auto-name')
-
-        return (ts + a) * 2
+    def histautoname(__interpreter__, a:int, b:int=0) -> pd.Series:
+        return (ts + a + b) * 2
 
     @metadata('hist-auto-name')
     def histautoname_metadata(_cn, _tsh, tree):
@@ -1287,26 +1298,25 @@ def test_history_auto_name_issue(engine, tsh):
 
     tsh.register_formula(
         engine,
-        'bad-auto-history',
-        '(add (hist-auto-name) '
+        'good-auto-history',
+        '(add (hist-auto-name 0) '
         '     (hist-auto-name 1))'
     )
 
-    top = tsh.get(engine, 'bad-auto-history')
+    top = tsh.get(engine, 'good-auto-history')
     assert_df("""
 2020-01-01 00:00:00+00:00     6.0
 2020-01-02 00:00:00+00:00    10.0
 2020-01-03 00:00:00+00:00    14.0
 """, top)
 
-    hist = tsh.history(engine, 'bad-auto-history')
-    # we're missing half the data !
+    hist = tsh.history(engine, 'good-auto-history')
     assert_hist("""
 insertion_date             value_date               
-2020-01-01 00:00:00+00:00  2020-01-01 00:00:00+00:00     4.0
-                           2020-01-02 00:00:00+00:00     6.0
-                           2020-01-03 00:00:00+00:00     8.0
-2020-01-02 00:00:00+00:00  2020-01-01 00:00:00+00:00     8.0
-                           2020-01-02 00:00:00+00:00    12.0
-                           2020-01-03 00:00:00+00:00    16.0
+2020-01-01 00:00:00+00:00  2020-01-01 00:00:00+00:00     3.0
+                           2020-01-02 00:00:00+00:00     5.0
+                           2020-01-03 00:00:00+00:00     7.0
+2020-01-02 00:00:00+00:00  2020-01-01 00:00:00+00:00     6.0
+                           2020-01-02 00:00:00+00:00    10.0
+                           2020-01-03 00:00:00+00:00    14.0
 """, hist)
