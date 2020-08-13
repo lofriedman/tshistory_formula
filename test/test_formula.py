@@ -947,7 +947,7 @@ def test_custom_history(engine, tsh):
     @func('made-up-series')
     def madeup(__interpreter__, base: int, coeff: float=1.) -> pd.Series:
         if __interpreter__.histories:
-            return __interpreter__.history_item
+            return __interpreter__.history_item('made-up-series')
 
         return pd.Series(
             np.array([base, base + 1, base + 2]) * coeff,
@@ -1175,7 +1175,7 @@ def test_history_autotrophic_nr(engine, tsh):
     @func('hist-nr2-1')
     def histnr21(__interpreter__) -> pd.Series:
         if __interpreter__.histories:
-            return __interpreter__.history_item
+            return __interpreter__.history_item('hist-nr2-1')
 
         return ts2
 
@@ -1201,7 +1201,7 @@ def test_history_autotrophic_nr(engine, tsh):
     @func('hist-nr2-2')
     def histnr22(__interpreter__) -> pd.Series:
         if __interpreter__.histories:
-            return __interpreter__.history_item
+            return __interpreter__.history_item('hist-nr2-2')
 
         return ts2 + 1
 
@@ -1237,12 +1237,15 @@ def test_history_autotrophic_nr(engine, tsh):
 2020-01-02    10.5
 """, top)
 
-
     hist = tsh.history(engine, 'hist-nr-form2')
     assert_hist("""
 insertion_date             value_date
-2020-01-01 01:00:00+00:00  2020-01-01     2.0
-                           2020-01-02     2.0
-2020-01-02 01:00:00+00:00  2020-01-01    11.0
-                           2020-01-02    11.0
+2020-01-01 00:00:00+00:00  2020-01-01     1.0
+                           2020-01-02     1.0
+2020-01-01 01:00:00+00:00  2020-01-01     1.5
+                           2020-01-02     1.5
+2020-01-02 00:00:00+00:00  2020-01-01     6.0
+                           2020-01-02     6.0
+2020-01-02 01:00:00+00:00  2020-01-01    10.5
+                           2020-01-02    10.5
 """, hist)

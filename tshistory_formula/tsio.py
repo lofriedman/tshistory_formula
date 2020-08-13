@@ -334,8 +334,8 @@ class timeseries(basets):
 
         if callsites:
             # autotrophic history
-            histmap.update({
-                name: self.history(
+            for idx, callsite in enumerate(callsites):
+                chist = self.history(
                     cn,
                     None, # just mark that we won't work "by name" there
                     from_insertion_date,
@@ -344,8 +344,10 @@ class timeseries(basets):
                     to_value_date,
                     _tree=callsite
                 ) or {}
-                for callsite in callsites
-            })
+                cname = f'{callsite[0]}'
+                histmap.update({
+                    cname: chist
+                })
 
         i = interpreter.HistoryInterpreter(
             cn, self, {

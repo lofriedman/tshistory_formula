@@ -126,14 +126,12 @@ class HistoryInterpreter(Interpreter):
         assert self.histories
         return self._find_by_nearest_idate(name, idate)
 
-    @property
-    def history_item(self):
+    def history_item(self, name):
         """ helper for autotrophic series that have pre built their
         history and are asked for one element
         (necessary since they bypass the above .get)
         """
         idate = self.env.get('__idate__')
-        name = self.env.get('__name__')
         assert idate and name
         return self._find_by_nearest_idate(name, idate)
 
