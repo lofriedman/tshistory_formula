@@ -15,12 +15,14 @@ from tshistory_formula.registry import (
     func,
     FUNCS,
     finder,
+    HISTORY,
     history,
     metadata
 )
 from tshistory_formula.helper import (
     constant_fold
 )
+from tshistory_formula.interpreter import OperatorHistory
 
 
 def test_evaluator():
@@ -1154,4 +1156,93 @@ insertion_date             value_date
                            2020-01-02     6.0
 2020-01-02 01:00:00+00:00  2020-01-01    10.5
                            2020-01-02    10.5
+""", hist)
+
+
+def test_history_autotrophic_nr(engine, tsh):
+    # reset this to be sure it contains our _very late_ new operators definitions
+    OperatorHistory.FUNCS = None
+
+    ts1 = pd.Series(
+        [1.0] * 24,
+        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
+    )
+    ts2 = pd.Series(
+        [10] * 24,
+        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
+    )
+
+    @func('hist-nr2-1')
+    def histnr21(__interpreter__) -> pd.Series:
+        if __interpreter__.histories:
+            return __interpreter__.history_item
+
+        return ts2
+
+    @metadata('hist-nr2-1')
+    def histnr21_metadata(_cn, _tsh, tree):
+        return {
+            tree[0]: {
+                'tzaware': True,
+                'index_type': 'datetime64[ns, UTC]',
+                'value_type': 'float64',
+                'index_dtype': '|M8[ns]',
+                'value_dtype': '<f8'
+            }
+        }
+
+    @history('hist-nr2-1')
+    def histnr21history(__interpreter__):
+        return {
+            utcdt(2020, 1, 1): ts1,
+            utcdt(2020, 1, 2): ts2
+        }
+
+    @func('hist-nr2-2')
+    def histnr22(__interpreter__) -> pd.Series:
+        if __interpreter__.histories:
+            return __interpreter__.history_item
+
+        return ts2 + 1
+
+    @metadata('hist-nr2-2')
+    def histnr22_metadata(_cn, _tsh, tree):
+        return {
+            tree[0]: {
+                'tzaware': True,
+                'index_type': 'datetime64[ns, UTC]',
+                'value_type': 'float64',
+                'index_dtype': '|M8[ns]',
+                'value_dtype': '<f8'
+            }
+        }
+
+    @history('hist-nr2-2')
+    def histnr22history(__interpreter__):
+        return {
+            utcdt(2020, 1, 1, 1): ts1 + 1,
+            utcdt(2020, 1, 2, 1): ts2 + 1
+        }
+
+    tsh.register_formula(
+        engine,
+        'hist-nr-form2',
+        '(row-mean (resample (naive (hist-nr2-1) "CET") "D") '
+        '          (resample (naive (hist-nr2-2) "CET") "D"))'
+    )
+
+    top = tsh.get(engine, 'hist-nr-form2')
+    assert_df("""
+2020-01-01    10.5
+2020-01-02    10.5
+""", top)
+
+
+    hist = tsh.history(engine, 'hist-nr-form2')
+    assert_hist("""
+insertion_date             value_date
+2020-01-01 01:00:00+00:00  2020-01-01     2.0
+                           2020-01-02     2.0
+2020-01-02 01:00:00+00:00  2020-01-01    11.0
+                           2020-01-02    11.0
 """, hist)
