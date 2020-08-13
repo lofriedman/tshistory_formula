@@ -1249,3 +1249,64 @@ insertion_date             value_date
 2020-01-02 01:00:00+00:00  2020-01-01    10.5
                            2020-01-02    10.5
 """, hist)
+
+
+def test_history_auto_name_issue(engine, tsh):
+    # reset this to be sure it contains our _very late_ new operators definitions
+    OperatorHistory.FUNCS = None
+    ts = pd.Series(
+        [1.0, 2.0, 3.0],
+        index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
+    )
+
+    @func('hist-auto-name')
+    def histautoname(__interpreter__, a:int=0) -> pd.Series:
+        if __interpreter__.histories:
+            return __interpreter__.history_item('hist-auto-name')
+
+        return (ts + a) * 2
+
+    @metadata('hist-auto-name')
+    def histautoname_metadata(_cn, _tsh, tree):
+        return {
+            tree[0]: {
+                'tzaware': True,
+                'index_type': 'datetime64[ns, UTC]',
+                'value_type': 'float64',
+                'index_dtype': '|M8[ns]',
+                'value_dtype': '<f8'
+            }
+        }
+
+    @history('hist-auto-name')
+    def histautoname_history(__interpreter__, a:int=0):
+        return {
+            utcdt(2020, 1, 1): ts + a,
+            utcdt(2020, 1, 2): (ts + a) * 2
+        }
+
+    tsh.register_formula(
+        engine,
+        'bad-auto-history',
+        '(add (hist-auto-name) '
+        '     (hist-auto-name 1))'
+    )
+
+    top = tsh.get(engine, 'bad-auto-history')
+    assert_df("""
+2020-01-01 00:00:00+00:00     6.0
+2020-01-02 00:00:00+00:00    10.0
+2020-01-03 00:00:00+00:00    14.0
+""", top)
+
+    hist = tsh.history(engine, 'bad-auto-history')
+    # we're missing half the data !
+    assert_hist("""
+insertion_date             value_date               
+2020-01-01 00:00:00+00:00  2020-01-01 00:00:00+00:00     4.0
+                           2020-01-02 00:00:00+00:00     6.0
+                           2020-01-03 00:00:00+00:00     8.0
+2020-01-02 00:00:00+00:00  2020-01-01 00:00:00+00:00     8.0
+                           2020-01-02 00:00:00+00:00    12.0
+                           2020-01-03 00:00:00+00:00    16.0
+""", hist)
