@@ -114,7 +114,7 @@ class HistoryInterpreter(Interpreter):
             if idate >= compdate:
                 return hist[date]
 
-        ts = pd.Series(name=name)
+        ts = pd.Series(name=name, dtype='float64')
         return ts
 
     def get(self, name, _getargs):
