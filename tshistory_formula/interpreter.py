@@ -1,6 +1,4 @@
 import json
-import re
-import typing
 import inspect
 from functools import partial
 
@@ -17,18 +15,6 @@ from tshistory_formula import (
     helper,
     registry
 )
-
-
-class fjson(json.JSONEncoder):
-
-    def default(self, o):
-        try:
-            return super().default(o)
-        except TypeError:
-            typename = extract_type_name(o)
-            if 'Union' in typename:
-                typename = normalize_union_types(o)
-            return typename
 
 
 def functypes():
