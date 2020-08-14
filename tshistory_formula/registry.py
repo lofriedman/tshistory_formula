@@ -28,6 +28,7 @@ def func(name):
 
     def decorator(func):
         assert_typed(func)
+        names = {}
 
         def _ensure_series_options(func, *a, **kw):
             if name in HISTORY:
@@ -39,7 +40,11 @@ def func(name):
                 # To return the right historical pieces we forge a name
                 # made from func signature and actual args.
                 if a and isinstance(a[0], Interpreter) and a[0].histories:
-                    hname = _name_from_signature_and_args(name, func, a, kw)
+                    key = (name, a, tuple(kw.items()))
+                    hname = names.get(key)
+                    if hname is None:
+                        hname = _name_from_signature_and_args(name, func, a, kw)
+                        names[key] = hname
                     return _ensure_options(
                         a[0].history_item(hname)
                     )
