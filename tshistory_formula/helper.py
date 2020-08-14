@@ -12,8 +12,7 @@ from psyl.lisp import (
     expreval,
     Keyword,
     parse,
-    serialize,
-    Symbol
+    serialize
 )
 
 from tshistory_formula.registry import (
@@ -308,7 +307,7 @@ def narrow_arg(typespec, arg):
 def most_specific_num_type(t1, t2):
     if float in (t1, t2):
         return float
-    elif int in (t1, t2):
+    if int in (t1, t2):
         return int
     return Number
 
@@ -323,7 +322,7 @@ def narrow_types(op, typespec, argstypes):
         if argstypes[1] != pd.Series:
             return most_specific_num_type(*argstypes[:2])
         return pd.Series
-    elif strop == '/':
+    if strop == '/':
         if argstypes[0] != pd.Series:
             return most_specific_num_type(*argstypes[:2])
         return pd.Series
