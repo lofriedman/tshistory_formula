@@ -1357,7 +1357,7 @@ def test_history_auto_name_subexpr(engine, tsh):
         engine,
         'auto-history-sub',
         '(add (hist-auto-subexpr (date "2020-1-1")) '
-        '     (hist-auto-subexpr (date "2020-1-2")))'
+        '     (hist-auto-subexpr #:date (date "2020-1-2")))'
     )
 
     top = tsh.get(engine, 'auto-history-sub')

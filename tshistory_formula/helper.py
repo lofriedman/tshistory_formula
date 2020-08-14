@@ -92,20 +92,22 @@ def _name_from_signature_and_args(name, func, a, kw):
             continue
         if param.default is inspect._empty:
             # almost pure positional
-            out.append(f'{pname}={a[idx]}')
-            continue
+            if idx < len(a):
+                out.append(f'{pname}={a[idx]}')
+                continue
         try:
             # let's check out if fed as positional
             val = a[idx]
             out.append(f'{pname}={val}')
             continue
         except:
-            # we're in keyword land
-            if pname in kw:
-                val = kw[pname]
-            else:
-                val = param.default
-            out.append(f'{pname}={val}')
+            pass
+        # we're in keyword land
+        if pname in kw:
+            val = kw[pname]
+        else:
+            val = param.default
+        out.append(f'{pname}={val}')
     return '-'.join(out)
 
 
