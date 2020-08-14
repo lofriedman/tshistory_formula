@@ -329,6 +329,14 @@ class timeseries(basets):
             for name in series
         }
 
+        i = interpreter.HistoryInterpreter(
+            cn, self, {
+                'from_value_date': from_value_date,
+                'to_value_date': to_value_date
+            },
+            histories=histmap
+        )
+
         # prepare work for autotrophic operator history
         callsites = self._custom_history_sites(cn, tree)
 
@@ -344,19 +352,12 @@ class timeseries(basets):
                     to_value_date,
                     _tree=callsite
                 ) or {}
-                fname, func, args, kwargs = helper._extract_from_expr(callsite)
+                fname, func, args, kwargs = helper._extract_from_expr(callsite, i.env)
                 cname = helper._name_from_signature_and_args(fname, func, args, kwargs)
-                histmap.update({
+                i.histories.update({
                     cname: chist
                 })
 
-        i = interpreter.HistoryInterpreter(
-            cn, self, {
-                'from_value_date': from_value_date,
-                'to_value_date': to_value_date
-            },
-            histories=histmap
-        )
         idates = sorted({
             idate
             for hist in histmap.values()

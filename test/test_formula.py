@@ -1320,3 +1320,60 @@ insertion_date             value_date
                            2020-01-02 00:00:00+00:00    10.0
                            2020-01-03 00:00:00+00:00    14.0
 """, hist)
+
+
+def test_history_auto_name_subexpr(engine, tsh):
+    # reset this to be sure it contains our _very late_ new operators definitions
+    OperatorHistory.FUNCS = None
+    ts = pd.Series(
+        [1.0, 2.0, 3.0],
+        index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
+    )
+
+    @func('hist-auto-subexpr')
+    def histautoname(__interpreter__, date: pd.Timestamp) -> pd.Series:
+        return ts
+
+    @metadata('hist-auto-subexpr')
+    def histautoname_metadata(_cn, _tsh, tree):
+        return {
+            tree[0]: {
+                'tzaware': True,
+                'index_type': 'datetime64[ns, UTC]',
+                'value_type': 'float64',
+                'index_dtype': '|M8[ns]',
+                'value_dtype': '<f8'
+            }
+        }
+
+    @history('hist-auto-subexpr')
+    def histautoname_history(__interpreter__, date: pd.Timestamp):
+        return {
+            utcdt(2020, 1, 1): ts,
+            utcdt(2020, 1, 2): ts + 1
+        }
+
+    tsh.register_formula(
+        engine,
+        'auto-history-sub',
+        '(add (hist-auto-subexpr (date "2020-1-1")) '
+        '     (hist-auto-subexpr (date "2020-1-2")))'
+    )
+
+    top = tsh.get(engine, 'auto-history-sub')
+    assert_df("""
+2020-01-01 00:00:00+00:00    2.0
+2020-01-02 00:00:00+00:00    4.0
+2020-01-03 00:00:00+00:00    6.0
+""", top)
+
+    hist = tsh.history(engine, 'auto-history-sub')
+    assert_hist("""
+insertion_date             value_date               
+2020-01-01 00:00:00+00:00  2020-01-01 00:00:00+00:00    2.0
+                           2020-01-02 00:00:00+00:00    4.0
+                           2020-01-03 00:00:00+00:00    6.0
+2020-01-02 00:00:00+00:00  2020-01-01 00:00:00+00:00    4.0
+                           2020-01-02 00:00:00+00:00    6.0
+                           2020-01-03 00:00:00+00:00    8.0
+""", hist)

@@ -252,11 +252,10 @@ def _group_series(*serieslist):
     opts = {}
 
     # join everything
-    for ts in serieslist:
+    for idx, ts in enumerate(serieslist):
         if not len(ts):
             continue
-        while ts.name in opts:
-            ts.name = f'{id(ts)}'  # do something unique
+        ts.name = f'{idx}'  # do something unique
         fillopt = (
             ts.options['fill']
             if ts.options.get('fill') is not None

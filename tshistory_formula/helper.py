@@ -9,6 +9,7 @@ import pandas as pd
 from psyl.lisp import (
     Env,
     evaluate,
+    expreval,
     Keyword,
     parse,
     serialize,
@@ -108,7 +109,7 @@ def _name_from_signature_and_args(name, func, a, kw):
     return '-'.join(out)
 
 
-def _extract_from_expr(expr):
+def _extract_from_expr(expr, env):
     from tshistory_formula.interpreter import NullIntepreter
 
     fname = str(expr[0])
@@ -120,6 +121,9 @@ def _extract_from_expr(expr):
         if isinstance(a, Keyword):
             kw = a
             continue
+        if isinstance(a, list):
+            # a subepression ! let's evaluate it ...
+            a = expreval(a, env=env)
         if kw:
             kwargs[str(kw)] = a
             kw = None
