@@ -20,10 +20,7 @@ def _ensure_options(obj):
 
 def func(name):
     # work around the circular import
-    from tshistory_formula.helper import (
-        assert_typed,
-        _name_from_signature_and_args
-    )
+    from tshistory_formula.helper import assert_typed
     from tshistory_formula.interpreter import Interpreter
 
     def decorator(func):
@@ -37,16 +34,11 @@ def func(name):
                 # because we already have the histories ...
                 # (the .histories predicate below indicates we got through
                 # the @history protocol just before)
-                # To return the right historical pieces we forge a name
+                # To return the right historical pieces we will forge a name
                 # made from func signature and actual args.
                 if a and isinstance(a[0], Interpreter) and a[0].histories:
-                    key = (name, a, tuple(kw.items()))
-                    hname = names.get(key)
-                    if hname is None:
-                        hname = _name_from_signature_and_args(name, func, a, kw)
-                        names[key] = hname
                     return _ensure_options(
-                        a[0].history_item(hname)
+                        a[0].history_item(name, func, a, kw)
                     )
 
             res = func(*a, **kw)

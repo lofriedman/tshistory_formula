@@ -98,11 +98,12 @@ class OperatorHistory(Interpreter):
 
 
 class HistoryInterpreter(Interpreter):
-    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'histories')
+    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'histories', 'namecache')
 
     def __init__(self, *args, histories):
         super().__init__(*args)
         self.histories = histories
+        self.namecache = {}
 
     def _find_by_nearest_idate(self, name, idate):
         hist = self.histories[name]
@@ -126,14 +127,19 @@ class HistoryInterpreter(Interpreter):
         assert self.histories
         return self._find_by_nearest_idate(name, idate)
 
-    def history_item(self, name):
+    def history_item(self, name, func, args, kw):
         """ helper for autotrophic series that have pre built their
         history and are asked for one element
         (necessary since they bypass the above .get)
         """
+        key = (name, args, tuple(kw.items()))
+        hname = self.namecache.get(key)
+        if hname is None:
+            hname = helper._name_from_signature_and_args(name, func, args, kw)
+            self.namecache[key] = hname
         idate = self.env.get('__idate__')
-        assert idate and name
-        return self._find_by_nearest_idate(name, idate)
+        assert idate
+        return self._find_by_nearest_idate(hname, idate)
 
     def evaluate(self, text, idate, name):
         self.env['__idate__'] = idate
