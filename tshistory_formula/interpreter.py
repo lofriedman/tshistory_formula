@@ -29,7 +29,7 @@ def jsontypes():
 
 
 class Interpreter:
-    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'histories')
+    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'histories', 'vcache')
     FUNCS = None
 
     @property
@@ -52,6 +52,7 @@ class Interpreter:
         funcs['#f'] = False
         self.env = Env(funcs)
         self.histories = {}
+        self.vcache = {}
 
     def get(self, name, getargs):
         # `getarg` likey comes from self.getargs
@@ -84,7 +85,7 @@ class OperatorHistory(Interpreter):
 
 
 class HistoryInterpreter(Interpreter):
-    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'histories', 'namecache')
+    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'histories', 'namecache', 'vcache')
 
     def __init__(self, *args, histories):
         super().__init__(*args)

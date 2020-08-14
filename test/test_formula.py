@@ -1356,7 +1356,7 @@ def test_history_auto_name_subexpr(engine, tsh):
     tsh.register_formula(
         engine,
         'auto-history-sub',
-        '(add (hist-auto-subexpr (date "2020-1-1")) '
+        '(add (hist-auto-subexpr (today)) '
         '     (hist-auto-subexpr #:date (date "2020-1-2")))'
     )
 

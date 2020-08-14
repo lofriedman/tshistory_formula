@@ -147,7 +147,8 @@ def timedelta_eval(date: pd.Timestamp,
 
 
 @func('today')
-def today(naive: Optional[bool]=False,
+def today(__interpreter__,
+          naive: Optional[bool]=False,
           tz: Optional[str]=None) -> pd.Timestamp:
     """
     Produces a timezone-aware timestamp as of today
@@ -158,13 +159,24 @@ def today(naive: Optional[bool]=False,
 
     Example: `(today)`
     """
+    key = ('today', naive, tz)
+    val = __interpreter__.vcache.get(key)
+    if val is not None:
+        return val
+
+    if naive:
+        assert tz is None, f'date cannot be naive and have a tz'
+        val = pd.Timestamp(datetime.today())
+        __interpreter__.vcache[key] = val
+        return val
+
     if tz:
-        assert not naive, f'date cannot be naive and have a tz'
         pytz.timezone(tz)
         tz = pytz.timezone(tz)
-    if naive:
-        return pd.Timestamp(datetime.today())
-    return pd.Timestamp(datetime.today(), tz=tz or 'utc')
+
+    val = pd.Timestamp(datetime.today(), tz=tz or 'utc')
+    __interpreter__.vcache[key] = val
+    return val
 
 
 @func('+')
