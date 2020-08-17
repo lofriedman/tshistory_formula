@@ -6,10 +6,10 @@ TSHISTORY FORMULA
 This [tshistory][tshistory] component provides a formula language to
 build computed series.
 
-Using `csv` definition files, one can define formula using a simple
-lisp-like syntax, using a pre-defined function library.
+Formulas are defined using a simple lisp-like syntax, using a
+pre-defined function library.
 
-Formulae are read-only series (you can't `update` or `replace`
+Formulas are read-only series (you can't `update` or `replace`
 values).
 
 They also have an history, which is built, time stamps wise, using the
