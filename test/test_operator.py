@@ -1101,3 +1101,73 @@ def test_rolling(engine, tsh):
 2020-01-14 00:00:00+00:00    11.0
 2020-01-15 00:00:00+00:00    11.0
 """, s1)
+
+
+def test_na_behaviour(engine, tsh):
+    series = pd.Series(
+        [1, 2, np.nan],
+        index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
+    )
+
+    tsh.update(
+        engine,
+        series,
+        'tsnan',
+        'Author'
+    )
+
+    # scalar operators
+    # *
+    ts = tsh.eval_formula(engine, '(* 1 (series "tsnan"))')
+    assert_df("""
+2020-01-01 00:00:00+00:00    1.0
+2020-01-02 00:00:00+00:00    2.0
+""", ts)
+
+    # +
+    ts = tsh.eval_formula(engine, '(+ 1 (series "tsnan"))')
+    assert_df("""
+2020-01-01 00:00:00+00:00    2.0
+2020-01-02 00:00:00+00:00    3.0
+""", ts)
+
+    # /
+    ts = tsh.eval_formula(engine, '(/ 1 (series "tsnan"))')
+    assert_df("""
+2020-01-01 00:00:00+00:00    1.0
+2020-01-02 00:00:00+00:00    0.5
+""", ts)
+
+    # series to series operator
+    series = pd.Series(
+        [1] * 3,
+        index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
+    )
+
+    tsh.update(
+        engine,
+        series,
+        'const',
+        'Author'
+    )
+
+    # add
+    ts = tsh.eval_formula(engine, '(add (series "tsnan") (series "const"))')
+    assert_df("""
+2020-01-01 00:00:00+00:00    2.0
+2020-01-02 00:00:00+00:00    3.0
+""", ts)
+
+    # mul
+    ts = tsh.eval_formula(engine, '(mul (series "tsnan") (series "const"))')
+    assert_df("""
+2020-01-01 00:00:00+00:00    1.0
+2020-01-02 00:00:00+00:00    2.0
+""", ts)
+
+    # div
+    ts = tsh.eval_formula(engine, '(div (series "tsnan") (series "const"))')
+    assert_df("""
+2020-01-01 00:00:00+00:00    1.0
+2020-01-02 00:00:00+00:00    2.0
+""", ts)
