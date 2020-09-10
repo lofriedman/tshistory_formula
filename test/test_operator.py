@@ -1171,3 +1171,52 @@ def test_na_behaviour(engine, tsh):
 2020-01-01 00:00:00+00:00    1.0
 2020-01-02 00:00:00+00:00    2.0
 """, ts)
+
+
+def test_out_of_bounds(engine, tsh):
+    # short series vs long series
+    series = pd.Series(
+        [1, 2],
+        index=pd.date_range(utcdt(2020, 1, 1), periods=2, freq='D')
+    )
+
+    tsh.update(
+        engine,
+        series,
+        'short',
+        'Author'
+    )
+
+    series = pd.Series(
+        [1] * 6,
+        index=pd.date_range(utcdt(2020, 1, 1), periods=6, freq='D')
+    )
+
+    tsh.update(
+        engine,
+        series,
+        'long',
+        'Author'
+    )
+
+    formula = '(add (series "short") (series "long"))'
+    # add
+    tsh.register_formula(engine, 'addition', formula)
+
+    ts = tsh.get(engine, 'addition')
+    assert_df("""
+2020-01-01 00:00:00+00:00    2.0
+2020-01-02 00:00:00+00:00    3.0
+""", ts)
+
+    ts = tsh.get(
+        engine, 'addition',
+        from_value_date=utcdt(2020, 1, 3),
+        to_value_date=utcdt(2020, 1, 4),
+    )
+    # we should obtain an empty series
+    assert_df("""
+2020-01-03 00:00:00+00:00    1.0
+2020-01-04 00:00:00+00:00    1.0
+""", ts)
+
