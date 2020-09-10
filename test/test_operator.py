@@ -1214,9 +1214,7 @@ def test_out_of_bounds(engine, tsh):
         from_value_date=utcdt(2020, 1, 3),
         to_value_date=utcdt(2020, 1, 4),
     )
-    # we should obtain an empty series
-    assert_df("""
-2020-01-03 00:00:00+00:00    1.0
-2020-01-04 00:00:00+00:00    1.0
-""", ts)
+    # one of the two series is empty on this interval
+    # => the sum returns an empty series
+    assert not len(ts)
 

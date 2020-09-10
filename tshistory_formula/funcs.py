@@ -295,7 +295,8 @@ def _group_series(*serieslist):
     # join everything
     for idx, ts in enumerate(serieslist):
         if not len(ts):
-            continue
+            return pd.DataFrame(dtype='float64')
+
         ts.name = f'{idx}'  # do something unique
         fillopt = (
             ts.options['fill']
@@ -304,9 +305,6 @@ def _group_series(*serieslist):
         )
         opts[ts.name] = fillopt
         dfs.append(ts)
-
-    if not dfs:
-        return pd.DataFrame(dtype='float64')
 
     df = pd.concat(dfs, axis=1, join='outer')
 
