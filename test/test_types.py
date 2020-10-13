@@ -123,14 +123,14 @@ def test_operators_types():
         if name in opnames
     }
     assert {
-        '*': {'a': 'Number',
-              'b': 'Union[Number, Series]',
+        '*': {'num': 'Number',
+              'num_or_series': 'Union[Number, Series]',
               'return': 'Union[Number, Series]'},
-        '+': {'a': 'Number',
-              'b': 'Union[Number, Series]',
+        '+': {'num': 'Number',
+              'num_or_series': 'Union[Number, Series]',
               'return': 'Union[Number, Series]'},
-        '/': {'a': 'Union[Number, Series]',
-              'b': 'Number',
+        '/': {'num_or_series': 'Union[Number, Series]',
+              'num': 'Number',
               'return': 'Union[Number, Series]'},
         'add': {'return': 'Series', 'serieslist': 'Series'},
         'clip': {'max': 'Default[Number=None]',

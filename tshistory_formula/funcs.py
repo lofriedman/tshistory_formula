@@ -181,19 +181,19 @@ def today(__interpreter__,
 
 @func('+')
 def scalar_add(
-        a: Number,
-        b: Union[Number, pd.Series]) -> Union[Number, pd.Series]:
+        num: Number,
+        num_or_series: Union[Number, pd.Series]) -> Union[Number, pd.Series]:
     """
     Add a constant quantity to a series.
 
     Example: `(+ 42 (series "i-feel-undervalued"))`
     """
     opts = None
-    if isinstance(b, pd.Series):
-        assert isinstance(a, (int, float))
-        opts = b.options
+    if isinstance(num_or_series, pd.Series):
+        assert isinstance(num, (int, float))
+        opts = num_or_series.options
 
-    res = a + b
+    res = num + num_or_series
     if opts is not None:
         # we did a series + scalar and want to propagate
         # the original series options
@@ -203,19 +203,19 @@ def scalar_add(
 
 @func('*')
 def scalar_prod(
-        a: Number,
-        b: Union[Number, pd.Series]) -> Union[Number, pd.Series]:
+        num: Number,
+        num_or_series: Union[Number, pd.Series]) -> Union[Number, pd.Series]:
     """
     Performs a scalar product on a series.
 
     Example: `(* -1 (series "positive-things"))`
     """
     opts = None
-    if isinstance(b, pd.Series):
-        assert isinstance(a, (int, float))
-        opts = b.options
+    if isinstance(num_or_series, pd.Series):
+        assert isinstance(num, (int, float))
+        opts = num_or_series.options
 
-    res = a * b
+    res = num * num_or_series
     if opts is not None:
         # we did a series * scalar and want to propagate
         # the original series options
@@ -225,19 +225,19 @@ def scalar_prod(
 
 @func('/')
 def scalar_div(
-        a: Union[Number, pd.Series],
-        b: Number) -> Union[Number, pd.Series]:
+        num_or_series: Union[Number, pd.Series],
+        num: Number) -> Union[Number, pd.Series]:
     """
     Perform a scalar division between numbers or a series and a scalar.
 
     Example: `(/ (series "div-me") (/ 3 2))`
     """
     opts = None
-    if isinstance(a, pd.Series):
-        assert isinstance(b, (int, float))
-        opts = a.options
+    if isinstance(num_or_series, pd.Series):
+        assert isinstance(num, (int, float))
+        opts = num_or_series.options
 
-    res = a / b
+    res = num_or_series / num
     if opts is not None:
         res.options = opts
     return res
