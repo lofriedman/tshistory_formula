@@ -203,6 +203,27 @@ def test_override_primary(engine, tsh):
     )
 
 
+def test_override_formula(engine, tsh):
+    test = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(dt(2019, 1, 1), periods=3, freq='D')
+    )
+    tsh.update(engine, test, 'a-primary', 'Babar')
+
+    tsh.register_formula(
+        engine,
+        'override-me',
+        '(* 2 (series "a-primary"))'
+    )
+
+    tsh.update(engine, test, 'override-me', 'Babar')
+    assert_df("""
+2019-01-01    2.0
+2019-01-02    4.0
+2019-01-03    6.0
+""", tsh.get(engine, 'override-me'))
+
+
 def test_normalization(engine, tsh):
     test = pd.Series(
         [1, 2, 3],
