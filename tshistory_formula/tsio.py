@@ -212,6 +212,12 @@ class timeseries(basets):
     def exists(self, cn, name):
         return super().exists(cn, name) or bool(self.formula(cn, name))
 
+    def update(self, cn, updatets, name, author, **k):
+        if self.type(cn, name) == 'formula':
+            raise ValueError(f'`{name}` is a formula, it cannot be updated')
+
+        return super().update(cn, updatets, name, author, **k)
+
     @tx
     def get(self, cn, name, **kw):
         formula = self.formula(cn, name)

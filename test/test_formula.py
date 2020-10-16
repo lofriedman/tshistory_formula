@@ -216,12 +216,8 @@ def test_override_formula(engine, tsh):
         '(* 2 (series "a-primary"))'
     )
 
-    tsh.update(engine, test, 'override-me', 'Babar')
-    assert_df("""
-2019-01-01    2.0
-2019-01-02    4.0
-2019-01-03    6.0
-""", tsh.get(engine, 'override-me'))
+    with pytest.raises(ValueError):
+        tsh.update(engine, test, 'override-me', 'Babar')
 
 
 def test_normalization(engine, tsh):
