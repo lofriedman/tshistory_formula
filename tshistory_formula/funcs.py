@@ -182,6 +182,18 @@ def today(__interpreter__,
     return val
 
 
+@func('start-of-month')
+def start_of_month(date: pd.Timestamp) -> pd.Timestamp:
+    """
+    Produces a timezone-aware timestamp equal to the first day of the
+    given date current month.
+
+    Example: `(start-of-month (date "1973-05-20 09:00"))`
+
+    """
+    return date.replace(day=1)
+
+
 @func('+')
 def scalar_add(
         num: Number,
