@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Union, Optional
+from typing import Union, Optional, Tuple
 from numbers import Number
 
 import numpy as np
@@ -569,3 +569,22 @@ def shift(series: pd.Series,
     )
 
     return series
+
+
+@func('rolling')
+def rolling(series: pd.Series,
+            window: int,
+            method: str='mean') -> pd.Series:
+    """
+    Computes a calculation `method` (mean by default) to a rolling
+    window (as described in the pandas documentation).
+
+    Example: `(rolling (series "foo") 30 #:method "median"))`
+
+    """
+    if not len(series):
+        return series
+
+    rolled = series.rolling(window)
+    df = rolled.agg((method,)).dropna()
+    return df[df.columns[0]]
