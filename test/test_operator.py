@@ -918,6 +918,12 @@ def test_start_of_month(engine, tsh):
     assert a == pd.Timestamp('1973-05-01 09:00:00+0000', tz='UTC')
 
 
+def test_end_of_month(engine, tsh):
+    i = Interpreter(engine, tsh, {})
+    a = lisp.evaluate('(end-of-month (date "1973-05-20 09:00"))', i.env)
+    assert a == pd.Timestamp('1973-05-31 09:00:00+0000', tz='UTC')
+
+
 def test_resample(engine, tsh):
     hourly = pd.Series(
         list(range(36)),

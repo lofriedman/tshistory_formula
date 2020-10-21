@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Union, Optional, Tuple
 from numbers import Number
+import calendar
 
 import numpy as np
 import pandas as pd
@@ -192,6 +193,19 @@ def start_of_month(date: pd.Timestamp) -> pd.Timestamp:
 
     """
     return date.replace(day=1)
+
+
+@func('end-of-month')
+def end_of_month(date: pd.Timestamp) -> pd.Timestamp:
+    """
+    Produces a timezone-aware timestamp equal to the last day of the
+    given date current month.
+
+    Example: `(end-of-month (date "1973-05-20 09:00"))`
+
+    """
+    _, end = calendar.monthrange(date.year, date.month)
+    return date.replace(day=end)
 
 
 @func('+')
