@@ -24,6 +24,10 @@ from tshistory_formula.registry import (
 NONETYPE = type(None)
 
 
+class seriesname(str):
+    pass
+
+
 def expanded(tsh, cn, tree):
     # base case: check the current operation
     op = tree[0]
@@ -173,12 +177,19 @@ def sametype(supertype, atype):
             return atype in (int, float, Number)
         return any(sametype(supertype, subt)
                    for subt in atype.__args__)
+    elif atype is Number:
+        if sametype(atype, supertype):
+            return True
 
     # supertype is type/abcmeta
     if isinstance(supertype, type):
         if isinstance(atype, (type, abc.ABCMeta)):
             # supertype = atype (standard python types or abc.Meta)
-            if issubclass(supertype, atype):
+            if issubclass(atype, supertype):
+                return True
+            if supertype is seriesname and issubclass(atype, str):
+                # gross cheat there but we want `seriesname` to really
+                # be an alias for `str`
                 return True
         elif atype.__origin__ is typing.Union:
             # supertype ∈ atype (type vs typing)
@@ -193,6 +204,11 @@ def sametype(supertype, atype):
                 if any(sametype(supert, atype)
                        for supert in supertype.__args__):
                     return True
+        elif getattr(atype, '_name', None):
+            # generic non-union typing vs typing
+            if supertype._name == atype._name:
+                if sametype(supertype.__args__[0], atype.__args__[0]):
+                    return True
         elif atype.__origin__ is typing.Union:
             # typing vs typing
             # supertype ∩ atype
@@ -200,6 +216,7 @@ def sametype(supertype, atype):
                                                   atype.__args__):
                 if sametype(supert, subt):
                     return True
+
     return False
 
 

@@ -17,12 +17,15 @@ from tshistory_formula.registry import (
     func,
     metadata
 )
+from tshistory_formula.helper import (
+    NONETYPE,
+    seriesname
+)
 
 
-NONETYPE = type(None)
-
-class seriesname(str):
-    pass
+@func('tuple')
+def make_list(*a: object) -> Tuple[object]:
+    return a
 
 
 @func('series')
