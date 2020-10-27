@@ -5,7 +5,10 @@ from functools import partial
 import pandas as pd
 from psyl.lisp import (
     Env,
-    parse,
+    parse
+)
+
+from tshistory_formula.evaluator import (
     pevaluate,
     pexpreval,
     quasiexpreval
