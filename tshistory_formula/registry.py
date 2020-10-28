@@ -9,6 +9,7 @@ FUNCS = {}
 HISTORY = {}
 METAS = {}
 FINDERS = {}
+AUTO = {}
 
 
 def _ensure_options(obj):
@@ -103,3 +104,14 @@ def finder(name):
         return func
 
     return decorator
+
+
+def auto(name):
+    assert name in ('get', 'exists', 'history', 'revision_dates')
+
+    def decorator(func):
+        AUTO[name] = func
+        return func
+
+    return decorator
+
