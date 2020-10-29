@@ -19,7 +19,7 @@ def _ensure_options(obj):
     return obj
 
 
-def func(name):
+def func(name, auto=False):
     # work around the circular import
     from tshistory_formula.helper import assert_typed
     from tshistory_formula.interpreter import Interpreter
@@ -50,6 +50,8 @@ def func(name):
         dec = decorate(func, _ensure_series_options)
 
         FUNCS[name] = dec
+        if auto:
+            AUTO[name] = func
         return dec
 
     return decorator
@@ -101,16 +103,6 @@ def finder(name):
 
     def decorator(func):
         FINDERS[name] = func
-        return func
-
-    return decorator
-
-
-def auto(name):
-    assert name in ('get', 'exists', 'history', 'revision_dates')
-
-    def decorator(func):
-        AUTO[name] = func
         return func
 
     return decorator

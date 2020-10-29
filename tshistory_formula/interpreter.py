@@ -32,7 +32,7 @@ def jsontypes():
 
 
 class Interpreter:
-    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'histories', 'vcache')
+    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'histories', 'vcache', 'auto')
     FUNCS = None
 
     @property
@@ -56,6 +56,7 @@ class Interpreter:
         self.env = Env(funcs)
         self.histories = {}
         self.vcache = {}
+        self.auto = set(registry.AUTO.values())
 
     def get(self, name, getargs):
         # `getarg` likey comes from self.getargs
@@ -64,7 +65,7 @@ class Interpreter:
         return self.tsh.get(self.cn, name, **getargs)
 
     def evaluate(self, text):
-        return pevaluate(text, self.env)
+        return pevaluate(text, self.env, self.auto)
 
 
 class OperatorHistory(Interpreter):
@@ -81,9 +82,9 @@ class OperatorHistory(Interpreter):
         return pexpreval(
             quasiexpreval(
                 tree,
-                env=self.env
+                self.env,
             ),
-            env=self.env
+            self.env
         )
 
 

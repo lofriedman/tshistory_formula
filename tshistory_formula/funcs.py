@@ -14,7 +14,6 @@ from tshistory.util import (
     tzaware_serie
 )
 from tshistory_formula.registry import (
-    auto,
     finder,
     func,
     metadata
@@ -30,8 +29,7 @@ def make_list(*a: object) -> Tuple[object]:
     return a
 
 
-@auto('get')
-@func('series')
+@func('series', auto=True)
 def series(__interpreter__,
            name: seriesname,
            fill: Union[str, Number, NONETYPE]=None,
@@ -77,8 +75,6 @@ def series_metas(cn, tsh, stree):
     # alt sources lookup
     if meta is None and tsh.othersources:
         meta = tsh.othersources.metadata(name)
-    if meta:
-        meta['expandable'] = True
     return {name: meta}
 
 

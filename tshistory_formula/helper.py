@@ -16,6 +16,7 @@ from psyl.lisp import (
 )
 
 from tshistory_formula.registry import (
+    AUTO,
     METAS,
     FUNCS
 )
@@ -31,19 +32,14 @@ class seriesname(str):
 def expanded(tsh, cn, tree):
     # base case: check the current operation
     op = tree[0]
-    metas = METAS.get(op)
-    seriesmeta = metas(cn, tsh, tree) if metas else None
-    if seriesmeta:
-        # hidden assumption: true series operators
-        # operate one series at a time (e.g.  `series`)
-        # hence we can be brutal ...
-        if len(seriesmeta) == 1:  # if not: unexpandable
-            name, meta = seriesmeta.popitem()
-            if meta.get('expandable', False):
-                if tsh.type(cn, name) == 'formula':
-                    formula = tsh.formula(cn, name)
-                    subtree = parse(formula)
-                    return expanded(tsh, cn, subtree)
+    if op in AUTO:
+        metas = METAS.get(op)
+        seriesmeta = metas(cn, tsh, tree) if metas else None
+        name, _ = seriesmeta.popitem()
+        if tsh.type(cn, name) == 'formula':
+            formula = tsh.formula(cn, name)
+            subtree = parse(formula)
+            return expanded(tsh, cn, subtree)
 
     newtree = []
     for item in tree:
