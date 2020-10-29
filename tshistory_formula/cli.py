@@ -157,33 +157,6 @@ def test_formula(db_uri, formula, pdbshell=False, namespace='tsh'):
         import ipdb; ipdb.set_trace()
 
 
-def rewrite(tree, clipinfo):
-    # top-level/base case, we consider only "series"
-    rewritten = []
-    op = tree[0]
-    if op == 'clip':
-        return tree  # already rewritten
-    if op == 'series':
-        sid = tree[1]
-        if sid in clipinfo:
-            rewritten = [Symbol('clip'), tree]
-            min, max = clipinfo[sid]
-            if not pd.isnull(min):
-                rewritten += [Keyword('min'), min]
-            if not pd.isnull(max):
-                rewritten += [Keyword('max'), max]
-            return rewritten
-
-    for node in tree:
-        if isinstance(node, list):
-            rewritten.append(
-                rewrite(node, clipinfo)
-            )
-        else:
-            rewritten.append(node)
-    return rewritten
-
-
 @click.command(name='formula-init-db')
 @click.argument('db-uri')
 @click.option('--namespace', default='tsh')
