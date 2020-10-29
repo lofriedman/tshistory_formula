@@ -237,15 +237,24 @@ class timeseries(basets):
 
     def eval_formula(self, cn, formula, **kw):
         i = kw.get('__interpreter__') or interpreter.Interpreter(cn, self, kw)
-        ts = i.evaluate(formula)
+        ts = i.evaluate(
+            self._expanded_formula(cn, formula)
+        )
         return ts
+
+    def _expanded_formula(self, cn, formula):
+        return helper.expanded(
+            self, cn, parse(formula)
+        )
 
     def expanded_formula(self, cn, name):
         formula = self.formula(cn, name)
         if formula is None:
             return
 
-        tree = parse(formula)
+        tree = self._expanded_formula(cn, formula)
+        if tree is None:
+            return
 
         return serialize(
             helper.expanded(self, cn, tree)
@@ -320,7 +329,7 @@ class timeseries(basets):
             return hist
 
         formula = self.formula(cn, name)
-        tree = parse(formula)
+        tree = self._expanded_formula(cn, formula)
         series = self.find_series(cn, tree)
 
         # normal history
@@ -370,7 +379,7 @@ class timeseries(basets):
             for idate in hist
         })
         h = {
-            idate: i.evaluate(formula, idate, name)
+            idate: i.evaluate(tree, idate, name)
             for idate in idates
         }
 

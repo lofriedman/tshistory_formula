@@ -64,8 +64,8 @@ class Interpreter:
         # it comes back as a parameter there
         return self.tsh.get(self.cn, name, **getargs)
 
-    def evaluate(self, text):
-        return pevaluate(text, self.env, self.auto)
+    def evaluate(self, tree):
+        return pevaluate(tree, self.env, self.auto)
 
 
 class OperatorHistory(Interpreter):
@@ -132,10 +132,10 @@ class HistoryInterpreter(Interpreter):
         assert idate
         return self._find_by_nearest_idate(hname, idate)
 
-    def evaluate(self, text, idate, name):
+    def evaluate(self, tree, idate, name):
         self.env['__idate__'] = idate
         self.env['__name__'] = name
-        ts = pevaluate(text, self.env)
+        ts = pevaluate(tree, self.env)
         ts.name = name
         return ts
 

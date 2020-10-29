@@ -55,7 +55,7 @@ def series(__interpreter__,
     i = __interpreter__
     ts = i.get(name, i.getargs)
     if ts is None:
-        if not i.tsh.exists(i.cn, name):
+        if not i.tsh.exists(i.cn, name): # that should be turned into an assertion
             raise ValueError(f'No such series `{name}`')
         ts = pd.Series(name=name, dtype='float64')
     if prune:

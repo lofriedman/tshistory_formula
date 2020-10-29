@@ -48,7 +48,7 @@ def pexpreval(tree, env, asyncfuncs=(), pool=None):
 
 
 def pevaluate(expr, env, asyncfuncs=(), concurrency=16):
-    newtree = quasiexpreval(parse(expr), env=env)
+    newtree = quasiexpreval(expr, env=env)
     if asyncfuncs:
         with ThreadPoolExecutor(concurrency) as pool:
             val = pexpreval(newtree, env, {funcid(func) for func in asyncfuncs}, pool)

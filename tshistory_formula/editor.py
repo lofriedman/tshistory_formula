@@ -25,7 +25,7 @@ class fancypresenter:
                 # attempt immediate expression interpretation
                 # (autotrophic operator)
                 i = Interpreter(tsa.engine, tsa.tsh, getargs)
-                ts = i.evaluate(serialize(expr))
+                ts = i.evaluate(expr)
                 if ts is None:
                     return pd.Series(name=name, dtype='float64')
                 ts.name = name
