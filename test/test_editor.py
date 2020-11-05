@@ -95,7 +95,7 @@ def test_editor_pure_scalar_op(mapi):
 
 
 def test_editor_new_operator(mapi):
-    @func('genrandomseries')
+    @func('genrandomseries', auto=True)
     def genrandomseries() -> pd.Series:
         return pd.Series(
             [1.0, 2.0, 3.0],
@@ -215,7 +215,7 @@ def test_complicated_thing(mapi):
 
 
 def test_autotrophic_operator(mapi):
-    @func('auto')
+    @func('auto', auto=True)
     def auto() -> pd.Series:
         return pd.Series(
             [1, 2, 3],
@@ -226,6 +226,18 @@ def test_autotrophic_operator(mapi):
     def auto(cn, tsh, tree):
         return {
             'my-little-constant-series': tree
+        }
+
+    @metadata('auto')
+    def auto(_cn, _tsh, tree):
+        return {
+            tree[0]: {
+                'tzaware': True,
+                'index_type': 'datetime64[ns, UTC]',
+                'value_type': 'float64',
+                'index_dtype': '|M8[ns]',
+                'value_dtype': '<f8'
+            }
         }
 
     mapi.register_formula(

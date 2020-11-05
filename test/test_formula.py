@@ -684,7 +684,7 @@ def test_new_func(engine, tsh):
 
 def test_ifunc(engine, tsh):
 
-    @func('shifted')
+    @func('shifted', auto=True)
     def shifted(__interpreter__, name: str, days: int=0) -> pd.Series:
         args = __interpreter__.getargs.copy()
         fromdate = args.get('from_value_date')
@@ -791,7 +791,7 @@ insertion_date             value_date
 
 def test_newop_expansion(engine, tsh):
     @func('combine')
-    def shifted(__interpreter__, name1: str, name2: str) -> pd.Series:
+    def combine(__interpreter__, name1: str, name2: str) -> pd.Series:
         args = __interpreter__.getargs.copy()
         return (
             __interpreter__.get(name1, args) +
@@ -963,7 +963,7 @@ def test_custom_metadata(engine, tsh):
 
 
 def test_custom_history(engine, tsh):
-    @func('made-up-series')
+    @func('made-up-series', auto=True)
     def madeup(__interpreter__, base: int, coeff: float=1.) -> pd.Series:
         return pd.Series(
             np.array([base, base + 1, base + 2]) * coeff,
@@ -1188,7 +1188,7 @@ def test_history_autotrophic_nr(engine, tsh):
         index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
     )
 
-    @func('hist-nr2-1')
+    @func('hist-nr2-1', auto=True)
     def histnr21(__interpreter__) -> pd.Series:
         return ts2
 
@@ -1211,7 +1211,7 @@ def test_history_autotrophic_nr(engine, tsh):
             utcdt(2020, 1, 2): ts2
         }
 
-    @func('hist-nr2-2')
+    @func('hist-nr2-2', auto=True)
     def histnr22(__interpreter__) -> pd.Series:
         return ts2 + 1
 
@@ -1290,7 +1290,7 @@ def test_history_auto_name_issue(engine, tsh):
         index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
     )
 
-    @func('hist-auto-name')
+    @func('hist-auto-name', auto=True)
     def histautoname(__interpreter__, a:int, b:int=0) -> pd.Series:
         return (ts + a + b) * 2
 
@@ -1347,7 +1347,7 @@ def test_history_auto_name_subexpr(engine, tsh):
         index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
     )
 
-    @func('hist-auto-subexpr')
+    @func('hist-auto-subexpr', auto=True)
     def histautoname(__interpreter__, date: pd.Timestamp) -> pd.Series:
         return ts
 

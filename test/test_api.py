@@ -218,7 +218,7 @@ def test_formula_components_wall(mapi):
         '(add (series "comp-b") (series "comp-c"))'
     )
 
-    @func('opaque-components')
+    @func('opaque-components', auto=True)
     def custom(__interpreter__, s1name: str, s2name: str) -> pd.Series:
         i = __interpreter__
         s1 = i.get(i.cn, s1name)
@@ -256,7 +256,7 @@ def test_formula_components_wall(mapi):
 
 
 def test_autotrophic_idates(mapi):
-    @func('autotrophic')
+    @func('autotrophic', auto=True)
     def custom() -> pd.Series:
         return pd.Series(
             [1, 2, 3],

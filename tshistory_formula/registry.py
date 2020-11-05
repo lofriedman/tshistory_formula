@@ -60,6 +60,7 @@ def func(name, auto=False):
 def history(name):
 
     def decorator(func):
+        assert name in AUTO, f'operator {name} is not declared as "auto"'
         HISTORY[name] = func
         return func
 
