@@ -414,7 +414,8 @@ class timeseries(basets):
             )
 
         formula = self.formula(cn, name)
-        series = self.find_series(cn, parse(formula))
+        tree = parse(formula)
+        series = self.find_series(cn, tree)
         allrevs = []
         for name in series:
             if not self.exists(cn, name):
@@ -441,7 +442,6 @@ class timeseries(basets):
                     )]
 
         # autotrophic operators
-        tree = parse(formula)
         for site in self._custom_history_sites(cn, tree):
             hist = self.history(
                 cn,
