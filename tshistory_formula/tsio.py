@@ -19,6 +19,7 @@ from tshistory_formula.registry import (
     FINDERS,
     FUNCS,
     HISTORY,
+    IDATES,
     METAS
 )
 
@@ -278,6 +279,14 @@ class timeseries(basets):
             for call in self.find_callsites(cn, sname, tree)
         ]
 
+    def _custom_idates_sites(self, cn, tree):
+        return [
+            call
+            for sname in IDATES
+            for call in self.find_callsites(cn, sname, tree)
+        ]
+
+
     @tx
     def history(self, cn, name,
                 from_insertion_date=None,
@@ -442,7 +451,19 @@ class timeseries(basets):
                     )]
 
         # autotrophic operators
+        isites = self._custom_idates_sites(cn, tree)
+        for site in isites:
+            fname = site[0]
+            idates_func = IDATES[fname]
+            revs = idates_func(cn, self, site)
+            if revs:
+                allrevs += revs
+
+        # last resort: get the idates from a full history
+        # not great wrt performance ...
         for site in self._custom_history_sites(cn, tree):
+            if site in isites:
+                continue  # we're already good
             hist = self.history(
                 cn,
                 None, # just mark that we won't work "by name" there
@@ -452,6 +473,8 @@ class timeseries(basets):
             )
             if hist:
                 allrevs += list(hist.keys())
+
+        # /auto
 
         return sorted(set(allrevs))
 

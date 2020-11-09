@@ -7,6 +7,7 @@ import pandas as pd
 
 FUNCS = {}
 HISTORY = {}
+IDATES = {}
 METAS = {}
 FINDERS = {}
 AUTO = {}
@@ -65,6 +66,17 @@ def history(name):
         return func
 
     return decorator
+
+
+def insertion_dates(name):
+
+    def decorator(func):
+        assert name in AUTO, f'operator {name} is not declared as "auto"'
+        IDATES[name] = func
+        return func
+
+    return decorator
+
 
 
 _KEYS = set([

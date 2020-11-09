@@ -11,6 +11,7 @@ from tshistory_formula.tsio import timeseries
 from tshistory_formula.registry import (
     func,
     finder,
+    insertion_dates,
     metadata
 )
 
@@ -256,6 +257,8 @@ def test_formula_components_wall(mapi):
 
 
 def test_autotrophic_idates(mapi):
+    # using the fallback path through .history
+
     @func('autotrophic', auto=True)
     def custom() -> pd.Series:
         return pd.Series(
@@ -276,3 +279,37 @@ def test_autotrophic_idates(mapi):
 
     idates = mapi.insertion_dates('autotrophic-idates')
     assert idates == []
+
+
+
+def test_autotrophic_idates2(mapi):
+    @func('auto2', auto=True)
+    def custom() -> pd.Series:
+        return pd.Series(
+            [1, 2, 3],
+            pd.date_range(utcdt(2020, 1, 1), periods=1, freq='D')
+        )
+
+    @finder('auto2')
+    def custom(cn, tsh, tree):
+        return {
+            'I HAVE A NAME FOR DISPLAY PURPOSES': tree
+        }
+
+    @insertion_dates('auto2')
+    def custom(cn, tsh, tree):
+        return [
+            pd.Timestamp('2020-1-1', tz='utc'),
+            pd.Timestamp('2020-1-2', tz='utc')
+        ]
+
+    mapi.register_formula(
+        'autotrophic-idates-2',
+        '(auto2)'
+    )
+
+    idates = mapi.insertion_dates('autotrophic-idates-2')
+    assert idates == [
+        pd.Timestamp('2020-1-1', tz='utc'),
+        pd.Timestamp('2020-1-2', tz='utc')
+    ]
