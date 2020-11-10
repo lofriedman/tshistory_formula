@@ -1,3 +1,5 @@
+import inspect
+
 from concurrent.futures import (
     Future,
     ThreadPoolExecutor
@@ -10,6 +12,9 @@ from psyl.lisp import (
     Symbol
 )
 
+
+def funcid(func):
+    return hash(inspect.getsource(func))
 
 # parallel evaluator
 
@@ -36,7 +41,7 @@ def pexpreval(tree, env, asyncfuncs=(), pool=None):
     else:
         func = proc
     # ... on which we can decide to go async
-    if func in asyncfuncs and pool:
+    if funcid(func) in asyncfuncs and pool:
         return pool.submit(proc, *posargs, **kwargs)
 
     return proc(*posargs, **kwargs)
@@ -46,7 +51,7 @@ def pevaluate(expr, env, asyncfuncs=(), concurrency=16):
     newtree = quasiexpreval(parse(expr), env=env)
     if asyncfuncs:
         with ThreadPoolExecutor(concurrency) as pool:
-            val = pexpreval(newtree, env, asyncfuncs, pool)
+            val = pexpreval(newtree, env, {funcid(func) for func in asyncfuncs}, pool)
             if isinstance(val, Future):
                 val = val.result()
     else:
