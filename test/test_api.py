@@ -296,11 +296,14 @@ def test_autotrophic_idates2(mapi):
         }
 
     @insertion_dates('auto2')
-    def custom(cn, tsh, tree):
-        return [
+    def custom(cn, tsh, tree, fromdate, todate):
+        dates = [
             pd.Timestamp('2020-1-1', tz='utc'),
             pd.Timestamp('2020-1-2', tz='utc')
         ]
+        fromdate = fromdate or pd.Timestamp('1900-1-1', tz='UTC')
+        todate = todate or pd.Timestamp('2100-1-1', tz='UTC')
+        return filter(lambda d: fromdate <= d <= todate, dates)
 
     mapi.register_formula(
         'autotrophic-idates-2',
@@ -311,4 +314,20 @@ def test_autotrophic_idates2(mapi):
     assert idates == [
         pd.Timestamp('2020-1-1', tz='utc'),
         pd.Timestamp('2020-1-2', tz='utc')
+    ]
+
+    idates = mapi.insertion_dates(
+        'autotrophic-idates-2',
+        pd.Timestamp('2020-1-2', tz='UTC')
+    )
+    assert idates == [
+        pd.Timestamp('2020-1-2', tz='utc')
+    ]
+
+    idates = mapi.insertion_dates(
+        'autotrophic-idates-2',
+        to_insertion_date=pd.Timestamp('2020-1-1', tz='UTC')
+    )
+    assert idates == [
+        pd.Timestamp('2020-1-1', tz='utc')
     ]

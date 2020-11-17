@@ -455,7 +455,7 @@ class timeseries(basets):
         for site in isites:
             fname = site[0]
             idates_func = IDATES[fname]
-            revs = idates_func(cn, self, site)
+            revs = idates_func(cn, self, site, fromdate, todate)
             if revs:
                 allrevs += revs
 
