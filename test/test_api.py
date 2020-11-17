@@ -281,7 +281,6 @@ def test_autotrophic_idates(mapi):
     assert idates == []
 
 
-
 def test_autotrophic_idates2(mapi):
     @func('auto2', auto=True)
     def custom() -> pd.Series:

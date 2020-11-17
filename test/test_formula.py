@@ -22,9 +22,14 @@ from tshistory_formula.registry import (
 )
 from tshistory_formula.helper import (
     constant_fold,
+    _extract_from_expr,
     _name_from_signature_and_args,
 )
-from tshistory_formula.interpreter import OperatorHistory
+from tshistory_formula.interpreter import (
+    Interpreter,
+    NullIntepreter,
+    OperatorHistory
+)
 
 
 def test_evaluator():
@@ -1280,6 +1285,33 @@ def test_forged_names():
     assert foo(1, 43) == 'foo-a=1-b=43'
     assert foo(a=1) == 'foo-a=1-b=42'
     assert foo(b=43, a=1) == 'foo-a=1-b=43'
+
+
+def test_extract_from_expr(engine, tsh):
+
+    @func('extractme')
+    def extractme(a: str, b: int, date: pd.Timestamp, bar: str) -> type(None):
+        pass
+
+    tree = lisp.parse('(extractme "a" 42 #:bar "bar" #:date (date "2021-1-1"))')
+    fname, f, args, kw = _extract_from_expr(tree)
+    assert fname == 'extractme'
+    assert f == extractme
+    assert isinstance(args[0], NullIntepreter)
+    assert args[1:] == ['a', 42]
+    assert kw == {'bar': 'bar', 'date': '(date "2021-1-1")'}
+
+    it = Interpreter(engine, tsh, {})
+    tree = lisp.parse('(extractme "a" 42 #:bar "bar" #:date (date "2021-1-1"))')
+    fname, f, args, kw = _extract_from_expr(tree, it.env)
+    assert fname == 'extractme'
+    assert f == extractme
+    assert isinstance(args[0], NullIntepreter)
+    assert args[1:] == ['a', 42]
+    assert kw == {
+        'bar': 'bar',
+        'date': pd.Timestamp('2021-01-01 00:00:00+0000', tz='UTC')
+    }
 
 
 def test_history_auto_name_issue(engine, tsh):

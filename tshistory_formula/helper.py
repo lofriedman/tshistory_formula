@@ -110,7 +110,7 @@ def _name_from_signature_and_args(name, func, a, kw):
     return '-'.join(out)
 
 
-def _extract_from_expr(expr, env):
+def _extract_from_expr(expr, env=None):
     from tshistory_formula.interpreter import NullIntepreter
 
     fname = str(expr[0])
@@ -123,8 +123,14 @@ def _extract_from_expr(expr, env):
             kw = a
             continue
         if isinstance(a, list):
-            # a subepression ! let's evaluate it ...
-            a = expreval(a, env=env)
+            # a subepression ! let's evaluate it if we got an env
+            # needed when we compute autotrophic history
+            if env is not None:
+                a = expreval(a, env=env)
+            else:
+                # let's take the static approach (computing
+                # autotrophic insertion_dates ...)
+                a = serialize(a)
         if kw:
             kwargs[str(kw)] = a
             kw = None
