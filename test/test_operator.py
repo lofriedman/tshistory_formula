@@ -63,6 +63,42 @@ def test_naive_tzone(engine, tsh):
 """, ts)
 
 
+def test_naive_vs_dst(engine, tsh):
+   ts = pd.Series(
+       range(10),
+       index=pd.date_range(
+           utcdt(2020, 10, 24, 22),
+           periods=10,
+           freq='H'
+       )
+   )
+   tsh.update(
+       engine,
+       ts,
+       'naive-dst',
+       'Babar'
+   )
+
+   tsh.register_formula(
+       engine,
+       'dst-naive',
+       '(naive (series "naive-dst") "CET")',
+   )
+
+   ts = tsh.get(engine, 'dst-naive')
+   assert_df("""
+2020-10-25 00:00:00    0.0
+2020-10-25 01:00:00    1.0
+2020-10-25 02:00:00    2.5
+2020-10-25 03:00:00    4.0
+2020-10-25 04:00:00    5.0
+2020-10-25 05:00:00    6.0
+2020-10-25 06:00:00    7.0
+2020-10-25 07:00:00    8.0
+2020-10-25 08:00:00    9.0
+""", ts)
+
+
 def test_naive_over_naive(engine, tsh):
     x = pd.Series(
         [1, 2, 3],
