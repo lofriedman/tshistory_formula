@@ -84,6 +84,12 @@ def series_finder(cn, tsh, stree):
     return {name: stree}
 
 
+def dedupe(series):
+    if series.index.duplicated().any():
+        return series.groupby(series.index).mean()
+    return series
+
+
 @func('naive')
 def naive(series: pd.Series, tzone: str) -> pd.Series:
     """
@@ -97,12 +103,10 @@ def naive(series: pd.Series, tzone: str) -> pd.Series:
     if not len(series):
         return pd.Series(dtype='float64')
     if not tzaware_serie(series):
-        return series
+        return dedupe(series)
 
     series.index = series.index.tz_convert(tzone).tz_localize(None)
-    if series.index.duplicated().any():
-        series = series.groupby(series.index).mean()
-    return series
+    return dedupe(series)
 
 
 @func('date')
