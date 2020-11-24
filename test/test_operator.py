@@ -1,12 +1,12 @@
 from datetime import datetime as dt
 import math
-
 import pytz
 import pytest
 
 import numpy as np
 import pandas as pd
 from psyl import lisp
+from dateutil.relativedelta import relativedelta
 
 from tshistory.testutil import (
     assert_df,
@@ -946,6 +946,79 @@ def test_today(engine, tsh):
     assert b.tz is None
     assert d.tz == pytz.utc
     assert e.tz.zone == 'Europe/Moscow'
+
+
+def test_more_today(engine, tsh):
+    """ setup to exhibit an issue with the use of the `today`
+    operator
+
+    a series with 3 versions
+    yesterday: -1
+    today:      0
+    tomorrow:   1
+    and version are also at: yesterday, today, tomorrow
+    (value date == insertion date)
+
+    with a formula using a moving slicing windows over this
+    using `today`
+    """
+    now = pd.Timestamp(dt.now().date(), tz='UTC')
+    for d in [-1, 0, 1]:
+        ts = pd.Series(
+            [d] * 3,
+            index=pd.date_range(
+                now, periods=3, freq='D'
+            )
+        )
+
+        tsh.update(
+            engine,
+            ts,
+            'today-base',
+            'Babar',
+            insertion_date=(now + relativedelta(days=d))
+        )
+
+    tsh.register_formula(
+        engine,
+        'clipped-base',
+        '(slice (series "today-base") '
+        '       #:fromdate (today) '
+        '       #:todate (timedelta (today) #:days 10))'
+    )
+
+    # last version: as of today + 1 day
+    ts_2 = tsh.get(engine, 'clipped-base')
+    assert len(ts_2) == 2
+    assert ts_2[0] == 1.0
+    assert ts_2.index[0] == now + relativedelta(days=1)
+    assert ts_2.index[-1] == now + relativedelta(days=2)
+
+    # first version: as of today - 1 day
+    ts_0 = tsh.get(
+        engine, 'clipped-base',
+        revision_date=now - relativedelta(days=1)
+    )
+    assert len(ts_0) == 2
+    assert ts_0[0] == -1.0
+    assert ts_0.index[0] == now + relativedelta(days=1)
+
+    # middle version: as of today
+    ts_1 = tsh.get(
+        engine, 'clipped-base',
+        revision_date=now
+    )
+    assert len(ts_1) == 2
+    assert ts_1[0] == 0.0
+    assert ts_1.index[0] == now + relativedelta(days=1)
+
+    hist = tsh.history(
+        engine,
+        'clipped-base'
+    )
+    assert [2, 2, 2] == list(map(len, hist.values()))
+    for idx, (k, ts) in enumerate(hist.items()):
+        assert k + relativedelta(days=2-idx) == ts.index[0]
 
 
 def test_start_of_month(engine, tsh):
