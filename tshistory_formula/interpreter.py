@@ -1,7 +1,9 @@
 import json
 import inspect
 from functools import partial
+from datetime import datetime
 
+import pytz
 import pandas as pd
 from psyl.lisp import (
     Env,
@@ -66,6 +68,26 @@ class Interpreter:
 
     def evaluate(self, tree):
         return pevaluate(tree, self.env, self.auto)
+
+    def today(self, naive, tz):
+        key = ('today', naive, tz)
+        val = self.vcache.get(key)
+        if val is not None:
+            return val
+
+        if naive:
+            assert tz is None, f'date cannot be naive and have a tz'
+            val = pd.Timestamp(datetime.today())
+            self.vcache[key] = val
+            return val
+
+        if tz:
+            pytz.timezone(tz)
+            tz = pytz.timezone(tz)
+
+        val = pd.Timestamp(datetime.today(), tz=tz or 'utc')
+        self.vcache[key] = val
+        return val
 
 
 class OperatorHistory(Interpreter):

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Union, Optional, Tuple
 from numbers import Number
 import calendar
@@ -165,24 +165,7 @@ def today(__interpreter__,
 
     Example: `(today)`
     """
-    key = ('today', naive, tz)
-    val = __interpreter__.vcache.get(key)
-    if val is not None:
-        return val
-
-    if naive:
-        assert tz is None, f'date cannot be naive and have a tz'
-        val = pd.Timestamp(datetime.today())
-        __interpreter__.vcache[key] = val
-        return val
-
-    if tz:
-        pytz.timezone(tz)
-        tz = pytz.timezone(tz)
-
-    val = pd.Timestamp(datetime.today(), tz=tz or 'utc')
-    __interpreter__.vcache[key] = val
-    return val
+    return __interpreter__.today(naive, tz)
 
 
 @func('start-of-month')
