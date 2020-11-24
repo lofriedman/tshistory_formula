@@ -590,6 +590,8 @@ def shift(series: pd.Series,
     Example `(shift (series "shifted") #:days 2 #:hours 7)`
 
     """
+    # note: relativedelta is unfit there as it cannot be
+    # broadcast on the index
     series.index = series.index + timedelta(
         weeks=weeks,
         days=days,
