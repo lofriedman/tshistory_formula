@@ -1029,9 +1029,10 @@ def test_more_today(engine, tsh):
         engine,
         'clipped-base'
     )
-    assert [2, 2, 2] == list(map(len, hist.values()))
-    for idx, (k, ts) in enumerate(hist.items()):
-        assert k + relativedelta(days=2-idx) == ts.index[0]
+    assert [3, 3, 2] == list(map(len, hist.values()))
+    series = list(hist.values())
+    for left, right in zip(series, [ts_0, ts_1, ts_2]):
+        assert left.equals(right)
 
 
 def test_start_of_month(engine, tsh):

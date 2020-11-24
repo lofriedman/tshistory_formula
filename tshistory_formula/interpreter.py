@@ -70,16 +70,12 @@ class Interpreter:
         return pevaluate(tree, self.env, self.auto)
 
     def today(self, naive, tz):
-        key = ('today', naive, tz)
-        val = self.vcache.get(key)
-        if val is not None:
-            return val
-
         if naive:
             assert tz is None, f'date cannot be naive and have a tz'
         if tz:
             tz = pytz.timezone(tz)
 
+        key = ('today', naive, tz)
         if self.getargs.get('revision_date'):
             val = self.getargs['revision_date']
             if naive:
@@ -87,6 +83,10 @@ class Interpreter:
             if tz:
                 val = pd.Timestamp(val, tz=tz)
             self.vcache[key] = val
+            return val
+
+        val = self.vcache.get(key)
+        if val is not None:
             return val
 
         if naive:
@@ -144,6 +144,8 @@ class HistoryInterpreter(Interpreter):
         # getargs is moot there because histories
         # have been precomputed
         idate = self.env.get('__idate__')
+        # provide ammo to .today
+        self.getargs['revision_date'] = idate
         # get the nearest inferior or equal for the given
         # insertion date
         assert self.histories
