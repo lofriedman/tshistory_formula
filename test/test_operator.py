@@ -994,23 +994,36 @@ def test_more_today(engine, tsh):
     assert ts_2.index[0] == now + relativedelta(days=1)
     assert ts_2.index[-1] == now + relativedelta(days=2)
 
+    # last version: as of today + 1 day (explicit revision_date)
+    # the cutoff is not the same since we look into tomorrow
+    # and (today) will be bound to it
+    ts_2 = tsh.get(
+        engine,
+        'clipped-base',
+        revision_date=now + relativedelta(days=1)
+    )
+    assert len(ts_2) == 2
+    assert ts_2[0] == 1.0
+    assert ts_2.index[0] == now + relativedelta(days=1)
+    assert ts_2.index[-1] == now + relativedelta(days=2)
+
     # first version: as of today - 1 day
     ts_0 = tsh.get(
         engine, 'clipped-base',
         revision_date=now - relativedelta(days=1)
     )
-    assert len(ts_0) == 2
+    assert len(ts_0) == 3
     assert ts_0[0] == -1.0
-    assert ts_0.index[0] == now + relativedelta(days=1)
+    assert ts_0.index[0] == now
 
     # middle version: as of today
     ts_1 = tsh.get(
         engine, 'clipped-base',
         revision_date=now
     )
-    assert len(ts_1) == 2
+    assert len(ts_1) == 3
     assert ts_1[0] == 0.0
-    assert ts_1.index[0] == now + relativedelta(days=1)
+    assert ts_1.index[0] == now
 
     hist = tsh.history(
         engine,

@@ -77,13 +77,22 @@ class Interpreter:
 
         if naive:
             assert tz is None, f'date cannot be naive and have a tz'
-            val = pd.Timestamp(datetime.today())
+        if tz:
+            tz = pytz.timezone(tz)
+
+        if self.getargs.get('revision_date'):
+            val = self.getargs['revision_date']
+            if naive:
+               val = val.replace(tzinfo=None)
+            if tz:
+                val = pd.Timestamp(val, tz=tz)
             self.vcache[key] = val
             return val
 
-        if tz:
-            pytz.timezone(tz)
-            tz = pytz.timezone(tz)
+        if naive:
+            val = pd.Timestamp(datetime.today())
+            self.vcache[key] = val
+            return val
 
         val = pd.Timestamp(datetime.today(), tz=tz or 'utc')
         self.vcache[key] = val
