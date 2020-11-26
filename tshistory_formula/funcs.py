@@ -16,6 +16,7 @@ from tshistory.util import (
 from tshistory_formula.registry import (
     finder,
     func,
+    history,
     metadata
 )
 from tshistory_formula.helper import (
@@ -193,12 +194,21 @@ def end_of_month(date: pd.Timestamp) -> pd.Timestamp:
     return date.replace(day=end)
 
 
-@func('constant')
+@func('constant', auto=True)
 def constant(value: float,
              fromdate: pd.Timestamp,
              todate: pd.Timestamp,
              freq: str,
              revdate: pd.Timestamp) -> pd.Series:
+
+    assert fromdate.tzinfo is not None
+    assert todate.tzinfo is not None
+    assert revdate.tzinfo is not None
+
+    return _constant(value, fromdate, todate, freq, revdate)
+
+
+def _constant(value, fromdate, todate, freq, revdate):
     dates = pd.date_range(
         start=fromdate,
         end=todate,
@@ -211,6 +221,26 @@ def constant(value: float,
         index=dates,
         dtype='float64'
     )
+
+
+@metadata('constant')
+def metadata(cn, tsh, tree):
+    return {
+        'constant': {
+        'tzaware': True,
+        'index_type': 'datetime64[ns, UTC]',
+        'value_type': 'float64',
+        'index_dtype': '|M8[ns]',
+        'value_dtype': '<f8'
+        }
+    }
+
+
+@history('constant')
+def constant_history(value, fromdate, todate, freq, revdate):
+    return {
+        revdate: _constant(value, fromdate, todate, freq, revdate)
+    }
 
 
 @func('+')

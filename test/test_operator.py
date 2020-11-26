@@ -10,6 +10,7 @@ from dateutil.relativedelta import relativedelta
 
 from tshistory.testutil import (
     assert_df,
+    assert_hist,
     utcdt
 )
 from tshistory_formula.registry import (
@@ -1342,3 +1343,11 @@ def test_constant(engine, tsh):
 2020-01-02 00:00:00+00:00    1.0
 2020-01-03 00:00:00+00:00    1.0
 """, ts)
+
+    hist = tsh.history(engine, 'constant-1')
+    assert_hist("""
+insertion_date             value_date               
+2020-02-01 00:00:00+00:00  2020-01-01 00:00:00+00:00    1.0
+                           2020-01-02 00:00:00+00:00    1.0
+                           2020-01-03 00:00:00+00:00    1.0
+""", hist)
