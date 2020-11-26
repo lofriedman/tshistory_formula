@@ -1365,3 +1365,8 @@ insertion_date             value_date
     assert idates == [
         pd.Timestamp('2020-02-01 00:00:00+0000', tz='UTC')
     ]
+
+    idates = tsh.insertion_dates(engine, 'constant-1', fromdate=utcdt(2020, 2, 2))
+    assert idates == []
+    idates = tsh.insertion_dates(engine, 'constant-1', todate=utcdt(2019, 1, 1))
+    assert idates == []
