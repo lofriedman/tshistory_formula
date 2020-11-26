@@ -1355,6 +1355,12 @@ insertion_date             value_date
                            2020-01-03 00:00:00+00:00    1.0
 """, hist)
 
+    hist = tsh.history(engine, 'constant-1', from_insertion_date=utcdt(2020, 2, 2))
+    assert len(hist) == 0
+
+    hist = tsh.history(engine, 'constant-1', to_insertion_date=utcdt(2019, 1, 1))
+    assert len(hist) == 0
+
     idates = tsh.insertion_dates(engine, 'constant-1')
     assert idates == [
         pd.Timestamp('2020-02-01 00:00:00+0000', tz='UTC')

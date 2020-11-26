@@ -216,6 +216,12 @@ def _constant(__interpreter__, value, fromdate, todate, freq, revdate):
     if getargs.get('revision_date'):
         if getargs['revision_date'] < revdate:
             return pd.Series(dtype='float64')
+    if getargs.get('from_insertion_date'):
+        if getargs['from_insertion_date'] > revdate:
+            return pd.Series(dtype='float64')
+    if getargs.get('to_insertion_date'):
+        if getargs['to_insertion_date'] < revdate:
+            return pd.Series(dtype='float64')
 
     dates = pd.date_range(
         start=fromdate,
@@ -246,11 +252,14 @@ def metadata(cn, tsh, tree):
 
 @history('constant')
 def constant_history(__interpreter__, value, fromdate, todate, freq, revdate):
-    return {
-        revdate: _constant(
-            __interpreter__, value, fromdate, todate, freq, revdate
-        )
-    }
+    series = _constant(
+        __interpreter__, value, fromdate, todate, freq, revdate
+    )
+    if len(series):
+        return {
+            revdate: series
+        }
+    return {}
 
 
 @insertion_dates('constant')
