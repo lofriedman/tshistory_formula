@@ -193,6 +193,26 @@ def end_of_month(date: pd.Timestamp) -> pd.Timestamp:
     return date.replace(day=end)
 
 
+@func('constant')
+def constant(value: float,
+             fromdate: pd.Timestamp,
+             todate: pd.Timestamp,
+             freq: str,
+             revdate: pd.Timestamp) -> pd.Series:
+    dates = pd.date_range(
+        start=fromdate,
+        end=todate,
+        freq=freq
+    )
+
+    return pd.Series(
+        [value] * len(dates),
+        name='constant',
+        index=dates,
+        dtype='float64'
+    )
+
+
 @func('+')
 def scalar_add(
         num: Number,

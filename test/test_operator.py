@@ -1328,3 +1328,17 @@ def test_out_of_bounds(engine, tsh):
     # => the sum returns an empty series
     assert not len(ts)
 
+
+def test_constant(engine, tsh):
+    tsh.register_formula(
+        engine,
+        'constant-1',
+        '(constant 1. (date "2020-1-1") (date "2020-1-3") "D" (date "2020-2-1"))'
+    )
+
+    ts = tsh.get(engine, 'constant-1')
+    assert_df("""
+2020-01-01 00:00:00+00:00    1.0
+2020-01-02 00:00:00+00:00    1.0
+2020-01-03 00:00:00+00:00    1.0
+""", ts)
