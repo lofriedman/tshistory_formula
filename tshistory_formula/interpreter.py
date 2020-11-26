@@ -91,10 +91,9 @@ class Interpreter:
 
         if naive:
             val = pd.Timestamp(datetime.today())
-            self.vcache[key] = val
-            return val
+        else:
+            val = pd.Timestamp(datetime.today(), tz=tz or 'utc')
 
-        val = pd.Timestamp(datetime.today(), tz=tz or 'utc')
         self.vcache[key] = val
         return val
 
