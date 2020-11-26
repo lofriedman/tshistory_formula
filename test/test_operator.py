@@ -1344,6 +1344,9 @@ def test_constant(engine, tsh):
 2020-01-03 00:00:00+00:00    1.0
 """, ts)
 
+    ts = tsh.get(engine, 'constant-1', revision_date=utcdt(2020, 1, 1))
+    assert len(ts) == 0
+
     hist = tsh.history(engine, 'constant-1')
     assert_hist("""
 insertion_date             value_date               

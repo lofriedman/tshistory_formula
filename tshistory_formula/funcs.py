@@ -197,7 +197,8 @@ def end_of_month(date: pd.Timestamp) -> pd.Timestamp:
 
 
 @func('constant', auto=True)
-def constant(value: float,
+def constant(__interpreter__,
+             value: float,
              fromdate: pd.Timestamp,
              todate: pd.Timestamp,
              freq: str,
@@ -207,10 +208,15 @@ def constant(value: float,
     assert todate.tzinfo is not None
     assert revdate.tzinfo is not None
 
-    return _constant(value, fromdate, todate, freq, revdate)
+    return _constant(__interpreter__, value, fromdate, todate, freq, revdate)
 
 
-def _constant(value, fromdate, todate, freq, revdate):
+def _constant(__interpreter__, value, fromdate, todate, freq, revdate):
+    getargs = __interpreter__.getargs
+    if getargs.get('revision_date'):
+        if getargs['revision_date'] < revdate:
+            return pd.Series(dtype='float64')
+
     dates = pd.date_range(
         start=fromdate,
         end=todate,
@@ -239,9 +245,11 @@ def metadata(cn, tsh, tree):
 
 
 @history('constant')
-def constant_history(value, fromdate, todate, freq, revdate):
+def constant_history(__interpreter__, value, fromdate, todate, freq, revdate):
     return {
-        revdate: _constant(value, fromdate, todate, freq, revdate)
+        revdate: _constant(
+            __interpreter__, value, fromdate, todate, freq, revdate
+        )
     }
 
 
