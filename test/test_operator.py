@@ -949,19 +949,6 @@ def test_today(engine, tsh):
 
 
 def test_more_today(engine, tsh):
-    """ setup to exhibit an issue with the use of the `today`
-    operator
-
-    a series with 3 versions
-    yesterday: -1
-    today:      0
-    tomorrow:   1
-    and version are also at: yesterday, today, tomorrow
-    (value date == insertion date)
-
-    with a formula using a moving slicing windows over this
-    using `today`
-    """
     now = pd.Timestamp(dt.now().date(), tz='UTC')
     for d in [-1, 0, 1]:
         ts = pd.Series(
