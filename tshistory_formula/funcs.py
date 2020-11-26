@@ -17,12 +17,14 @@ from tshistory_formula.registry import (
     finder,
     func,
     history,
+    insertion_dates,
     metadata
 )
 from tshistory_formula.helper import (
     NONETYPE,
     seriesname
 )
+from tshistory_formula.interpreter import Interpreter
 
 
 @func('tuple')
@@ -241,6 +243,15 @@ def constant_history(value, fromdate, todate, freq, revdate):
     return {
         revdate: _constant(value, fromdate, todate, freq, revdate)
     }
+
+
+@insertion_dates('constant')
+def constant_idates(cn, tsh, tree, fromdate, todate):
+    itrp = Interpreter(cn, tsh, {})
+    revdate = itrp.evaluate(tree[-1])
+    if fromdate and fromdate >= revdate or todate and todate <= revdate:
+        return []
+    return [revdate]
 
 
 @func('+')
