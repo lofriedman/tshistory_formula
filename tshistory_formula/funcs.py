@@ -203,7 +203,16 @@ def constant(__interpreter__,
              todate: pd.Timestamp,
              freq: str,
              revdate: pd.Timestamp) -> pd.Series:
+    """
+    Produces a constant-valued timeseries over a pre-defined horizon
+    and a given granularity and for a given revision date.
 
+    Example: `(constant 42.5 (date "1900-1-1") (date "2039-12-31") "D" (date "1900-1-1"))`
+
+    This will yield a daily series of value 42.5 between 1900 and
+    2040, dated from 1900.
+
+    """
     assert fromdate.tzinfo is not None
     assert todate.tzinfo is not None
     assert revdate.tzinfo is not None
