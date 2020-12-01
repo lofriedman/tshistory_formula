@@ -1,7 +1,7 @@
 from warnings import warn
 import inspect
 
-from decorator import decorate
+from tshistory_formula.decorator import decorate
 import pandas as pd
 
 
