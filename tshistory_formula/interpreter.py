@@ -124,6 +124,7 @@ class HistoryInterpreter(Interpreter):
     def __init__(self, *args, histories):
         super().__init__(*args)
         self.histories = histories
+        # a callsite -> name mapping
         self.namecache = {}
 
     def _find_by_nearest_idate(self, name, idate):
@@ -150,24 +151,23 @@ class HistoryInterpreter(Interpreter):
         assert self.histories
         return self._find_by_nearest_idate(name, idate)
 
-    def history_item(self, name, func, args, kw):
+    def get_auto(self, tree):
         """ helper for autotrophic series that have pre built their
         history and are asked for one element
         (necessary since they bypass the above .get)
         """
-        key = (name, args, tuple(kw.items()))
-        hname = self.namecache.get(key)
-        if hname is None:
-            hname = helper._name_from_signature_and_args(name, func, args, kw)
-            self.namecache[key] = hname
+        name = self.namecache.get(id(tree))
+        if name is None:
+            name = helper.name_of_expr(tree)
+            self.namecache[id(tree)] = name
         idate = self.env.get('__idate__')
         assert idate
-        return self._find_by_nearest_idate(hname, idate)
+        return self._find_by_nearest_idate(name, idate)
 
     def evaluate(self, tree, idate, name):
         self.env['__idate__'] = idate
         self.env['__name__'] = name
-        ts = pevaluate(tree, self.env)
+        ts = pevaluate(tree, self.env, self.auto, hist=True)
         ts.name = name
         return ts
 

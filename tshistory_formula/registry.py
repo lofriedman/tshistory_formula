@@ -29,6 +29,7 @@ def func(name, auto=False):
         assert_typed(func)
 
         def operator(func, *a, **kw):
+            tree = kw.pop('__tree__', None)
             if name in HISTORY:
                 # Autotrophic operator with an history:
                 # we redirect from a get call without even evaluating the func
@@ -39,7 +40,7 @@ def func(name, auto=False):
                 # made from func signature and actual args.
                 if a and isinstance(a[0], Interpreter) and a[0].histories:
                     return _ensure_options(
-                        a[0].history_item(name, func, a, kw)
+                        a[0].get_auto(tree)
                     )
 
             res = func(*a, **kw)
@@ -47,7 +48,7 @@ def func(name, auto=False):
                 res
             )
 
-        dec = decorate(func, operator)
+        dec = decorate(func, operator, extrakw={'__tree__': None})
 
         FUNCS[name] = dec
         if auto:

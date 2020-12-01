@@ -24,6 +24,7 @@ from tshistory_formula.helper import (
     constant_fold,
     _extract_from_expr,
     _name_from_signature_and_args,
+    name_of_expr
 )
 from tshistory_formula.interpreter import (
     Interpreter,
@@ -1303,15 +1304,20 @@ def test_extract_from_expr(engine, tsh):
 
     it = Interpreter(engine, tsh, {})
     tree = lisp.parse('(extractme "a" 42 #:bar "bar" #:date (date "2021-1-1"))')
-    fname, f, args, kw = _extract_from_expr(tree, it.env)
+    fname, f, args, kw = _extract_from_expr(tree)
     assert fname == 'extractme'
     assert f == extractme
     assert isinstance(args[0], NullIntepreter)
     assert args[1:] == ['a', 42]
     assert kw == {
         'bar': 'bar',
-        'date': pd.Timestamp('2021-01-01 00:00:00+0000', tz='UTC')
+        'date': '(date "2021-1-1")'
     }
+
+    name = name_of_expr(tree)
+    assert name.endswith(
+        '-b=a-date=42-bar=bar'
+    )
 
 
 def test_history_auto_name_issue(engine, tsh):

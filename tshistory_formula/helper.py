@@ -83,6 +83,10 @@ def constant_fold(tree):
 
 # signature building
 
+def name_of_expr(expr):
+    return _name_from_signature_and_args(*_extract_from_expr(expr))
+
+
 def _name_from_signature_and_args(name, func, a, kw):
     sig = inspect.signature(func)
     out = [name]
@@ -110,11 +114,13 @@ def _name_from_signature_and_args(name, func, a, kw):
     return '-'.join(out)
 
 
-def _extract_from_expr(expr, env=None):
+def _extract_from_expr(expr):
     from tshistory_formula.interpreter import NullIntepreter
 
     fname = str(expr[0])
     func = FUNCS[fname]
+    # because auto operators have it
+    # NOTE: is it always true ?
     args = [NullIntepreter()]
     kwargs = {}
     kw = None
@@ -123,14 +129,7 @@ def _extract_from_expr(expr, env=None):
             kw = a
             continue
         if isinstance(a, list):
-            # a subepression ! let's evaluate it if we got an env
-            # needed when we compute autotrophic history
-            if env is not None:
-                a = expreval(a, env=env)
-            else:
-                # let's take the static approach (computing
-                # autotrophic insertion_dates ...)
-                a = serialize(a)
+            a = serialize(a)
         if kw:
             kwargs[str(kw)] = a
             kw = None

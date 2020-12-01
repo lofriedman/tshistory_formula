@@ -16,16 +16,15 @@ from psyl.lisp import (
 def funcid(func):
     return hash(inspect.getsource(func))
 
+
 # parallel evaluator
 
-def pexpreval(tree, env, asyncfuncs=(), pool=None):
+def pexpreval(tree, env, asyncfuncs=(), pool=None, hist=False):
     if not isinstance(tree, list):
-        # atom, we're done there as quasiexpreval
-        # did the heavy lifting
-        return tree
+        return quasiexpreval(tree, env)
 
     exps = [
-        pexpreval(exp, env, asyncfuncs, pool)
+        pexpreval(exp, env, asyncfuncs, pool, hist)
         for exp in tree
     ]
     newargs = [
@@ -35,25 +34,35 @@ def pexpreval(tree, env, asyncfuncs=(), pool=None):
     proc = exps[0]
     posargs, kwargs = buildargs(newargs)
 
-    # open partials to find the true operator ...
+    # open partials to find the true operator on which we can decide
+    # to go async
     if hasattr(proc, 'func'):
         func = proc.func
     else:
         func = proc
-    # ... on which we can decide to go async
-    if funcid(func) in asyncfuncs and pool:
+
+    # for autotrophic operators: prepare to pass the tree if present
+    funkey = funcid(func)
+    if hist and funkey in asyncfuncs:
+        kwargs['__tree__'] = tree
+
+    if funkey in asyncfuncs and pool:
         return pool.submit(proc, *posargs, **kwargs)
 
     return proc(*posargs, **kwargs)
 
 
-def pevaluate(expr, env, asyncfuncs=(), concurrency=16):
-    newtree = quasiexpreval(expr, env=env)
+def pevaluate(expr, env, asyncfuncs=(), concurrency=16, hist=False):
     if asyncfuncs:
         with ThreadPoolExecutor(concurrency) as pool:
-            val = pexpreval(newtree, env, {funcid(func) for func in asyncfuncs}, pool)
+            val = pexpreval(
+                expr, env,
+                {funcid(func) for func in asyncfuncs},
+                pool,
+                hist
+            )
             if isinstance(val, Future):
                 val = val.result()
-    else:
-        val = pexpreval(newtree, env, asyncfuncs)
-    return val
+        return val
+
+    return pexpreval(expr, env, asyncfuncs, hist)

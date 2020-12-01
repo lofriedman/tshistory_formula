@@ -376,8 +376,8 @@ class timeseries(basets):
                     to_value_date,
                     _tree=callsite
                 ) or {}
-                fname, func, args, kwargs = helper._extract_from_expr(callsite, i.env)
-                cname = helper._name_from_signature_and_args(fname, func, args, kwargs)
+                cname = helper.name_of_expr(callsite)
+                i.namecache[serialize(callsite)] = cname
                 i.histories.update({
                     cname: chist
                 })

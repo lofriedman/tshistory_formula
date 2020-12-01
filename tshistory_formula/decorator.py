@@ -61,7 +61,7 @@ class FunctionMaker:
     # make pylint happy
     args = varargs = varkw = defaults = kwonlyargs = kwonlydefaults = ()
 
-    def __init__(self, func):
+    def __init__(self, func, extrakw={}):
         # func can be a class or a callable, but not an instance method
         self.name = func.__name__
         if self.name == '<lambda>':  # small hack for lambda functions
@@ -73,6 +73,14 @@ class FunctionMaker:
         for a in ('args', 'varargs', 'varkw', 'defaults', 'kwonlyargs',
                   'kwonlydefaults'):
             setattr(self, a, getattr(argspec, a))
+
+        # add extra things on the decorator
+        for k, v in extrakw.items():
+            self.kwonlyargs.append(k)
+            if self.kwonlydefaults is None:
+                self.kwonlydefaults = {}
+            self.kwonlydefaults[k] = v
+
         for i, arg in enumerate(self.args):
             setattr(self, 'arg%d' % i, arg)
         allargs = list(self.args)
@@ -135,21 +143,22 @@ class FunctionMaker:
         return func
 
     @classmethod
-    def create(cls, func, body, evaldict, **attrs):
-        self = cls(func)
+    def create(cls, func, body, evaldict, extrakw, **attrs):
+        self = cls(func, extrakw)
         ibody = '\n'.join('    ' + line for line in body.splitlines())
         body = 'def %(name)s(%(signature)s):\n' + ibody
         return self.make(body, evaldict, **attrs)
 
 
-def decorate(func, caller):
+def decorate(func, caller, extrakw={}):
     """
     decorate(func, caller) decorates a function using a caller.
     """
     evaldict = dict(_call_=caller, _func_=func)
     fun = FunctionMaker.create(
         func, "return _call_(_func_, %(shortsignature)s)",
-        evaldict, __wrapped__=func
+        evaldict, __wrapped__=func,
+        extrakw=extrakw
     )
     if hasattr(func, '__qualname__'):
         fun.__qualname__ = func.__qualname__
