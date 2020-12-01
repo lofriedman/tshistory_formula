@@ -27,7 +27,6 @@ def func(name, auto=False):
 
     def decorator(func):
         assert_typed(func)
-        names = {}
 
         def _ensure_series_options(func, *a, **kw):
             if name in HISTORY:
