@@ -1,8 +1,8 @@
 from warnings import warn
-import inspect
+
+import pandas as pd
 
 from tshistory_formula.decorator import decorate
-import pandas as pd
 
 
 FUNCS = {}
@@ -28,7 +28,7 @@ def func(name, auto=False):
     def decorator(func):
         assert_typed(func)
 
-        def _ensure_series_options(func, *a, **kw):
+        def operator(func, *a, **kw):
             if name in HISTORY:
                 # Autotrophic operator with an history:
                 # we redirect from a get call without even evaluating the func
@@ -47,7 +47,7 @@ def func(name, auto=False):
                 res
             )
 
-        dec = decorate(func, _ensure_series_options)
+        dec = decorate(func, operator)
 
         FUNCS[name] = dec
         if auto:
