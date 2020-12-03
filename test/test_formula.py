@@ -1467,9 +1467,10 @@ def test_expand_vs_fill(engine, tsh):
         lisp.parse(tsh.formula(engine, 'top-expandme'))
     )
 
-    # we've lost the fill and prune specifications !
     assert lisp.serialize(e) == (
-        '(row-mean (series "base-expand-me") (series "base-expand-me"))'
+        '(row-mean'
+        ' (options (series "base-expand-me") #:fill 0 #:prune 1 #:weight 1.5)'
+        ' (options (series "base-expand-me") #:fill 1 #:prune 2))'
     )
 
     ts = tsh.get(
@@ -1486,5 +1487,4 @@ def test_expand_vs_fill(engine, tsh):
     assert_df("""
 2021-01-01 00:00:00+00:00    1.0
 2021-01-02 00:00:00+00:00    2.0
-2021-01-03 00:00:00+00:00    3.0
 """, ts)

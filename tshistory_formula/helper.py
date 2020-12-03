@@ -12,7 +12,8 @@ from psyl.lisp import (
     expreval,
     Keyword,
     parse,
-    serialize
+    serialize,
+    Symbol
 )
 
 from tshistory_formula.registry import (
@@ -29,6 +30,23 @@ class seriesname(str):
     pass
 
 
+def extract_auto_options(tree):
+    options = []
+    optnames = ('fill', 'weight', 'prune')
+
+    keyword = None
+    for item in tree:
+        if keyword is not None:
+            options.append(item)
+            keyword = None
+            continue
+        if item in optnames:
+            options.append(item)
+            keyword = item
+
+    return options
+
+
 def expanded(tsh, cn, tree):
     # base case: check the current operation
     op = tree[0]
@@ -38,8 +56,13 @@ def expanded(tsh, cn, tree):
         name, _ = seriesmeta.popitem()
         if tsh.type(cn, name) == 'formula':
             formula = tsh.formula(cn, name)
-            subtree = parse(formula)
-            return expanded(tsh, cn, subtree)
+            options = extract_auto_options(tree)
+            if not options:
+                return expanded(tsh, cn, parse(formula))
+            return [
+                Symbol('options'),
+                expanded(tsh, cn, parse(formula)),
+            ] + options
 
     newtree = []
     for item in tree:

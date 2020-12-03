@@ -32,6 +32,43 @@ def make_list(*a: object) -> Tuple[object]:
     return a
 
 
+@func('options')
+def options(series: pd.Series,
+            fill: Union[str, Number, NONETYPE]=None,
+            prune: Optional[int]=None,
+            weight: Optional[Number]=None) -> pd.Series:
+    """
+    The `options` operator takes a series and three keywords to modify
+    the behaviour of series.
+
+    * `fill` to specify a filling policy to avoid `nans` when the
+      series will be `add`ed with others; accepted values are
+      `"ffill"` (forward-fill), `"bfill"` (backward-fill) or any
+      floating value.
+
+    * `weight` to provide a weight (float) value to be used by other
+      operators like e.g. `row-mean`
+
+    * `prune` to indicate how many points must be truncated from the
+      tail end (useful for priorities). Applies immediately.
+
+    The `fill` and `weight` options are put on the series object for
+    later use while `prune` is applied immediately.
+
+    """
+    if prune:
+        series = series[:-prune]
+
+    series.options = {
+        'fill': fill
+    }
+
+    if weight is not None:
+        series.options['weight'] = weight
+
+    return series
+
+
 @func('series', auto=True)
 def series(__interpreter__,
            name: seriesname,
@@ -46,14 +83,19 @@ def series(__interpreter__,
       `"ffill"` (forward-fill), `"bfill"` (backward-fill) or any
       floating value.
 
+    * `weight` to provide a weight (float) value to be used by other
+      operators like e.g. `row-mean`
+
     * `prune` to indicate how many points must be truncated from the
       tail end (useful for priorities).
 
+
     For instance in `(add (series "a" #:fill 0) (series "b")` will
     make sure that series `a`, if shorter than series `b` will get
-    zeroes instead of nans where `b` provides values.
-
+    zeroes instead of nans where `b` provides values
+.
     In `(series "realized" #:prune 3)` we would drop the last three points.
+
     """
     i = __interpreter__
     ts = i.get(name, i.getargs)
