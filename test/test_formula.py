@@ -23,6 +23,7 @@ from tshistory_formula.registry import (
 from tshistory_formula.helper import (
     constant_fold,
     _extract_from_expr,
+    expanded,
     _name_from_signature_and_args,
     name_of_expr
 )
@@ -1432,3 +1433,58 @@ insertion_date             value_date
                            2020-01-02 00:00:00+00:00    6.0
                            2020-01-03 00:00:00+00:00    8.0
 """, hist)
+
+
+def test_expand_vs_fill(engine, tsh):
+    ts = pd.Series(
+        [1.0, 2.0, 3.0],
+        index=pd.date_range(utcdt(2021, 1, 1), periods=3, freq='D')
+    )
+
+    tsh.update(
+        engine,
+        ts,
+        'base-expand-me',
+        'Babar'
+    )
+
+    tsh.register_formula(
+        engine,
+        'bottom-expandme',
+        '(series "base-expand-me")'
+    )
+
+    tsh.register_formula(
+        engine,
+        'top-expandme',
+        '(row-mean (series "bottom-expandme" #:fill 0 #:prune 1 #:weight 1.5) '
+        '          (series "bottom-expandme" #:fill 1 #:prune 2))'
+    )
+
+    e = expanded(
+        tsh,
+        engine,
+        lisp.parse(tsh.formula(engine, 'top-expandme'))
+    )
+
+    # we've lost the fill and prune specifications !
+    assert lisp.serialize(e) == (
+        '(row-mean (series "base-expand-me") (series "base-expand-me"))'
+    )
+
+    ts = tsh.get(
+        engine,
+        'top-expandme',
+        to_value_date=utcdt(2021, 1, 5)
+    )
+
+    # careful reading that: row-mean does not use #:fill
+    # and handles itself well the missing value situation
+    # the #:weight is also a bit useless if only for the
+    # above test
+    # only #:prune has a visible effect
+    assert_df("""
+2021-01-01 00:00:00+00:00    1.0
+2021-01-02 00:00:00+00:00    2.0
+2021-01-03 00:00:00+00:00    3.0
+""", ts)
