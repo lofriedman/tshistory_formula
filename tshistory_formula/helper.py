@@ -17,7 +17,6 @@ from psyl.lisp import (
 )
 
 from tshistory_formula.registry import (
-    AUTO,
     METAS,
     FUNCS
 )
@@ -50,7 +49,7 @@ def extract_auto_options(tree):
 def expanded(tsh, cn, tree):
     # base case: check the current operation
     op = tree[0]
-    if op in AUTO:
+    if op == 'series':
         metas = METAS.get(op)
         seriesmeta = metas(cn, tsh, tree) if metas else None
         name, _ = seriesmeta.popitem()
