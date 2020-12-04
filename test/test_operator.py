@@ -1360,6 +1360,33 @@ def test_out_of_bounds(engine, tsh):
 """, ts)
 
 
+    # with ffill
+    tsh.register_formula(
+        engine,
+        'addition_ter',
+        '(add (series "short" #:fill "ffill") (series "long"))'
+    )
+
+    ts = tsh.get(engine, 'addition_ter')
+    assert_df("""
+2020-01-01 00:00:00+00:00    2.0
+2020-01-02 00:00:00+00:00    3.0
+2020-01-03 00:00:00+00:00    3.0
+2020-01-04 00:00:00+00:00    3.0
+2020-01-05 00:00:00+00:00    3.0
+2020-01-06 00:00:00+00:00    3.0
+""", ts)
+
+    ts = tsh.get(
+        engine, 'addition_ter',
+        from_value_date=utcdt(2020, 1, 3),
+        to_value_date=utcdt(2020, 1, 4),
+    )
+    # with data out of bounds of the short series, ffill is not
+    # able to infer the data to fill, hence nothing is returned
+    assert not len(ts)
+
+
 def test_constant(engine, tsh):
     tsh.register_formula(
         engine,
