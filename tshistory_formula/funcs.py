@@ -240,7 +240,7 @@ def end_of_month(date: pd.Timestamp) -> pd.Timestamp:
 
 @func('constant', auto=True)
 def constant(__interpreter__,
-             value: float,
+             value: Number,
              fromdate: pd.Timestamp,
              todate: pd.Timestamp,
              freq: str,
