@@ -1329,6 +1329,33 @@ def test_out_of_bounds(engine, tsh):
     # => the sum returns an empty series
     assert not len(ts)
 
+    # with fill parameters
+    tsh.register_formula(
+        engine,
+        'addition_bis',
+        '(add (series "short" #:fill -10) (series "long"))'
+    )
+
+    ts = tsh.get(engine, 'addition_bis')
+    assert_df("""
+2020-01-01 00:00:00+00:00    2.0
+2020-01-02 00:00:00+00:00    3.0
+2020-01-03 00:00:00+00:00   -9.0
+2020-01-04 00:00:00+00:00   -9.0
+2020-01-05 00:00:00+00:00   -9.0
+2020-01-06 00:00:00+00:00   -9.0
+""", ts)
+
+    ts = tsh.get(
+        engine,
+        'addition_bis',
+        from_value_date=utcdt(2020, 1, 3),
+        to_value_date=utcdt(2020, 1, 4),
+    )
+
+    # problem: we where expecting some values on this interval
+    assert not len(ts)
+
 
 def test_constant(engine, tsh):
     tsh.register_formula(
