@@ -408,7 +408,9 @@ def _group_series(*serieslist):
 
     # join everything
     for idx, ts in enumerate(serieslist):
-        if not len(ts):
+        if ts.options.get('fill') is None and not len(ts):
+            # at least one series without fill policy and no data
+            # entails an empty result
             return pd.DataFrame(dtype='float64')
 
         ts.name = f'{idx}'  # do something unique

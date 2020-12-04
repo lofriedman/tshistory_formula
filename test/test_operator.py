@@ -1353,8 +1353,11 @@ def test_out_of_bounds(engine, tsh):
         to_value_date=utcdt(2020, 1, 4),
     )
 
-    # problem: we where expecting some values on this interval
-    assert not len(ts)
+    # as expected
+    assert_df("""
+2020-01-03 00:00:00+00:00   -9.0
+2020-01-04 00:00:00+00:00   -9.0
+""", ts)
 
 
 def test_constant(engine, tsh):
