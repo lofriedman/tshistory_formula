@@ -1442,3 +1442,12 @@ insertion_date             value_date
 
     ts = tsh.get(engine, 'constant-2')
     assert len(ts) == 0
+
+    tsh.register_formula(
+        engine,
+        'constant-3',
+        '(constant 3. (date "2020-1-1") (today) "D" (date "2020-2-1"))'
+    )
+
+    with pytest.raises(AssertionError):
+        ts = tsh.get(engine, 'constant-3', revision_date=dt(2020, 2, 1))
