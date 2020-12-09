@@ -10,6 +10,7 @@ from dateutil.relativedelta import relativedelta
 
 from tshistory.util import (
     compatible_date,
+    empty_series,
     patchmany,
     tzaware_serie
 )
@@ -102,7 +103,9 @@ def series(__interpreter__,
     if ts is None:
         if not i.tsh.exists(i.cn, name): # that should be turned into an assertion
             raise ValueError(f'No such series `{name}`')
-        ts = pd.Series(name=name, dtype='float64')
+        meta = i.tsh.metadata(i.cn, name)
+        ts = empty_series(meta['tzaware'], name=name)
+
     if prune:
         ts = ts[:-prune]
     ts.options = {
@@ -146,7 +149,8 @@ def naive(series: pd.Series, tzone: str) -> pd.Series:
 
     """
     if not len(series):
-        return pd.Series(dtype='float64')
+        return empty_series(False)
+
     if not tzaware_serie(series):
         return dedupe(series)
 
@@ -266,13 +270,15 @@ def _constant(__interpreter__, value, fromdate, todate, freq, revdate):
     getargs = __interpreter__.getargs
     if getargs.get('revision_date'):
         if getargs['revision_date'] < revdate:
-            return pd.Series(dtype='float64')
+            return empty_series(True)
+
     if getargs.get('from_insertion_date'):
         if getargs['from_insertion_date'] > revdate:
-            return pd.Series(dtype='float64')
+            return empty_series(True)
+
     if getargs.get('to_insertion_date'):
         if getargs['to_insertion_date'] < revdate:
-            return pd.Series(dtype='float64')
+            return empty_series(True)
 
     dates = pd.date_range(
         start=fromdate,
@@ -467,14 +473,11 @@ def series_multiply(*serieslist: pd.Series) -> pd.Series:
     in euros, using a currency exchange rate series with a
     forward-fill option.
     """
-    assert [
-        isinstance(s, pd.Series)
-        for s in serieslist
-    ]
-
     df = _group_series(*serieslist)
     if not len(df):
-        return pd.Series(dtype='float64')
+        return empty_series(
+            tzaware_serie(serieslist[0])
+        )
 
     res = None
     for col in df.columns:
@@ -495,7 +498,9 @@ def series_div(s1: pd.Series, s2: pd.Series) -> pd.Series:
     """
     df = _group_series(*(s1, s2))
     if not len(df) or len(df.columns) < 2:
-        return pd.Series(dtype='float64')
+        return empty_series(
+            tzaware_serie(s1)
+        )
 
     c1, c2 = df.columns
     return (df[c1] / df[c2]).dropna()

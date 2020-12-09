@@ -596,6 +596,10 @@ def test_mul(engine, tsh):
 2019-01-03 00:00:00+00:00    27.0
 """, ts)
 
+    ts = tsh.get(engine, 'multiply-aligned',
+                 from_value_date=utcdt(2020, 1, 1))
+    assert ts.index.tz.zone == 'UTC'
+
     base = pd.Series(
         [1, 2, np.nan],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')

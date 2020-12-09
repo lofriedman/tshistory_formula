@@ -10,6 +10,7 @@ from psyl.lisp import (
     parse
 )
 
+from tshistory.util import empty_series
 from tshistory_formula.evaluator import (
     pevaluate,
     pexpreval,
@@ -119,13 +120,14 @@ class OperatorHistory(Interpreter):
 
 
 class HistoryInterpreter(Interpreter):
-    __slots__ = ('env', 'cn', 'tsh', 'getargs', 'histories', 'namecache', 'vcache')
+    __slots__ = 'env', 'cn', 'tsh', 'getargs', 'histories', 'tzaware', 'namecache', 'vcache'
 
-    def __init__(self, *args, histories):
+    def __init__(self, name, *args, histories):
         super().__init__(*args)
         self.histories = histories
         # a callsite -> name mapping
         self.namecache = {}
+        self.tzaware = self.tsh.metadata(self.cn, name)
 
     def _find_by_nearest_idate(self, name, idate):
         hist = self.histories[name]
@@ -137,7 +139,10 @@ class HistoryInterpreter(Interpreter):
             if idate >= compdate:
                 return hist[date]
 
-        ts = pd.Series(name=name, dtype='float64')
+        ts = empty_series(
+            self.tzaware,
+            name=name
+        )
         return ts
 
     def get(self, name, _getargs):

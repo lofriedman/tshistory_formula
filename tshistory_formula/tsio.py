@@ -354,7 +354,7 @@ class timeseries(basets):
         }
 
         i = interpreter.HistoryInterpreter(
-            cn, self, {
+            name, cn, self, {
                 'from_value_date': from_value_date,
                 'to_value_date': to_value_date
             },
