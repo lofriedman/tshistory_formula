@@ -1403,6 +1403,7 @@ def test_constant(engine, tsh):
 
     ts = tsh.get(engine, 'constant-1', revision_date=utcdt(2020, 1, 1))
     assert len(ts) == 0
+    assert isinstance(ts.index, pd.Index)
 
     hist = tsh.history(engine, 'constant-1')
     assert_hist("""
@@ -1427,3 +1428,13 @@ insertion_date             value_date
     assert idates == []
     idates = tsh.insertion_dates(engine, 'constant-1', todate=utcdt(2019, 1, 1))
     assert idates == []
+
+    # edge cases
+    tsh.register_formula(
+        engine,
+        'constant-2',
+        '(constant 2. (date "2020-1-5") (date "2020-1-3") "D" (date "2020-2-1"))'
+    )
+
+    ts = tsh.get(engine, 'constant-2')
+    assert len(ts) == 0
