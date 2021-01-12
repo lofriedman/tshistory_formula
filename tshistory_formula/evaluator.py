@@ -1,8 +1,7 @@
 import inspect
 
 from concurrent.futures import (
-    Future,
-    ThreadPoolExecutor
+    Future
 )
 
 from psyl.lisp import (
@@ -11,6 +10,9 @@ from psyl.lisp import (
     quasiexpreval,
     Symbol
 )
+
+from tshistory_formula.helper import ThreadPoolExecutor
+
 
 
 def funcid(func):

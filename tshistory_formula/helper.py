@@ -2,7 +2,10 @@ import abc
 import typing
 import inspect
 import itertools
+import queue
 import re
+import threading
+from concurrent.futures import _base
 from numbers import Number
 
 import pandas as pd
@@ -444,3 +447,74 @@ def typecheck(tree, env=FUNCS):
         op, returntype, narrowed_argstypes
     )
     return returntype
+
+
+# thread pool
+
+class _WorkItem(object):
+    def __init__(self, future, fn, args, kwargs):
+        self.future = future
+        self.fn = fn
+        self.args = args
+        self.kwargs = kwargs
+
+    def run(self):
+        try:
+            result = self.fn(*self.args, **self.kwargs)
+        except BaseException as exc:
+            self.future.set_exception(exc)
+        else:
+            self.future.set_result(result)
+
+
+class Stop:
+    pass
+
+
+class ThreadPoolExecutor:
+
+    def __init__(self, max_workers):
+        self._max_workers = max_workers
+        self._work_queue = queue.SimpleQueue()
+        self._threads = set()
+        self._shutdown = False
+        self._shutdown_lock = threading.Lock()
+
+    def _worker(self):
+        while True:
+            work_item = self._work_queue.get(block=True)
+            if work_item is Stop:
+                # allow the other workers to get it
+                self._work_queue.put(Stop)
+                return
+            work_item.run()
+
+    def submit(self, fn, *args, **kwargs):
+        with self._shutdown_lock:
+            if self._shutdown:
+                raise RuntimeError('cannot schedule new futures after shutdown')
+
+            f = _base.Future()
+
+            self._work_queue.put(_WorkItem(f, fn, args, kwargs))
+            num_threads = len(self._threads)
+            if num_threads < self._max_workers:
+                thread_name = f'{self}_{num_threads}'
+                t = threading.Thread(target=self._worker)
+                t.start()
+                self._threads.add(t)
+            return f
+
+    def shutdown(self):
+        with self._shutdown_lock:
+            self._shutdown = True
+            self._work_queue.put(Stop)
+            for t in self._threads:
+                t.join()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.shutdown()
+        return False
