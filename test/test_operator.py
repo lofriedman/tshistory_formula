@@ -1405,6 +1405,16 @@ def test_constant(engine, tsh):
 2020-01-03 00:00:00+00:00    1.0
 """, ts)
 
+    ts = tsh.get(
+        engine,
+        'constant-1',
+        from_value_date=utcdt(2020, 1, 2),
+        to_value_date=utcdt(2020, 1, 2)
+    )
+    assert_df("""
+2020-01-02 00:00:00+00:00    1.0
+""", ts)
+
     ts = tsh.get(engine, 'constant-1', revision_date=utcdt(2020, 1, 1))
     assert len(ts) == 0
     assert isinstance(ts.index, pd.Index)

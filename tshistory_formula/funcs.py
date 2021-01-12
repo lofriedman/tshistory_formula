@@ -280,6 +280,14 @@ def _constant(__interpreter__, value, fromdate, todate, freq, revdate):
         if getargs['to_insertion_date'] < revdate:
             return empty_series(True)
 
+    mindate = getargs.get('from_value_date')
+    if mindate:
+        fromdate = max(mindate, fromdate)
+
+    maxdate = getargs.get('to_value_date')
+    if maxdate:
+        todate = min(maxdate, todate)
+
     dates = pd.date_range(
         start=fromdate,
         end=todate,
