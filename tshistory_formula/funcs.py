@@ -11,6 +11,7 @@ from dateutil.relativedelta import relativedelta
 from tshistory.util import (
     compatible_date,
     empty_series,
+    ensuretz,
     patchmany,
     tzaware_serie
 )
@@ -282,11 +283,11 @@ def _constant(__interpreter__, value, fromdate, todate, freq, revdate):
 
     mindate = getargs.get('from_value_date')
     if mindate:
-        fromdate = max(mindate, fromdate)
+        fromdate = max(ensuretz(mindate), fromdate)
 
     maxdate = getargs.get('to_value_date')
     if maxdate:
-        todate = min(maxdate, todate)
+        todate = min(ensuretz(maxdate), todate)
 
     dates = pd.date_range(
         start=fromdate,
