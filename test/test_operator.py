@@ -1469,5 +1469,7 @@ insertion_date             value_date
         '(constant 3. (date "2020-1-1") (today) "D" (date "2020-2-1"))'
     )
 
-    with pytest.raises(AssertionError):
-        ts = tsh.get(engine, 'constant-3', revision_date=dt(2020, 2, 1))
+    # no crash wrt naive revision_date
+    tsh.get(engine, 'constant-3', revision_date=dt(2020, 2, 1))
+    tsh.get(engine, 'constant-3', from_value_date=dt(2020, 2, 1))
+    tsh.get(engine, 'constant-3', to_value_date=dt(2020, 2, 1))

@@ -209,12 +209,15 @@ def today(__interpreter__,
     """
     Produces a timezone-aware timestamp as of today
 
-    The `tz` keyword allows to specify an alternate time zone.
     The `naive` keyword forces production of a naive timestamp.
+    The `tz` keyword allows to specify an alternate time zone
+    (if unpecified and not naive).
     Both `tz` and `naive` keywords are mutually exlcusive.
 
     Example: `(today)`
     """
+    # impl. note: if not naive and tz is none,
+    # tz will be utc
     return __interpreter__.today(naive, tz)
 
 
@@ -269,17 +272,17 @@ def constant(__interpreter__,
 
 def _constant(__interpreter__, value, fromdate, todate, freq, revdate):
     getargs = __interpreter__.getargs
-    if getargs.get('revision_date'):
-        if getargs['revision_date'] < revdate:
-            return empty_series(True)
+    qrevdate = getargs.get('revision_date')
+    if qrevdate and ensuretz(qrevdate) < revdate:
+        return empty_series(True)
 
-    if getargs.get('from_insertion_date'):
-        if getargs['from_insertion_date'] > revdate:
-            return empty_series(True)
+    qfromidate = getargs.get('from_insertion_date')
+    if qfromidate and ensuretz(qfromidate) > revdate:
+        return empty_series(True)
 
-    if getargs.get('to_insertion_date'):
-        if getargs['to_insertion_date'] < revdate:
-            return empty_series(True)
+    qtoidate = getargs.get('to_insertion_date')
+    if qtoidate and ensuretz(qtoidate) < revdate:
+        return empty_series(True)
 
     mindate = getargs.get('from_value_date')
     if mindate:
