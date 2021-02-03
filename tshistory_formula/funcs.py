@@ -94,8 +94,8 @@ def series(__interpreter__,
 
     For instance in `(add (series "a" #:fill 0) (series "b")` will
     make sure that series `a`, if shorter than series `b` will get
-    zeroes instead of nans where `b` provides values
-.
+    zeroes instead of nans where `b` provides values.
+
     In `(series "realized" #:prune 3)` we would drop the last three points.
 
     """
