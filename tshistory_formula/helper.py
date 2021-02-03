@@ -49,27 +49,29 @@ def extract_auto_options(tree):
     return options
 
 
-def expanded(tsh, cn, tree):
+def expanded(tsh, cn, tree, stopnames=()):
     # base case: check the current operation
     op = tree[0]
     if op == 'series':
         metas = METAS.get(op)
         seriesmeta = metas(cn, tsh, tree) if metas else None
         name, _ = seriesmeta.popitem()
+        if name in stopnames:
+            return tree
         if tsh.type(cn, name) == 'formula':
             formula = tsh.formula(cn, name)
             options = extract_auto_options(tree)
             if not options:
-                return expanded(tsh, cn, parse(formula))
+                return expanded(tsh, cn, parse(formula), stopnames)
             return [
                 Symbol('options'),
-                expanded(tsh, cn, parse(formula)),
+                expanded(tsh, cn, parse(formula), stopnames),
             ] + options
 
     newtree = []
     for item in tree:
         if isinstance(item, list):
-            newtree.append(expanded(tsh, cn, item))
+            newtree.append(expanded(tsh, cn, item, stopnames))
         else:
             newtree.append(item)
     return newtree

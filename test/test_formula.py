@@ -1488,3 +1488,49 @@ def test_expand_vs_fill(engine, tsh):
 2021-01-01 00:00:00+00:00    1.0
 2021-01-02 00:00:00+00:00    2.0
 """, ts)
+
+
+def test_expanded_stopnames(engine, tsh):
+    ts = pd.Series(
+        [1.0, 2.0, 3.0],
+        index=pd.date_range(utcdt(2021, 1, 1), periods=3, freq='D')
+    )
+
+    tsh.update(
+        engine,
+        ts,
+        'base-expand-me2',
+        'Babar'
+    )
+
+    tsh.register_formula(
+        engine,
+        'bottom-expandme2',
+        '(series "base-expand-me2")'
+    )
+
+    tsh.register_formula(
+        engine,
+        'bottom-expandme3',
+        '(series "base-expand-me2")'
+    )
+
+    tsh.register_formula(
+        engine,
+        'top-expandme2',
+        '(row-mean (series "bottom-expandme2" #:fill 0 #:prune 1 #:weight 1.5) '
+        '          (series "bottom-expandme3" #:fill 1 #:prune 2))'
+    )
+
+    e = expanded(
+        tsh,
+        engine,
+        lisp.parse(tsh.formula(engine, 'top-expandme2')),
+        stopnames=('bottom-expandme2',)
+    )
+
+    assert lisp.serialize(e) == (
+        '(row-mean'
+        ' (series "bottom-expandme2" #:fill 0 #:prune 1 #:weight 1.5)'
+        ' (options (series "base-expand-me2") #:fill 1 #:prune 2))'
+    )
