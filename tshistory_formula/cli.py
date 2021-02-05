@@ -17,15 +17,22 @@ from tshistory_formula.interpreter import Interpreter
 @click.command(name='update-formula-metadata')
 @click.argument('dburi')
 @click.option('--reset', is_flag=True, default=False)
+@click.option('--seriesname')
 @click.option('--namespace', default='tsh')
-def update_metadata(dburi, reset=False, namespace='tsh'):
+def update_metadata(dburi, reset=False, seriesname=None, namespace='tsh'):
     engine = create_engine(find_dburi(dburi))
     tsh = timeseries(namespace)
 
+    if seriesname:
+        series = [seriesname]
+    else:
+        series = [
+            name for name, kind in tsh.list_series(engine).items()
+            if kind == 'formula'
+        ]
+
     if reset:
-        for name, kind in tsh.list_series(engine).items():
-            if kind != 'formula':
-                continue
+        for name in series:
             # reset
             meta = tsh.metadata(engine, name)
             if meta:
@@ -50,14 +57,11 @@ def update_metadata(dburi, reset=False, namespace='tsh'):
     errors = []
 
     def justdoit():
-        for name, kind in tsh.list_series(engine).items():
-            if kind != 'formula':
-                continue
-            print(name)
-
+        for name in series:
             tree = parse(tsh.formula(engine, name))
             try:
                 tz = tsh.check_tz_compatibility(engine, tree)
+                print(name, tz)
                 meta = tsh.default_meta(tz)
             except ValueError as err:
                 errors.append((name, err))
