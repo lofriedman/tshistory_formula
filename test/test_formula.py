@@ -174,6 +174,40 @@ def test_metadata(engine, tsh):
     }
 
 
+def test_user_meta(engine, tsh):
+    ts = pd.Series(
+        [1, 2, 3],
+        index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
+    )
+
+    tsh.update(engine, ts, 'user_metadata', 'Babar',
+               insertion_date=utcdt(2021, 1, 1))
+
+    tsh.register_formula(
+        engine,
+        'test_user_meta',
+        '(+ 2 (series "user_metadata"))',
+    )
+
+    tsh.update_metadata(
+        engine,
+        'test_user_meta',
+        {'foo': 42}
+    )
+
+    meta = tsh.metadata(engine, 'test_user_meta')
+    assert meta['foo'] == 42
+
+    tsh.register_formula(
+        engine,
+        'test_user_meta',
+        '(+ 3 (series "user_metadata"))',
+        update=True
+    )
+    meta = tsh.metadata(engine, 'test_user_meta')
+    assert 'foo' not in meta
+
+
 def test_series_options(engine, tsh):
     test = pd.Series(
         [1, 2, 3],
