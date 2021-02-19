@@ -113,7 +113,8 @@ class timeseries(basets):
                          reject_unknown=True, update=False):
         if not update:
             assert not self.formula(cn, name), f'`{name}` already exists'
-        if self.exists(cn, name) and self.type(cn, name) == 'primary':
+        update = self.exists(cn, name)
+        if update and self.type(cn, name) == 'primary':
             raise TypeError(
                 f'primary series `{name}` cannot be overriden by a formula'
             )
@@ -168,7 +169,9 @@ class timeseries(basets):
             # bad situation ...
             return
 
-        meta = self.default_meta(tzaware)
+        coremeta = self.default_meta(tzaware)
+        meta = self.metadata(cn, name) or {}
+        meta = dict(meta, **coremeta)
         self.update_metadata(cn, name, meta, internal=True)
 
     def default_meta(self, tzaware):

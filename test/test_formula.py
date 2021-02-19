@@ -197,15 +197,31 @@ def test_user_meta(engine, tsh):
 
     meta = tsh.metadata(engine, 'test_user_meta')
     assert meta['foo'] == 42
+    assert meta == {
+        'foo': 42,
+        'index_dtype': '|M8[ns]',
+        'index_type': 'datetime64[ns, UTC]',
+        'tzaware': True,
+        'value_dtype': '<f8',
+        'value_type': 'float64'
+    }
 
     tsh.register_formula(
         engine,
         'test_user_meta',
-        '(+ 3 (series "user_metadata"))',
+        '(+ 3 (naive (series "user_metadata")))',
         update=True
     )
     meta = tsh.metadata(engine, 'test_user_meta')
-    assert 'foo' not in meta
+    # user meta preserved, core meta correctly updated
+    assert meta == {
+        'foo': 42,
+        'index_dtype': '<M8[ns]',
+        'index_type': 'datetime64[ns]',
+        'tzaware': False,
+        'value_dtype': '<f8',
+        'value_type': 'float64'
+    }
 
 
 def test_series_options(engine, tsh):
