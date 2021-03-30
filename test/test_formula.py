@@ -620,6 +620,75 @@ insertion_date             value_date
 """, h)
 
 
+def test_history_bounds(engine, tsh):
+    # two series, one with a gap
+
+    #    ^  h0      h1
+    #    |
+    #  i2| xxx     xxx
+    #  i1| xxx
+    #  i0| xxx     xxx
+
+    h0 = [
+        [pd.Series([1], index=[dt(2021, 4, 1)]), utcdt(2020, 1, 1)],
+        [pd.Series([2], index=[dt(2021, 4, 1)]), utcdt(2020, 1, 2)],
+        [pd.Series([3], index=[dt(2021, 4, 1)]), utcdt(2020, 1, 3)],
+    ]
+    h1 = [
+        [pd.Series([10], index=[dt(2021, 4, 1)]), utcdt(2020, 1, 1)],
+        [pd.Series([30], index=[dt(2021, 4, 1)]), utcdt(2020, 1, 3)],
+    ]
+
+    for idx, h in enumerate([h0, h1]):
+        for ts, idate in h:
+            tsh.update(engine, ts, f'h{idx}', 'timemaster', insertion_date=idate)
+
+    formula = '(add (series "h0") (series "h1"))'
+    tsh.register_formula(engine, 'sum-h', formula)
+
+    hist_all = tsh.history(engine, 'sum-h')
+
+    hist_slice = tsh.history(engine, 'sum-h',
+                             from_insertion_date= utcdt(2020, 1, 1, 12),
+                             to_insertion_date = utcdt(2020, 1, 2, 12),
+    )
+    hist_top = tsh.history(engine, 'sum-h',
+                           from_insertion_date=utcdt(2020, 1, 1, 12),
+    )
+
+    assert_hist("""
+insertion_date             value_date
+2020-01-01 00:00:00+00:00  2021-04-01    11.0
+2020-01-02 00:00:00+00:00  2021-04-01    12.0
+2020-01-03 00:00:00+00:00  2021-04-01    33.0
+""", hist_all)
+
+    # for references, h0 and h1, the components of the sum
+    assert_hist("""
+insertion_date             value_date
+2020-01-01 00:00:00+00:00  2021-04-01    1.0
+2020-01-02 00:00:00+00:00  2021-04-01    2.0
+2020-01-03 00:00:00+00:00  2021-04-01    3.0
+""", tsh.history(engine, 'h0'))
+
+    assert_hist("""
+insertion_date             value_date
+2020-01-01 00:00:00+00:00  2021-04-01    10.0
+2020-01-03 00:00:00+00:00  2021-04-01    30.0
+""", tsh.history(engine, 'h1'))
+
+    # return an empty series instead ot the correct result
+    assert_hist("""
+Series([], )
+""", hist_slice)
+
+    # one line is missing
+    assert_hist("""
+insertion_date             value_date
+2020-01-03 00:00:00+00:00  2021-04-01    33.0
+""", hist_top)
+
+
 def test_history_diffmode(engine, tsh):
     for i in range(1, 4):
         ts = pd.Series([i], index=[utcdt(2020, 1, i)])
