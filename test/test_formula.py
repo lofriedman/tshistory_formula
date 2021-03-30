@@ -677,14 +677,16 @@ insertion_date             value_date
 2020-01-03 00:00:00+00:00  2021-04-01    30.0
 """, tsh.history(engine, 'h1'))
 
-    # return an empty series instead ot the correct result
+    # as expected
     assert_hist("""
-Series([], )
+insertion_date             value_date
+2020-01-02 00:00:00+00:00  2021-04-01    12.0
 """, hist_slice)
 
     # one line is missing
     assert_hist("""
 insertion_date             value_date
+2020-01-02 00:00:00+00:00  2021-04-01    12.0
 2020-01-03 00:00:00+00:00  2021-04-01    33.0
 """, hist_top)
 
