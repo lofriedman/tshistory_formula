@@ -1390,6 +1390,8 @@ insertion_date             value_date
 
 
 def test_history_auto_nr(engine, tsh):
+    OperatorHistory.FUNCS = None
+
     ts1 = pd.Series(
         [1.0] * 24,
         index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
@@ -1428,13 +1430,12 @@ def test_history_auto_nr(engine, tsh):
 
     tsh.register_formula(engine, 'auto_series', '(auto-operator)')
     tsh.get(engine, 'auto_series')
-
-    with pytest.raises(ValueError):
-        tsh.history(
-            engine,
-            'auto_series',
-            from_insertion_date=utcdt(2020, 1, 1, 12)
-        )
+    hist = tsh.history(
+        engine,
+        'auto_series',
+        from_insertion_date=utcdt(2020, 1, 1, 12)
+    )
+    assert len(hist) == 2
 
 
 def test_forged_names():

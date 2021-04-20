@@ -359,21 +359,27 @@ class timeseries(basets):
         # complete the history with a value for the first idate
         # (we might be missing this because of the query from_insertion_date)
         if histmap:
-            mindate = min([min(hist.keys()) for hist in histmap.values() if len(hist)])
-            for name, hist in histmap.items():
-                if mindate not in hist:
-                    ts_mindate = self.get(
-                        cn,
-                        name,
-                        revision_date=mindate,
-                        from_value_date=from_value_date,
-                        to_value_date=to_value_date,
-                    )
-                    if ts_mindate is not None and len(ts_mindate):
-                        # the history must be ordered by key
-                        base = {mindate: ts_mindate}
-                        base.update(hist)
-                        histmap[name] = base
+            mins = [
+                min(hist.keys())
+                for hist in histmap.values()
+                if len(hist)
+            ]
+            if len(mins):
+                mindate = min(mins)
+                for name, hist in histmap.items():
+                    if mindate not in hist:
+                        ts_mindate = self.get(
+                            cn,
+                            name,
+                            revision_date=mindate,
+                            from_value_date=from_value_date,
+                            to_value_date=to_value_date,
+                        )
+                        if ts_mindate is not None and len(ts_mindate):
+                            # the history must be ordered by key
+                            base = {mindate: ts_mindate}
+                            base.update(hist)
+                            histmap[name] = base
 
         i = interpreter.HistoryInterpreter(
             name, cn, self, {
