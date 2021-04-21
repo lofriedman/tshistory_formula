@@ -1389,6 +1389,54 @@ insertion_date             value_date
 """, hist)
 
 
+def test_history_auto_nr(engine, tsh):
+    ts1 = pd.Series(
+        [1.0] * 24,
+        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
+    )
+    ts2 = pd.Series(
+        [10] * 24,
+        index=pd.date_range(utcdt(2020, 1, 1), periods=24, freq='H')
+    )
+
+    @func('auto-operator', auto=True)
+    def auto_operator(__interpreter__) -> pd.Series:
+        return ts2
+
+    @metadata('auto-operator')
+    def auto_operator_metadata(_cn, _tsh, tree):
+        return {
+            tree[0]: {
+                'tzaware': True,
+                'index_type': 'datetime64[ns, UTC]',
+                'value_type': 'float64',
+                'index_dtype': '|M8[ns]',
+                'value_dtype': '<f8'
+            }
+        }
+
+    @finder('auto-operator')
+    def auto_operator_finder(cn, tsh, tree):
+        return {'auto-operator': tree}
+
+    @history('auto-operator')
+    def auto_operator_history(__interpreter__):
+        return {
+            utcdt(2020, 1, 1): ts1,
+            utcdt(2020, 1, 2): ts2
+        }
+
+    tsh.register_formula(engine, 'auto_series', '(auto-operator)')
+    tsh.get(engine, 'auto_series')
+
+    with pytest.raises(ValueError):
+        tsh.history(
+            engine,
+            'auto_series',
+            from_insertion_date=utcdt(2020, 1, 1, 12)
+        )
+
+
 def test_forged_names():
 
     def func(name):
