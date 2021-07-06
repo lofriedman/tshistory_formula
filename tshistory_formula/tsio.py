@@ -675,6 +675,17 @@ class timeseries(basets):
         return res.scalar()
 
     @tx
+    def list_groups(self, cn):
+        cat = super().list_groups(cn)
+        cat.update({
+            name: 'formula'
+            for name, in cn.execute(
+                    f'select name from "{self.namespace}".group_formula'
+            ).fetchall()
+        })
+        return cat
+
+    @tx
     def group_get(self, cn, groupname,
                   revision_date=None,
                   from_value_date=None,

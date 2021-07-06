@@ -1785,3 +1785,13 @@ def test_group_formula(engine, tsh):
 2015-01-04  4.0  5.0  6.0
 2015-01-05  5.0  6.0  7.0
 """, df)
+
+    cat = tsh.list_groups(engine)
+    assert {
+        name: kind for name, kind in cat.items()
+        if kind == 'formula'
+    } == {
+        'group_formula': 'formula',
+        'sumgroup': 'formula',
+        'mixed_sum': 'formula'
+    }
