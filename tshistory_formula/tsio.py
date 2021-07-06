@@ -651,6 +651,47 @@ class timeseries(basets):
         return True
 
     @tx
+    def group_metadata(self, cn, name):
+        kind = self.group_type(cn, name)
+        if kind == 'primary':
+            return super().group_metadata(cn, name)
+
+        if kind == 'formula':
+            table, col = 'group_formula', 'name'
+        else:
+            assert kind == 'bound'
+            table, col = 'group_binding', 'groupname'
+
+        return cn.execute(
+            f'select metadata from "{self.namespace}".{table} '
+            f'where {col} = %(name)s',
+            name=name
+        ).scalar() or {}
+
+    @tx
+    def update_group_metadata(self, cn, name, meta):
+        kind = self.group_type(cn, name)
+        if kind == 'primary':
+            return super().update_group_metadata(cn, name, meta)
+
+        if kind == 'formula':
+            table, col = 'group_formula', 'name'
+        else:
+            assert kind == 'bound'
+            table, col = 'group_binding', 'groupname'
+
+        sql = (
+            f'update "{self.namespace}".{table} '
+            'set metadata = %(metadata)s '
+            f'where {col} = %(name)s'
+        )
+        cn.execute(
+            sql,
+            metadata=json.dumps(meta),
+            name=name
+        )
+
+    @tx
     def register_group_formula(self, cn,
                                name, formula):
         if self.group_exists(cn, name) and self.group_type(cn, name) != 'formula':

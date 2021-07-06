@@ -1798,8 +1798,16 @@ def test_group_formula(engine, tsh):
 
     assert tsh.group_type(engine, 'group_formula') == 'formula'
 
+    assert tsh.group_metadata(engine, 'group_formula') == {}
+    tsh.update_group_metadata(engine, 'group_formula', {'foo': 'bar'})
+    assert tsh.group_metadata(engine, 'group_formula') == {'foo': 'bar'}
+
     tsh.group_delete(engine, 'group_formula')
     assert not tsh.group_exists(engine, 'group_formula')
+
+    assert tsh.group_metadata(engine, 'group_formula') is None
+    with pytest.raises(AssertionError):
+        tsh.update_group_metadata(engine, 'group_formula', {'foo': 'bar'})
 
 
 def test_group_bound_formula(engine, tsh):
@@ -1902,5 +1910,13 @@ def test_group_bound_formula(engine, tsh):
         'hijacking': 'bound'
     }
 
+    assert tsh.group_metadata(engine, 'hijacking') == {}
+    tsh.update_group_metadata(engine, 'hijacking', {'foo': 'bar'})
+    assert tsh.group_metadata(engine, 'hijacking') == {'foo': 'bar'}
+
     tsh.group_delete(engine, 'hijacking')
     assert not tsh.group_exists(engine, 'hijacking')
+
+    assert tsh.group_metadata(engine, 'hijacking') is None
+    with pytest.raises(AssertionError):
+        tsh.update_group_metadata(engine, 'hijacking', {'foo': 'bar'})
