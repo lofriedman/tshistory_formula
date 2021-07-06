@@ -635,6 +635,12 @@ class timeseries(basets):
     # groups
 
     @tx
+    def group_type(self, cn, name):
+        if self.group_formula(cn, name) is not None:
+            return 'formula'
+        return super().group_type(cn, name)
+
+    @tx
     def register_group_formula(self, cn,
                                name, formula):
         if self.group_exists(cn, name) and self.group_type(cn, name) != 'formula':

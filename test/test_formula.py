@@ -1795,3 +1795,5 @@ def test_group_formula(engine, tsh):
         'sumgroup': 'formula',
         'mixed_sum': 'formula'
     }
+
+    assert tsh.group_type(engine, 'group_formula') == 'formula'
