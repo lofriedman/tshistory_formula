@@ -237,3 +237,34 @@ class GroupInterpreter(Interpreter):
         if GroupInterpreter.FUNCS is None:
             GroupInterpreter.FUNCS = dict(registry.FUNCS, **registry.GFUNCS)
         return GroupInterpreter.FUNCS
+
+
+class BridgeInterpreter(Interpreter):
+    """Intepreter that creates a bridge between the group world and the
+    series world
+    """
+
+    def __init__(self, *args, groups, binding):
+        super().__init__(*args)
+        self.groups = groups
+        self.binding = binding
+
+    def get(self, seriesname, _getargs):
+        mask_binding = self.binding['series'] == seriesname
+        if sum(mask_binding) == 0:
+            return super().get(seriesname, _getargs)
+        elif sum(mask_binding) > 1:
+            raise Exception
+
+        family = self.binding.loc[mask_binding, 'family'].iloc[0]
+        combination = self.env['__combination__']
+        return self.groups[family][seriesname][combination[family]]
+
+    def g_evaluate(self, text, combination):
+        self.env['__combination__'] = combination
+        ts = pevaluate(parse(text), self.env)
+        ts.name = '.'.join([
+            str(sn)
+            for _, sn, in combination.items()
+        ])
+        return ts

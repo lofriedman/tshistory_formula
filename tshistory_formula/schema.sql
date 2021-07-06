@@ -15,3 +15,11 @@ create table "{ns}".group_formula (
   metadata jsonb
 );
 
+create table "{ns}".group_binding (
+  id serial primary key,
+  -- groupname will have an index (unique), sufficient for the query needs
+  groupname text unique not null,
+  seriesname text not null,
+  binding jsonb not null,
+  metadata jsonb
+);

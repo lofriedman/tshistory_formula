@@ -1800,3 +1800,107 @@ def test_group_formula(engine, tsh):
 
     tsh.group_delete(engine, 'group_formula')
     assert not tsh.group_exists(engine, 'group_formula')
+
+
+def test_group_bound_formula(engine, tsh):
+    temp = pd.Series(
+        [12, 13, 14],
+        index=pd.date_range(utcdt(2021, 1, 1), freq='D', periods=3)
+    )
+    wind = pd.Series(
+        [.1, .1, .1],
+        index=pd.date_range(utcdt(2021, 1, 1), freq='D', periods=3)
+    )
+
+    tsh.update(engine, temp, 'base-temp', 'Babar')
+    tsh.update(engine, wind, 'base-wind', 'Celeste')
+
+    tsh.register_formula(
+        engine,
+        'hijacked',
+        '(add (series "base-temp") (series "base-wind"))'
+    )
+
+    df1 = gengroup(
+        n_scenarios=2,
+        from_date=dt(2021, 1, 1),
+        length=3,
+        freq='D',
+        seed=0
+    )
+    tsh.group_replace(
+        engine,
+        df1,
+        'temp-ens',
+        'Arthur'
+    )
+    assert_df("""
+            0  1
+2021-01-01  0  1
+2021-01-02  1  2
+2021-01-03  2  3
+""", df1)
+
+    df2 = gengroup(
+        n_scenarios=2,
+        from_date=dt(2021, 1, 1),
+        length=3,
+        freq='D',
+        seed=1
+    )
+    tsh.group_replace(
+        engine,
+        df2,
+        'wind-ens',
+        'Zéphir'
+    )
+    assert_df("""
+            0  1
+2021-01-01  1  2
+2021-01-02  2  3
+2021-01-03  3  4
+""", df2)
+
+    binding = pd.DataFrame(
+        [
+            ['base-temp', 'temp-ens', 'meteo'],
+            ['base-wind', 'wind-ens', 'meteo'],
+        ],
+        columns=('series', 'group', 'family')
+    )
+
+    tsh.register_formula_bindings(
+        engine,
+        'hijacking',
+        'hijacked',
+        binding
+    )
+
+    ts = tsh.get(engine, 'hijacked')
+    assert_df("""
+2021-01-01 00:00:00+00:00    12.1
+2021-01-02 00:00:00+00:00    13.1
+2021-01-03 00:00:00+00:00    14.1
+""", ts)
+
+    df = tsh.group_get(engine, 'hijacking')
+    assert_df("""
+              0    1
+2021-01-01  1.0  3.0
+2021-01-02  3.0  5.0
+2021-01-03  5.0  7.0
+""", df)
+
+    assert tsh.group_exists(engine, 'hijacking')
+    assert tsh.group_type(engine, 'hijacking') == 'bound'
+
+    cat = tsh.list_groups(engine)
+    assert {
+        name: kind for name, kind in cat.items()
+        if kind == 'bound'
+    } == {
+        'hijacking': 'bound'
+    }
+
+    tsh.group_delete(engine, 'hijacking')
+    assert not tsh.group_exists(engine, 'hijacking')

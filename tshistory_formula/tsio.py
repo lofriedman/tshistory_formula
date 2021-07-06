@@ -1,4 +1,6 @@
+from collections import defaultdict
 from datetime import timedelta
+import itertools
 import json
 
 import pandas as pd
@@ -246,23 +248,21 @@ class timeseries(basets):
         )
         return ts
 
-    def _expanded_formula(self, cn, formula):
+    def _expanded_formula(self, cn, formula, stopnames=()):
         return helper.expanded(
-            self, cn, parse(formula)
+            self, cn, parse(formula), stopnames=stopnames
         )
 
-    def expanded_formula(self, cn, name):
+    def expanded_formula(self, cn, name, stopnames=()):
         formula = self.formula(cn, name)
         if formula is None:
             return
 
-        tree = self._expanded_formula(cn, formula)
+        tree = self._expanded_formula(cn, formula, stopnames)
         if tree is None:
             return
 
-        return serialize(
-            helper.expanded(self, cn, tree)
-        )
+        return serialize(tree)
 
     @tx
     def delete(self, cn, name):
@@ -638,6 +638,8 @@ class timeseries(basets):
     def group_type(self, cn, name):
         if self.group_formula(cn, name) is not None:
             return 'formula'
+        if self.bindings_for(cn, name):
+            return 'bound'
         return super().group_type(cn, name)
 
     @tx
@@ -645,7 +647,7 @@ class timeseries(basets):
         kind = self.group_type(cn, name)
         if kind == 'primary':
             return super().group_exists(cn, name)
-        assert kind == 'formula'
+        assert kind in ('formula', 'bound')
         return True
 
     @tx
@@ -697,6 +699,12 @@ class timeseries(basets):
                     f'select name from "{self.namespace}".group_formula'
             ).fetchall()
         })
+        cat.update({
+            name: 'bound'
+            for name, in cn.execute(
+                    f'select groupname from "{self.namespace}".group_binding'
+            ).fetchall()
+        })
         return cat
 
     @tx
@@ -705,11 +713,17 @@ class timeseries(basets):
         if kind == 'primary':
             return super().group_delete(cn, name)
 
-        assert kind == 'formula'
-        sql = (
-            f'delete from "{self.namespace}".group_formula '
-            'where name = %(name)s'
-        )
+        if kind == 'formula':
+            sql = (
+                f'delete from "{self.namespace}".group_formula '
+                'where name = %(name)s'
+            )
+        else:
+            assert kind == 'bound'
+            sql = (
+                f'delete from "{self.namespace}".group_binding '
+                'where groupname = %(name)s'
+            )
         cn.execute(sql, name=name)
 
     @tx
@@ -741,6 +755,19 @@ class timeseries(basets):
                 df.index.name = None
             return df
 
+        bindinfo = self.bindings_for(
+            cn, groupname
+        )
+        if bindinfo:
+            return self._hijacked_formula(
+                cn,
+                bindinfo[0],
+                bindinfo[1],
+                revision_date=revision_date,
+                from_value_date=from_value_date,
+                to_value_date=to_value_date
+            )
+
         return super().group_get(
             cn,
             groupname,
@@ -748,3 +775,139 @@ class timeseries(basets):
             from_value_date=from_value_date,
             to_value_date=to_value_date
         )
+
+    # group formula binding
+
+    @tx
+    def register_formula_bindings(self, cn, groupname, formulaname, binding):
+        if self.type(cn, formulaname) != 'formula':
+            raise ValueError(f'`{formulaname}` is not a formula')
+
+        gtype = self.group_type(cn, groupname)
+
+        if self.group_exists(cn, groupname) and gtype != 'bound-formula':
+            raise ValueError(f'cannot bind `{groupname}`: already a {gtype}')
+
+        if set(binding.columns) != {'series', 'group', 'family'}:
+            raise ValueError(f'formula `{formulaname}` has no proper binding')
+
+        if not len(binding):
+            raise ValueError(f'formula `{formulaname}` has an empty binding')
+
+        cn.execute(
+            f'insert into "{self.namespace}"."group_binding" (groupname, seriesname, binding) '
+            'values (%(gname)s, %(sname)s, %(binding)s) '
+            'on conflict (groupname) do update '
+            'set seriesname = %(sname)s, '
+            '    binding = %(binding)s',
+            gname=groupname,
+            sname=formulaname,
+            binding=binding.to_json(orient='records')
+        )
+
+    @tx
+    def bindings_for(self, cn, groupname):
+        res = cn.execute(
+            'select seriesname, binding '
+            f'from "{self.namespace}".group_binding '
+            'where groupname = %(gname)s',
+            gname=groupname
+        )
+        sname_binding = res.fetchone()
+        if sname_binding is None:
+            return
+        binding = pd.DataFrame(sname_binding[1])
+        return sname_binding[0], binding
+
+    @tx
+    def get_bound_group(self, cn, name, binding,
+                        from_value_date=None,
+                        to_value_date=None,
+                        revision_date=None):
+        m = binding['series'] == name
+        if sum(m) == 0:
+            # unbound series
+            return None, None
+
+        assert sum(m) == 1
+        groupname = binding.loc[m, 'group'].iloc[0]
+        family = binding.loc[m, 'family'].iloc[0]
+        return (
+            self.group_get(
+                cn,
+                groupname,
+                from_value_date=None,
+                to_value_date=None,
+                revision_date=None
+            ),
+            family
+        )
+
+    @tx
+    def _hijacked_formula(self, cn, name, binding,
+                          from_value_date=None,
+                          to_value_date=None,
+                          revision_date=None):
+        # find all the series in the formula that are referenced in
+        # the binding since the series can be anywhere in the
+        # dependencies - we use exanded_formula using (stopnames) to
+        # limit the expansion - this semi-expanded formula will be
+        # used later in the interpretor
+        groupmap = defaultdict(dict)
+        formula = self.expanded_formula(
+            cn, name,
+            stopnames = binding['series'].values
+        )
+        tree = parse(formula)
+        series = self.find_series(cn, tree)
+
+        for sname in series:
+            df, family = self.get_bound_group(
+                cn,
+                sname,
+                binding,
+                from_value_date,
+                to_value_date,
+                revision_date
+            )
+            if family is not None:
+                assert df is not None
+                groupmap[family][sname] = df
+
+        assert groupmap
+
+        bi = interpreter.BridgeInterpreter(
+            cn, self, {
+                'from_value_date': from_value_date,
+                'to_value_date': to_value_date,
+                'revision_date': revision_date
+            },
+            groups=groupmap,
+            binding=binding,
+        )
+
+        # build scenarios combinations
+        possible_values = []
+        families = []
+        for ens_name, sub in groupmap.items():
+            # we may have several groups there
+            # but they all have the same column names
+            # and this is what we want
+            df = sub[list(sub.keys())[0]]
+            possible_values.append(df.columns.to_list())
+            families.append(ens_name)
+
+        # combination is a list of dict tha contain a unqiue scenario...
+        # [{ens0 = 'scenario0', ens1 = 'scenario4'}, ... ]
+        combinations = []
+        for comb in itertools.product(*possible_values):
+            combination = {}
+            for idx, values in enumerate(comb):
+                combination.update({families[idx]: values})
+            combinations.append(combination)
+
+        columns = []
+        for combination in combinations:
+            columns.append(bi.g_evaluate(formula, combination))
+
+        return pd.concat(columns, axis=1)
