@@ -1797,3 +1797,6 @@ def test_group_formula(engine, tsh):
     }
 
     assert tsh.group_type(engine, 'group_formula') == 'formula'
+
+    tsh.group_delete(engine, 'group_formula')
+    assert not tsh.group_exists(engine, 'group_formula')

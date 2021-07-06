@@ -641,6 +641,14 @@ class timeseries(basets):
         return super().group_type(cn, name)
 
     @tx
+    def group_exists(self, cn, name):
+        kind = self.group_type(cn, name)
+        if kind == 'primary':
+            return super().group_exists(cn, name)
+        assert kind == 'formula'
+        return True
+
+    @tx
     def register_group_formula(self, cn,
                                name, formula):
         if self.group_exists(cn, name) and self.group_type(cn, name) != 'formula':
@@ -690,6 +698,19 @@ class timeseries(basets):
             ).fetchall()
         })
         return cat
+
+    @tx
+    def group_delete(self, cn, name):
+        kind = self.group_type(cn, name)
+        if kind == 'primary':
+            return super().group_delete(cn, name)
+
+        assert kind == 'formula'
+        sql = (
+            f'delete from "{self.namespace}".group_formula '
+            'where name = %(name)s'
+        )
+        cn.execute(sql, name=name)
 
     @tx
     def group_get(self, cn, groupname,
