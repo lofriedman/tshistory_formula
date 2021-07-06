@@ -120,3 +120,20 @@ def finder(name):
 
     return decorator
 
+
+# groups
+
+GFUNCS = {}
+
+
+def gfunc(name):
+    # work around the circular import
+    from tshistory_formula.helper import assert_typed
+    from tshistory_formula.interpreter import Interpreter
+
+    def decorator(func):
+        assert_typed(func)
+        GFUNCS[name] = func
+        return func
+
+    return decorator

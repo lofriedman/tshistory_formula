@@ -223,3 +223,17 @@ class NullIntepreter(Interpreter):
 
     def __init__(self):
         pass
+
+
+# groups
+
+
+class GroupInterpreter(Interpreter):
+    __slots__ = 'env', 'cn', 'tsh', 'getargs', 'histories', 'vcache', 'auto'
+    FUNCS = None
+
+    @property
+    def operators(self):
+        if GroupInterpreter.FUNCS is None:
+            GroupInterpreter.FUNCS = dict(registry.FUNCS, **registry.GFUNCS)
+        return GroupInterpreter.FUNCS

@@ -9,7 +9,7 @@ from tshistory.util import (
     tx
 )
 
-from tshistory_formula import funcs  # trigger registration
+from tshistory_formula import funcs, gfuncs  # trigger registration
 from tshistory_formula import (
     api,  # trigger extension
     interpreter,
@@ -631,3 +631,82 @@ class timeseries(basets):
             )
         else:
             super().rename(cn, oldname, newname)
+
+    # groups
+
+    @tx
+    def register_group_formula(self, cn,
+                               name, formula):
+        if self.group_exists(cn, name) and self.group_type(cn, name) != 'formula':
+            raise TypeError(
+                f'cannot register formula `{name}`: already a `{self.group_type(cn, name)}`'
+            )
+        # basic syntax check
+        tree = parse(formula)
+        formula = serialize(tree)
+
+        # type checking
+        i = interpreter.GroupInterpreter(cn, self, {})
+        rtype = helper.typecheck(tree, env=i.env)
+        if not helper.sametype(rtype, pd.DataFrame):
+            raise TypeError(
+                f'formula `{name}` must return a `DataFrame`, not `{rtype.__name__}`'
+            )
+
+        sql = (
+            f'insert into "{self.namespace}".group_formula (name, text) '
+            'values (%(name)s, %(text)s) '
+            'on conflict (name) do update '
+            'set text = %(text)s'
+        )
+        cn.execute(
+            sql,
+            name=name,
+            text=formula
+        )
+
+    @tx
+    def group_formula(self, cn, groupname):
+        res = cn.execute(
+            f'select text from "{self.namespace}".group_formula '
+            'where name = %(name)s',
+            name=groupname
+        )
+        return res.scalar()
+
+    @tx
+    def group_get(self, cn, groupname,
+                  revision_date=None,
+                  from_value_date=None,
+                  to_value_date=None):
+        # case of formula
+        formula = self.group_formula(cn, groupname)
+        if formula:
+            interp = interpreter.GroupInterpreter(
+                cn, self,
+                dict(
+                    revision_date=revision_date,
+                    from_value_date=from_value_date,
+                    to_value_date=to_value_date
+                )
+            )
+            df = self.eval_formula(
+                cn, formula,
+                revision_date=revision_date,
+                from_value_date=from_value_date,
+                to_value_date=to_value_date,
+                __interpreter__=interp
+            )
+            if df.index.dtype != 'object':
+                df.columns = [str(col) for col in df.columns]
+            if df.index.name:
+                df.index.name = None
+            return df
+
+        return super().group_get(
+            cn,
+            groupname,
+            revision_date=revision_date,
+            from_value_date=from_value_date,
+            to_value_date=to_value_date
+        )

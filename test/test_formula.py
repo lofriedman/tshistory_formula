@@ -9,6 +9,7 @@ from psyl import lisp
 from tshistory.testutil import (
     assert_df,
     assert_hist,
+    gengroup,
     utcdt
 )
 
@@ -1704,3 +1705,83 @@ def test_expanded_stopnames(engine, tsh):
         ' (series "bottom-expandme2" #:fill 0 #:prune 1 #:weight 1.5)'
         ' (options (series "base-expand-me2") #:fill 1 #:prune 2))'
     )
+
+
+# groups
+
+def test_group_formula(engine, tsh):
+    df = gengroup(
+        n_scenarios=3,
+        from_date=dt(2015, 1, 1),
+        length=5,
+        freq='D',
+        seed=2
+    )
+
+    colnames = ['a', 'b', 'c']
+    df.columns = colnames
+
+    tsh.group_replace(engine, df, 'group1', 'test')
+
+    # first group formula, referencing a group
+    tsh.register_group_formula(
+        engine,
+        'group_formula',
+        '(group "group1")'
+    )
+    df = tsh.group_get(engine, 'group_formula')
+
+    assert_df("""
+              a    b    c
+2015-01-01  2.0  3.0  4.0
+2015-01-02  3.0  4.0  5.0
+2015-01-03  4.0  5.0  6.0
+2015-01-04  5.0  6.0  7.0
+2015-01-05  6.0  7.0  8.0
+""", df)
+
+    tsh.group_replace(engine, df, 'group2', 'test')
+
+    tsh.register_group_formula(
+        engine,
+        'sumgroup',
+        '(group_add (group "group1") (group "group2"))'
+    )
+
+    df = tsh.group_get(engine, 'sumgroup')
+
+    assert_df("""
+               a     b     c
+2015-01-01   4.0   6.0   8.0
+2015-01-02   6.0   8.0  10.0
+2015-01-03   8.0  10.0  12.0
+2015-01-04  10.0  12.0  14.0
+2015-01-05  12.0  14.0  16.0
+""", df)
+
+    plain_ts = pd.Series(
+        [1] * 7,
+        index=pd.date_range(
+            start=dt(2014, 12, 31),
+            freq='D',
+            periods=7,
+        )
+    )
+    tsh.update(engine, plain_ts, 'plain_ts', 'Babar')
+
+    # group_add is polymorphic
+    tsh.register_group_formula(
+        engine,
+        'mixed_sum',
+        '(group_add (group "group1") (* -1 (series "plain_ts")))'
+    )
+
+    df = tsh.group_get(engine, 'mixed_sum')
+    assert_df("""
+              a    b    c
+2015-01-01  1.0  2.0  3.0
+2015-01-02  2.0  3.0  4.0
+2015-01-03  3.0  4.0  5.0
+2015-01-04  4.0  5.0  6.0
+2015-01-05  5.0  6.0  7.0
+""", df)
