@@ -7,6 +7,11 @@ from tshistory_formula.registry import gfunc
 
 @gfunc('group')
 def group(__interpreter__, name: str)-> pd.DataFrame:
+    """
+    The `group` operator retrieves a group (from local storage,
+    formula or bound formula).
+
+    """
     return __interpreter__.tsh.group_get(
         __interpreter__.cn, name,  **__interpreter__.getargs
     )
@@ -14,6 +19,13 @@ def group(__interpreter__, name: str)-> pd.DataFrame:
 
 @gfunc('group_add')
 def group_add(*grouplist: Union[pd.DataFrame, pd.Series]) -> pd.DataFrame:
+    """
+    Linear combination of two or more groups. Takes a variable number
+    of groups and series as input. At least one group must be supplied.
+
+    Example: `(group-add (group "wallonie") (group "bruxelles") (group "flandres"))`
+
+    """
     dfs = [
         df for df in grouplist
         if isinstance(df, pd.DataFrame)
