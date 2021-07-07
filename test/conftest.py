@@ -34,7 +34,7 @@ def tsh(request, engine):
 
 
 @pytest.fixture(scope='session')
-def mapi(engine):
+def tsa(engine):
     tsschema('test-mapi').create(engine)
     formula_schema('test-mapi').create(engine)
     tsschema('test-mapi-2').create(engine)
@@ -48,9 +48,6 @@ def mapi(engine):
             (str(engine.url), 'test-mapi-2')
         ]
     )
-
-
-tsa = mapi
 
 
 @pytest.fixture

@@ -19,7 +19,7 @@ from tshistory_formula.editor import (
     fancypresenter
 )
 
-def test_editor_table_callback(mapi):
+def test_editor_table_callback(tsa):
     groundzero = pd.Series(
         [0, 0, 0],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
@@ -28,15 +28,15 @@ def test_editor_table_callback(mapi):
         [1, 1, 1],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
     )
-    mapi.update('groundzero-a', groundzero, 'Babar')
-    mapi.update('one-a', one, 'Celeste')
+    tsa.update('groundzero-a', groundzero, 'Babar')
+    tsa.update('one-a', one, 'Celeste')
 
-    mapi.register_formula(
+    tsa.register_formula(
         'editor-1',
         '(add (* 3.1416 (series "groundzero-a" #:fill "bfill" #:prune 1)) (series "one-a"))',
     )
 
-    presenter = fancypresenter(mapi, 'editor-1', {})
+    presenter = fancypresenter(tsa, 'editor-1', {})
     info = [
         {
             k: v for k, v in info.items() if k != 'ts'
@@ -50,7 +50,7 @@ def test_editor_table_callback(mapi):
     ]
 
     # trigger an empty series
-    presenter = fancypresenter(mapi, 'editor-1',
+    presenter = fancypresenter(tsa, 'editor-1',
                                {'from_value_date': utcdt(2019, 1, 4)})
     info = [
         {
@@ -65,22 +65,22 @@ def test_editor_table_callback(mapi):
     ]
 
 
-def test_editor_no_such_series(mapi):
+def test_editor_no_such_series(tsa):
     with pytest.raises(AssertionError):
-        fancypresenter(mapi, 'no-such-series', {})
+        fancypresenter(tsa, 'no-such-series', {})
 
 
-def test_editor_pure_scalar_op(mapi):
+def test_editor_pure_scalar_op(tsa):
     ts = pd.Series(
         [1, 2, 3],
         index=pd.date_range(utcdt(2020, 1, 1), periods=3, freq='D')
     )
-    mapi.update('pure-scalar-ops', ts, 'Babar')
-    mapi.register_formula(
+    tsa.update('pure-scalar-ops', ts, 'Babar')
+    tsa.register_formula(
         'formula-pure-scalar-ops',
         '(+ (* 3 (/ 6 2)) (series "pure-scalar-ops"))'
     )
-    presenter = fancypresenter(mapi, 'formula-pure-scalar-ops',
+    presenter = fancypresenter(tsa, 'formula-pure-scalar-ops',
                                {'from_value_date': utcdt(2019, 1, 4)})
     info = [
         {
@@ -94,7 +94,7 @@ def test_editor_pure_scalar_op(mapi):
     ]
 
 
-def test_editor_new_operator(mapi):
+def test_editor_new_operator(tsa):
     @func('genrandomseries', auto=True)
     def genrandomseries() -> pd.Series:
         return pd.Series(
@@ -123,23 +123,23 @@ def test_editor_new_operator(mapi):
 
     @func('frobulated')
     def frobulate(a: str, b: str) -> pd.Series:
-        sa = mapi.get(a)
-        sb = mapi.get(b)
+        sa = tsa.get(a)
+        sb = tsa.get(b)
         return (sa + 1) * sb
 
-    mapi.register_formula(
+    tsa.register_formula(
         'random',
         '(genrandomseries)',
     )
 
-    ts = mapi.get('random')
+    ts = tsa.get('random')
     assert_df("""
 2019-01-01    1.0
 2019-01-02    2.0
 2019-01-03    3.0
 """, ts)
 
-    presenter = fancypresenter(mapi, 'random', {})
+    presenter = fancypresenter(tsa, 'random', {})
     info = [
         {
             k: v for k, v in info.items() if k != 'ts'
@@ -151,7 +151,7 @@ def test_editor_new_operator(mapi):
         {'name': 'genrandomseries', 'type': 'autotrophic'}
     ]
 
-    mapi.update(
+    tsa.update(
         'new-op',
         pd.Series(
             [1, 2, 3],
@@ -160,12 +160,12 @@ def test_editor_new_operator(mapi):
         'Baabar'
     )
 
-    mapi.register_formula(
+    tsa.register_formula(
         'frobulating',
         '(* 2 (add (series "random")'
         '          (frobulated "new-op" "new-op")))'
     )
-    presenter = fancypresenter(mapi, 'frobulating', {})
+    presenter = fancypresenter(tsa, 'frobulating', {})
     info = [
         {
             k: v for k, v in info.items() if k != 'ts'
@@ -182,7 +182,7 @@ def test_editor_new_operator(mapi):
     FUNCS.pop('frobulated')
 
 
-def test_complicated_thing(mapi):
+def test_complicated_thing(tsa):
     groundzero = pd.Series(
         [0, 0, 0],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
@@ -191,16 +191,16 @@ def test_complicated_thing(mapi):
         [1, 1, 1],
         index=pd.date_range(utcdt(2019, 1, 1), periods=3, freq='D')
     )
-    mapi.update('groundzero-b', groundzero, 'Babar')
-    mapi.update('one-b', one, 'Celeste')
+    tsa.update('groundzero-b', groundzero, 'Babar')
+    tsa.update('one-b', one, 'Celeste')
 
-    mapi.register_formula(
+    tsa.register_formula(
         'complicated',
         '(add (* 3.1416 (series "groundzero-b" #:fill "bfill" #:prune 1))'
         '     (* 2 (min (+ 1 (series "groundzero-b")) (series "one-b"))))',
     )
 
-    presenter = fancypresenter(mapi, 'complicated', {})
+    presenter = fancypresenter(tsa, 'complicated', {})
     info = [
         {
             k: v for k, v in info.items() if k != 'ts'
@@ -214,7 +214,7 @@ def test_complicated_thing(mapi):
     ]
 
 
-def test_autotrophic_operator(mapi):
+def test_autotrophic_operator(tsa):
     @func('auto', auto=True)
     def auto() -> pd.Series:
         return pd.Series(
@@ -240,12 +240,12 @@ def test_autotrophic_operator(mapi):
             }
         }
 
-    mapi.register_formula(
+    tsa.register_formula(
         'present-auto',
         '(auto)'
     )
 
-    presenter = fancypresenter(mapi, 'present-auto', {})
+    presenter = fancypresenter(tsa, 'present-auto', {})
     info = [
         {
             k: v for k, v in info.items() if k != 'ts'
@@ -260,7 +260,7 @@ def test_autotrophic_operator(mapi):
     assert len(presenter.infos[1]['ts']) == 3
     assert presenter.infos[1]['ts'].name == 'my-little-constant-series'
 
-    mapi.update(
+    tsa.update(
         'too-naive',
         pd.Series(
             [1, 2, 3],
@@ -269,10 +269,10 @@ def test_autotrophic_operator(mapi):
         'Babar'
     )
 
-    mapi.register_formula(
+    tsa.register_formula(
         'mixed-naive-tzaware',
         '(add (series "too-naive") (naive (auto) "CET"))'
     )
 
     # not crash any more :)
-    components_table(mapi, 'mixed-naive-tzaware')
+    components_table(tsa, 'mixed-naive-tzaware')
