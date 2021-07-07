@@ -1,10 +1,12 @@
+from datetime import datetime
 import pandas as pd
 import pytest
 
 from psyl import lisp
 from tshistory.testutil import (
     assert_df,
-    assert_hist
+    assert_hist,
+    gengroup
 )
 
 from tshistory_formula.tsio import timeseries
@@ -331,3 +333,72 @@ def test_autotrophic_idates2(mapi):
     assert idates == [
         pd.Timestamp('2020-1-1', tz='utc')
     ]
+
+
+# groups
+
+def test_group_formula(tsa):
+    df = gengroup(
+        n_scenarios=3,
+        from_date=datetime(2015, 1, 1),
+        length=5,
+        freq='D',
+        seed=2
+    )
+
+    df.columns = ['a', 'b', 'c']
+
+    tsa.group_replace('groupa', df, 'test')
+
+    plain_ts = pd.Series(
+        [1] * 7,
+        index=pd.date_range(
+            start=datetime(2014, 12, 31),
+            freq='D',
+            periods=7,
+        )
+    )
+
+    tsa.update('plain_tsa', plain_ts, 'Babar')
+
+    # start to test
+
+    formula = (
+        '(group-add '
+        '  (group "groupa") '
+        '  (* -1 '
+        '    (series "plain_tsa")))'
+    )
+
+    tsa.register_group_formula(
+        'difference',
+        formula
+    )
+    df = tsa.group_get('difference')
+    assert_df("""
+              a    b    c
+2015-01-01  1.0  2.0  3.0
+2015-01-02  2.0  3.0  4.0
+2015-01-03  3.0  4.0  5.0
+2015-01-04  4.0  5.0  6.0
+2015-01-05  5.0  6.0  7.0
+""", df)
+
+    # formula of formula
+    # we add the same series that was substracted,
+    # hence we msut retrieve the original dataframe group1
+    formula = (
+        '(group-add '
+        '  (group "difference")'
+        '  (series "plain_tsa"))'
+    )
+
+    tsa.register_group_formula(
+        'roundtripeda',
+        formula
+    )
+
+    df_roundtrip = tsa.group_get('roundtripeda')
+    df_original = tsa.group_get('groupa')
+
+    assert df_roundtrip.equals(df_original)

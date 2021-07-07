@@ -50,6 +50,8 @@ def mapi(engine):
     )
 
 
+tsa = mapi
+
 
 @pytest.fixture
 def cli():

@@ -133,3 +133,29 @@ def formula_components(self,
     if source is None:
         return {}
     return source.tsa.formula_components(name, expanded=expanded)
+
+
+# groups
+
+@extend(dbtimeseries)
+def register_group_formula(self, name: str, formula: str) -> NONETYPE:
+    """Define a group as a named formula.
+
+    You can use any operator (including those working on series)
+    provided the top-level expression is a group.
+
+    """
+    with self.engine.begin() as cn:
+        self.tsh.register_group_formula(
+            cn, name, formula
+        )
+
+
+@extend(dbtimeseries)
+def group_formula(self, name: str, expanded: bool=False) -> Optional[str]:
+    """Get the group formula associated with a name.
+
+    """
+    # NOTE: implement expanded
+    with self.engine.begin() as cn:
+        return self.tsh.group_formula(cn, name)
