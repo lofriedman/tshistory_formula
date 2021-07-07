@@ -6,7 +6,8 @@ from psyl import lisp
 from tshistory.testutil import (
     assert_df,
     assert_hist,
-    gengroup
+    gengroup,
+    utcdt
 )
 
 from tshistory_formula.tsio import timeseries
@@ -402,3 +403,106 @@ def test_group_formula(tsa):
     df_original = tsa.group_get('groupa')
 
     assert df_roundtrip.equals(df_original)
+
+
+def test_group_bound_formula(tsa):
+    temp = pd.Series(
+        [12, 13, 14],
+        index=pd.date_range(utcdt(2021, 1, 1), freq='D', periods=3)
+    )
+    wind = pd.Series(
+        [.1, .1, .1],
+        index=pd.date_range(utcdt(2021, 1, 1), freq='D', periods=3)
+    )
+
+    tsa.update('base-temp', temp, 'Babar')
+    tsa.update('base-wind', wind, 'Celeste')
+
+    tsa.register_formula(
+        'hijacked',
+        '(add (series "base-temp") (series "base-wind"))'
+    )
+
+    df1 = gengroup(
+        n_scenarios=2,
+        from_date=datetime(2021, 1, 1),
+        length=3,
+        freq='D',
+        seed=0
+    )
+    tsa.group_replace(
+        'temp-ens',
+        df1,
+        'Arthur'
+    )
+    assert_df("""
+            0  1
+2021-01-01  0  1
+2021-01-02  1  2
+2021-01-03  2  3
+""", df1)
+
+    df2 = gengroup(
+        n_scenarios=2,
+        from_date=datetime(2021, 1, 1),
+        length=3,
+        freq='D',
+        seed=1
+    )
+    tsa.group_replace(
+        'wind-ens',
+        df2,
+        'Zéphir'
+    )
+    assert_df("""
+            0  1
+2021-01-01  1  2
+2021-01-02  2  3
+2021-01-03  3  4
+""", df2)
+
+    binding = pd.DataFrame(
+        [
+            ['base-temp', 'temp-ens', 'meteo'],
+            ['base-wind', 'wind-ens', 'meteo'],
+        ],
+        columns=('series', 'group', 'family')
+    )
+
+    tsa.register_formula_bindings(
+        'hijacking',
+        'hijacked',
+        binding
+    )
+
+    ts = tsa.get('hijacked')
+    assert_df("""
+2021-01-01 00:00:00+00:00    12.1
+2021-01-02 00:00:00+00:00    13.1
+2021-01-03 00:00:00+00:00    14.1
+""", ts)
+
+    df = tsa.group_get('hijacking')
+    assert_df("""
+              0    1
+2021-01-01  1.0  3.0
+2021-01-02  3.0  5.0
+2021-01-03  5.0  7.0
+""", df)
+
+    assert tsa.group_exists('hijacking')
+    assert tsa.group_type('hijacking') == 'bound'
+
+    cat = list(tsa.group_catalog().values())[0]
+    assert ('hijacking', 'bound') in cat
+
+    assert tsa.group_metadata('hijacking') == {}
+    tsa.update_group_metadata('hijacking', {'foo': 'bar'})
+    assert tsa.group_metadata('hijacking') == {'foo': 'bar'}
+
+    tsa.group_delete('hijacking')
+    assert not tsa.group_exists('hijacking')
+
+    assert tsa.group_metadata('hijacking') is None
+    with pytest.raises(AssertionError):
+        tsa.update_group_metadata('hijacking', {'foo': 'bar'})

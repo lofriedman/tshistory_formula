@@ -1,5 +1,7 @@
 from typing import Optional, Dict
 
+import pandas as pd
+
 from psyl.lisp import parse
 from tshistory.util import extend
 from tshistory.api import (
@@ -159,3 +161,41 @@ def group_formula(self, name: str, expanded: bool=False) -> Optional[str]:
     # NOTE: implement expanded
     with self.engine.begin() as cn:
         return self.tsh.group_formula(cn, name)
+
+
+@extend(dbtimeseries)
+def register_formula_bindings(self,
+                              groupname: str,
+                              formulaname: str,
+                              bindings: pd.DataFrame) -> NONETYPE:
+    """Define a group by association of an existing series formula
+    and a `bindings` object.
+
+    Given a formula:
+
+    (add (series "foo") (series "bar") (series "quux"))
+
+    You want to treat "foo" and "bar" as groups.
+    The binding is expressed as a dataframe:
+
+        binding = pd.DataFrame(
+        [
+            ['foo', 'foo-group', 'group'],
+            ['bar', 'bar-group', 'group'],
+        ],
+        columns=('series', 'group', 'ensemble')
+    )
+
+    """
+    with self.engine.begin() as cn:
+        return self.tsh.register_formula_bindings(
+            cn,
+            groupname,
+            formulaname,
+            bindings
+        )
+
+@extend(dbtimeseries)
+def bindings_for(self, name: str):
+    with self.engine.begin() as cn:
+        return self.tsh.bindings_for(cn, name)
