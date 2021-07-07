@@ -17,6 +17,11 @@ def register_formula(self,
                      formula: str,
                      reject_unknown: bool=True,
                      update: bool=False) -> NONETYPE:
+    """Define a series as a named formula.
+
+    e.g. `register_formula('sales.eu', '(add (series "sales.fr") (series "sales.be"))')`
+
+    """
 
     self.tsh.register_formula(
         self.engine,
@@ -31,6 +36,9 @@ def register_formula(self,
 def formula(self,
             name: str,
             expanded: bool=False) -> Optional[str]:
+    """Get the formula associated with a name.
+
+    """
     form = self.tsh.formula(self.engine, name)
     if form and expanded:
         form = self.tsh.expanded_formula(self.engine, name)
@@ -53,6 +61,21 @@ def formula(self,
 def formula_components(self,
                        name: str,
                        expanded: bool=False) -> Optional[Dict[str, str]]:
+    """Compute a mapping from series name (defined as formulas) to the
+    names of the component series.
+
+    If `expanded` is true, it will expand the formula before computing
+    the components. Hence only "ground" series (stored or autotrophic
+    formulas) will show up in the leaves.
+
+
+    >>> formula_components('my-series')
+    {'show-components': ['component-a', 'component-b']}
+
+    >>> formula_components('my-series-2', expanded=True)
+    {'my-series-2': [{'sub-component-1': ['component-a', 'component-b']}, 'component-b']}
+
+    """
     form = self.formula(name)
 
     if form is None:
