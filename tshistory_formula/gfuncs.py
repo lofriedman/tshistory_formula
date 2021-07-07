@@ -17,7 +17,7 @@ def group(__interpreter__, name: str)-> pd.DataFrame:
     )
 
 
-@gfunc('group_add')
+@gfunc('group-add')
 def group_add(*grouplist: Union[pd.DataFrame, pd.Series]) -> pd.DataFrame:
     """
     Linear combination of two or more groups. Takes a variable number
@@ -36,7 +36,7 @@ def group_add(*grouplist: Union[pd.DataFrame, pd.Series]) -> pd.DataFrame:
     ]
 
     if not len(dfs):
-        raise Exception('group_add: at least one argument must be a group')
+        raise Exception('group-add: at least one argument must be a group')
 
     sumdf = sum(dfs)
     sumts = sum(tss)

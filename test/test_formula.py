@@ -1745,7 +1745,7 @@ def test_group_formula(engine, tsh):
     tsh.register_group_formula(
         engine,
         'sumgroup',
-        '(group_add (group "group1") (group "group2"))'
+        '(group-add (group "group1") (group "group2"))'
     )
 
     df = tsh.group_get(engine, 'sumgroup')
@@ -1769,11 +1769,11 @@ def test_group_formula(engine, tsh):
     )
     tsh.update(engine, plain_ts, 'plain_ts', 'Babar')
 
-    # group_add is polymorphic
+    # group-add is polymorphic
     tsh.register_group_formula(
         engine,
         'mixed_sum',
-        '(group_add (group "group1") (* -1 (series "plain_ts")))'
+        '(group-add (group "group1") (* -1 (series "plain_ts")))'
     )
 
     df = tsh.group_get(engine, 'mixed_sum')
