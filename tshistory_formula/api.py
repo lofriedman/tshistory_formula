@@ -1,3 +1,5 @@
+from typing import Optional, Dict
+
 from psyl.lisp import parse
 from tshistory.util import extend
 from tshistory.api import (
@@ -6,9 +8,15 @@ from tshistory.api import (
 )
 
 
+NONETYPE = type(None)
+
+
 @extend(dbtimeseries)
-def register_formula(self, name, formula,
-                     reject_unknown=True, update=False):
+def register_formula(self,
+                     name: str,
+                     formula: str,
+                     reject_unknown: bool=True,
+                     update: bool=False) -> NONETYPE:
 
     self.tsh.register_formula(
         self.engine,
@@ -20,7 +28,9 @@ def register_formula(self, name, formula,
 
 
 @extend(dbtimeseries)
-def formula(self, name, expanded=False):
+def formula(self,
+            name: str,
+            expanded: bool=False) -> Optional[str]:
     form = self.tsh.formula(self.engine, name)
     if form and expanded:
         form = self.tsh.expanded_formula(self.engine, name)
@@ -30,7 +40,9 @@ def formula(self, name, expanded=False):
 
 
 @extend(altsources)
-def formula(self, name, expanded=False):
+def formula(self,
+            name: str,
+            expanded: bool=False) -> Optional[str]:
     source = self._findsourcefor(name)
     if source is None:
         return
@@ -38,7 +50,9 @@ def formula(self, name, expanded=False):
 
 
 @extend(dbtimeseries)
-def formula_components(self, name, expanded=False):
+def formula_components(self,
+                       name: str,
+                       expanded: bool=False) -> Optional[Dict[str, str]]:
     form = self.formula(name)
 
     if form is None:
@@ -89,7 +103,9 @@ def formula_components(self, name, expanded=False):
 
 
 @extend(altsources)
-def formula_components(self, name, expanded=False):
+def formula_components(self,
+                       name: str,
+                       expanded: bool=False) -> Optional[Dict[str, str]]:
     source = self._findsourcefor(name)
     if source is None:
         return {}
