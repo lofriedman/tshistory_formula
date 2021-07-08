@@ -79,7 +79,7 @@ class Interpreter:
         if self.getargs.get('revision_date'):
             val = self.getargs['revision_date']
             if naive:
-               val = val.replace(tzinfo=None)
+                val = val.replace(tzinfo=None)
             elif val.tzinfo is None:
                 val = pd.Timestamp(val, tz=tz)
             self.vcache[key] = val
