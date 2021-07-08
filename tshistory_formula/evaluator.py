@@ -6,9 +6,7 @@ from concurrent.futures import (
 
 from psyl.lisp import (
     buildargs,
-    parse,
-    quasiexpreval,
-    Symbol
+    quasiexpreval
 )
 
 from tshistory_formula.helper import ThreadPoolExecutor
