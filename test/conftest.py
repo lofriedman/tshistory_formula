@@ -1,8 +1,8 @@
 from pathlib import Path
+
 import pytest
-
 from sqlalchemy import create_engine
-
+import webtest
 from pytest_sa_pg import db
 from click.testing import CliRunner
 
@@ -68,3 +68,40 @@ def cli():
 @pytest.fixture(scope='session')
 def datadir():
     return DATADIR
+
+
+# support for the http (tshistory_rest) extensions
+DBURI = 'postgresql://localhost:5433/postgres'
+
+def make_app(tsa):
+    from flask import Flask
+    from tshistory_formula.http import formula_httpapi
+    app = Flask(__name__)
+    api = formula_httpapi(tsa)
+    app.register_blueprint(
+        api.bp
+    )
+    return app
+
+# Error-displaying web tester
+
+class WebTester(webtest.TestApp):
+
+    def _check_status(self, status, res):
+        try:
+            super(WebTester, self)._check_status(status, res)
+        except:
+            print('ERRORS', res.errors)
+            # raise <- default behaviour on 4xx is silly
+
+@pytest.fixture(scope='session')
+def client(engine):
+    wsgi = make_app(
+        api.timeseries(
+            str(engine.url),
+            handler=timeseries,
+            namespace='tsh',
+            # sources=[(DBURI, 'other')]
+        )
+    )
+    yield WebTester(wsgi)
