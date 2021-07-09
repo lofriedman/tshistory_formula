@@ -53,6 +53,44 @@ register_formula.add_argument(
     help='accept to update an existing formula if true'
 )
 
+# groups
+
+groupbase = reqparse.RequestParser()
+groupbase.add_argument(
+    'name',
+    type=str,
+    required=True,
+    help='group name'
+)
+
+register_group_formula = groupbase.copy()
+register_group_formula.add_argument(
+    'text',
+    type=str,
+    required=True,
+    help='source of the formula'
+)
+
+groupformula = groupbase.copy()
+groupformula.add_argument(
+    'expanded',
+    type=inputs.boolean,
+    default=False,
+    help='return the recursively expanded formula'
+)
+
+boundformula = groupbase.copy()
+boundformula.add_argument(
+    'formulaname',
+    type=str,
+    help='name of the formula to exploit (create/update)'
+)
+boundformula.add_argument(
+    'bindings',
+    type=str,
+    help='json representation of the bindings (create/update)'
+)
+
 
 class formula_httpapi(httpapi):
 
@@ -62,6 +100,7 @@ class formula_httpapi(httpapi):
         tsa = self.tsa
         api = self.api
         nss = self.nss
+        nsg = self.nsg
 
         @nss.route('/formula')
         class timeseries_formula(Resource):
@@ -121,3 +160,42 @@ class formula_httpapi(httpapi):
                 form = tsa.formula_components(args.name, args.expanded)
                 return form, 200
 
+        @nsg.route('/formula')
+        class group_formula(Resource):
+
+            @api.expect(groupformula)
+            @onerror
+            def get(self):
+                args = groupformula.parse_args()
+                if not tsa.group_exists(args.name):
+                    api.abort(404, f'`{args.name}` does not exists')
+
+                if not tsa.group_type(args.name):
+                    api.abort(409, f'`{args.name}` exists but is not a formula')
+
+                form = tsa.group_formula(args.name, args.expanded)
+                return form, 200
+
+            @api.expect(register_group_formula)
+            @onerror
+            def put(self):
+                args = register_group_formula.parse_args()
+
+                exists = tsa.group_formula(args.name)
+                try:
+                    tsa.register_group_formula(
+                        args.name,
+                        args.text
+                    )
+                except TypeError as err:
+                    api.abort(409, err.args[0])
+                except ValueError as err:
+                    api.abort(409, err.args[0])
+                except AssertionError as err:
+                    api.abort(409, err.args[0])
+                except SyntaxError:
+                    api.abort(400, f'`{args.name}` has a syntax error in it')
+                except Exception:
+                    raise
+
+                return '', 200 if exists else 201

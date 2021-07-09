@@ -1,14 +1,19 @@
+from datetime import datetime as dt
+import json
+
 import pandas as pd
+import webtest
 
 from tshistory import util
 from tshistory.testutil import (
     assert_df,
+    gengroup,
     genserie,
     utcdt
 )
 
 
-def test_formula(client, engine):
+def test_series_formula(client, engine):
     series = genserie(utcdt(2020, 1, 1), 'D', 3)
     res = client.patch('/series/state', params={
         'name': 'test-formula',
@@ -90,3 +95,42 @@ def test_formula(client, engine):
 
     res = client.get('/series/formula_components?name=new-formula')
     assert res.json == {'new-formula': ['test-formula']}
+
+
+def test_group_formula(client, engine):
+    df = gengroup(
+        n_scenarios=3,
+        from_date=dt(2021, 1, 1),
+        length=5,
+        freq='D',
+        seed=2.
+    )
+    df.columns = ['a', 'b', 'c']
+
+    bgroup = util.pack_group(df)
+    res = client.patch('/group/state', {
+        'name': 'test_group',
+        'author': 'Babar',
+        'format': 'tshpack',
+        'replace': json.dumps(True),
+        'bgroup': webtest.Upload('bgroup', bgroup)
+    })
+    assert res.status_code == 201
+
+    res = client.put('/group/formula', {
+        'name': 'group_formula',
+        'author': 'Babar',
+        'text': '(group-add (group "test_group") (group "test_group"))'
+    })
+
+    assert res.status_code == 201
+
+    res = client.get('/group/formula', {
+        'name': 'group_formula'
+    })
+    assert res.json == '(group-add (group "test_group") (group "test_group"))'
+
+    res = client.get('/group/state', {'name': 'group_formula'})
+    df2 = util.unpack_group(res.body)
+
+    assert df2.equals(df * 2)
