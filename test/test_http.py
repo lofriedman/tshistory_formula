@@ -134,3 +134,83 @@ def test_group_formula(client, engine):
     df2 = util.unpack_group(res.body)
 
     assert df2.equals(df * 2)
+
+
+def test_bound_formula(client, engine):
+    ts = genserie(pd.Timestamp('2021-1-1'), 'H', 3)
+    res = client.patch('/series/state', {
+        'name': 'a-series',
+        'series': util.tojson(ts),
+        'author': 'Babar',
+        'insertion_date': utcdt(2021, 1, 1, 10),
+        'tzaware': util.tzaware_serie(ts)
+    })
+    res = client.patch('/series/state', {
+        'name': 'another-series',
+        'series': util.tojson(ts),
+        'author': 'Babar',
+        'insertion_date': utcdt(2021, 1, 1, 10),
+        'tzaware': util.tzaware_serie(ts)
+    })
+
+    assert res.status_code == 201
+
+    # prepare a formula
+    res = client.patch('/series/formula', {
+        'name': 'hijack-me',
+        'text': '(add (series "a-series") (series "another-series"))'
+    })
+    assert res.status_code == 201
+
+    # prepare a group
+    df = gengroup(
+        n_scenarios=3,
+        from_date=dt(2021, 1, 1),
+        length=5,
+        freq='D',
+        seed=2.
+    )
+    df.columns = ['a', 'b', 'c']
+
+    bgroup = util.pack_group(df)
+    res = client.patch('/group/state', {
+        'name': 'a-group',
+        'author': 'Babar',
+        'format': 'tshpack',
+        'replace': json.dumps(True),
+        'bgroup': webtest.Upload('bgroup', bgroup)
+    })
+    assert res.status_code == 201
+
+    bindings = pd.DataFrame(
+        [
+            ['a-series', 'a-group', 'topic'],
+        ],
+        columns=('series', 'group', 'family')
+    )
+
+    res = client.put('/group/boundformula', {
+        'name': 'bfgroup',
+        'formulaname': 'hijack-me',
+        'bindings': bindings.to_json(orient='records')
+    })
+    assert res.status_code == 200
+
+    res = client.get('/group/boundformula', {'name': 'bfgroup'})
+    assert res.json == [
+        'hijack-me', [{
+            'group': 'a-group',
+            'family': 'topic',
+            'series': 'a-series'
+        }]
+    ]
+
+    res = client.get('/group/state', {
+        'name': 'bfgroup'
+    })
+    df2 = util.unpack_group(res.body)
+
+    assert_df("""
+              a    b    c
+2021-01-01  2.0  3.0  4.0
+""", df2)

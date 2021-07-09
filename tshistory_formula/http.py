@@ -1,3 +1,5 @@
+import pandas as pd
+
 from flask_restx import (
     inputs,
     Resource,
@@ -199,3 +201,32 @@ class formula_httpapi(httpapi):
                     raise
 
                 return '', 200 if exists else 201
+
+            @nsg.route('/boundformula')
+            class bound_formula(Resource):
+
+                @api.expect(boundformula)
+                @onerror
+                def get(self):
+                    args = boundformula.parse_args()
+                    if not tsa.group_exists(args.name):
+                        api.abort(404, f'`{args.name}` does not exists')
+
+                    if tsa.group_type(args.name) != 'bound':
+                        api.abort(409, f'`{args.name}` exists but is not a bound formula')
+
+                    name, bindings = tsa.bindings_for(args.name)
+                    return (name, bindings.to_dict(orient='records')), 200
+
+                @api.expect(boundformula)
+                @onerror
+                def put(self):
+                    args = boundformula.parse_args()
+                    bindings = pd.read_json(args.bindings)
+                    tsa.register_formula_bindings(
+                        args.name,
+                        args.formulaname,
+                        bindings
+                    )
+
+                    return '', 200
