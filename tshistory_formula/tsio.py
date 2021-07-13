@@ -821,19 +821,20 @@ class timeseries(basets):
 
     @tx
     def register_formula_bindings(self, cn, groupname, formulaname, binding):
+        if set(binding.columns) != {'series', 'group', 'family'}:
+            raise ValueError(
+                'bindings must have `series` `groups` and `family` columns'
+            )
+
+        if not len(binding):
+            raise ValueError(f'formula `{formulaname}` has an empty binding')
+
         if self.type(cn, formulaname) != 'formula':
             raise ValueError(f'`{formulaname}` is not a formula')
 
         gtype = self.group_type(cn, groupname)
-
-        if self.group_exists(cn, groupname) and gtype != 'bound-formula':
+        if self.group_exists(cn, groupname) and gtype != 'bound':
             raise ValueError(f'cannot bind `{groupname}`: already a {gtype}')
-
-        if set(binding.columns) != {'series', 'group', 'family'}:
-            raise ValueError(f'formula `{formulaname}` has no proper binding')
-
-        if not len(binding):
-            raise ValueError(f'formula `{formulaname}` has an empty binding')
 
         cn.execute(
             f'insert into "{self.namespace}"."group_binding" (groupname, seriesname, binding) '
