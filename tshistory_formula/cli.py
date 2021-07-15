@@ -80,29 +80,6 @@ def update_metadata(dburi, reset=False, seriesname=None, namespace='tsh'):
     pprint(dict(errors))
 
 
-@click.command(name='migrate-0.6-to-0.7')
-@click.argument('dburi')
-@click.option('--doit', default=False, is_flag=True)
-@click.option('--namespace', default='tsh')
-def migrate(dburi, doit=False, namespace='tsh'):
-    """ fix bad metadata on formula which happened
-    between 0.6 and 0.7
-    """
-    engine = create_engine(find_dburi(dburi))
-    tsh = timeseries(namespace)
-
-    for name, kind in tsh.list_series(engine).items():
-        if kind != 'formula':
-            continue
-
-        meta = tsh.metadata(engine, name)
-        if 'supervision_status' in meta:
-            print(name, meta['supervision_status'])
-            if doit:
-                meta.pop('supervision_status', None)
-                tsh.update_metadata(engine, name, meta)
-
-
 @click.command(name='ingest-formulas')
 @click.argument('dburi')
 @click.argument('formula-file', type=click.Path(exists=True))
