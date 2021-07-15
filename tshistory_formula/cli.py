@@ -1,9 +1,10 @@
 import json
-import click
+from pprint import pprint
 
+import click
 import pandas as pd
 from sqlalchemy import create_engine
-from psyl.lisp import parse, serialize, Symbol, Keyword
+from psyl.lisp import parse
 from tshistory.util import find_dburi
 
 from tshistory_formula.schema import formula_schema
@@ -76,7 +77,6 @@ def update_metadata(dburi, reset=False, seriesname=None, namespace='tsh'):
 
     print('TODO', todo)
     print('FAIL', len(errors))
-    from pprint import pprint
     pprint(dict(errors))
 
 
