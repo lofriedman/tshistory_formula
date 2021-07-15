@@ -122,6 +122,9 @@ def typecheck_formula(db_uri, pdbshell=False, namespace='tsh'):
         print(name, f'`{parsed[0]}`')
         typecheck(parsed, env=i.env)
 
+    if pdbshell:
+        import ipdb; ipdb.set_trace()
+
 
 @click.command(name='test-formula')
 @click.argument('db-uri')
