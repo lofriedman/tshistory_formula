@@ -6,7 +6,7 @@ doc = Path(__file__).parent / 'README.md'
 
 
 setup(name='tshistory_formula',
-      version='0.8.1',
+      version='0.9.0',
       author='Pythonian',
       author_email='aurelien.campeas@pythonian.fr',
       url='https://hg.sr.ht/~pythonian/tshistory_formula',
@@ -29,7 +29,7 @@ setup(name='tshistory_formula',
           'typecheck-formula=tshistory_formula.cli:typecheck_formula',
           'test-formula=tshistory_formula.cli:test_formula',
           'formula-init-db=tshistory_formula.cli:init_db',
-          'migrate-0.6-to-0.7=tshistory_formula.cli:migrate',
+          'migrate-to-formula-groups=tshistory_formula.cli:migrate_to_groups',
           'shell=tshistory_formula.cli:shell'
       ]},
       classifiers=[
