@@ -24,6 +24,7 @@ from tshistory_formula import (
 
 
 def functypes():
+    print(registry.FUNCS)
     return {
         name: helper.function_types(func)
         for name, func in registry.FUNCS.items()
