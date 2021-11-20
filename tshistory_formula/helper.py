@@ -301,6 +301,7 @@ def typename(typespec):
     if isinstance(typespec, type):
         return extract_type_name(typespec.__name__)
     # if a Union over NoneType, remove the later
+    print(f'{typespec=}')
     typespec = typespec.copy_with(
         tuple(
             tspec
@@ -308,6 +309,8 @@ def typename(typespec):
             if tspec is not NONETYPE
         )
     )
+    print('-' * 40)
+    print(f'{typespec=}')
     if len(typespec.__args__) == 1:
         return typename(typespec.__args__[0])
     strtype = str(typespec)
