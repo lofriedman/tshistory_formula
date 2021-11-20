@@ -324,8 +324,10 @@ def function_types(func):
         'return': typename(sig.return_annotation)
     }
     for par in sig.parameters.values():
+        print(f"{par.name=}")
         if par.name == '__interpreter__':
             continue
+        print(f"{par.annotation=}")
         atype = typename(par.annotation)
         if par.default is not inspect._empty:
             default = par.default
